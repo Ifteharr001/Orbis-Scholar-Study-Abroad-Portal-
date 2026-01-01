@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, MapPin, Phone, Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo2.png";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 const Footer = () => {
   const quickLinks = [
@@ -45,12 +47,17 @@ const Footer = () => {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary">
-                <span className="font-display text-xl font-bold text-primary-foreground">S</span>
-              </div>
-              <span className="font-display text-xl font-semibold">StudyAbroad</span>
-            </Link>
+            <Link href="/" className="flex items-center gap-2">
+       <Image 
+            src={logo} 
+            alt="Orbis Scholar Logo" 
+            width={500} 
+            height={150} 
+            className="h-14 w-auto object-contain" 
+            priority
+            quality={100} 
+          />
+        </Link>
             <p className="text-background/70 mb-6 max-w-sm">
               Your trusted partner for international education. We help students achieve their dreams of studying at top universities worldwide.
             </p>
@@ -133,13 +140,14 @@ const Footer = () => {
               <li>
                 <a href="tel:+1234567890" className="flex items-center gap-3 text-background/70 hover:text-background transition-colors">
                   <Phone className="h-5 w-5 text-secondary" />
-                  +1 (234) 567-890
+                  +86 131 6640 9570
+
                 </a>
               </li>
               <li>
                 <a href="mailto:info@studyabroad.com" className="flex items-center gap-3 text-background/70 hover:text-background transition-colors">
                   <Mail className="h-5 w-5 text-secondary" />
-                  info@studyabroad.com
+                  info@orbicsglobal.com
                 </a>
               </li>
             </ul>
