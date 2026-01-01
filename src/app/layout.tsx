@@ -3,12 +3,15 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
-
+import logo from "@/assets/logo.png";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Orbis Scholar", 
   description: "Study Abroad Education Website",
+  icons: {
+    icon: logo.src, 
+  },
 };
 
 export default function RootLayout({
