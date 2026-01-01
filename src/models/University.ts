@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// ১. ইন্টারফেসসমূহ (TypeScript Types)
 export interface IProgram {
   id?: number;
   name: string;
@@ -33,7 +32,6 @@ export interface IGalleryVideo {
   duration: string;
 }
 
-// Fees এর স্ট্রাকচার
 interface IFeeStructure {
   tuition: string;
   accommodation: string;
@@ -50,7 +48,6 @@ interface IFees {
   [key: string]: any; 
 }
 
-// ২. মেইন ইন্টারফেস
 export interface IUniversity extends Document {
   name: string;
   location: string;
@@ -80,7 +77,6 @@ export interface IUniversity extends Document {
   galleryVideos?: IGalleryVideo[];
 }
 
-// ৩. স্কিমা ডেফিনিশন
 const UniversitySchema = new Schema<IUniversity>(
   {
     name: { type: String, required: true },
@@ -116,7 +112,7 @@ const UniversitySchema = new Schema<IUniversity>(
     aboutText: String,
     accommodationText: String,
 
-    // Scholarships Array (অবশ্যই অবজেক্ট স্ট্রাকচার)
+    // Scholarships Array 
     scholarships: [
       {
         name: { type: String },
@@ -132,7 +128,6 @@ const UniversitySchema = new Schema<IUniversity>(
     fees: { type: Object }, 
     requiredDocuments: [String],
 
-    // FAQs Array
     faqs: [
       {
         question: String,

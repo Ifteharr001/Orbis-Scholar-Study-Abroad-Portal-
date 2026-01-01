@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { signIn } from "next-auth/react"; // ✅ NextAuth
+import { signIn } from "next-auth/react"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner"; // ✅ Sonner Toast
+import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
 // Zod স্কিমা
@@ -62,7 +62,6 @@ const PartnerAuth = () => {
 
   const router = useRouter();
 
-  // ভ্যালিডেশন ফাংশন
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -105,7 +104,6 @@ const PartnerAuth = () => {
 
     try {
       if (isLogin) {
-        // ✅ NextAuth Login Logic
         const result = await signIn("credentials", {
           redirect: false,
           email,
@@ -125,7 +123,6 @@ const PartnerAuth = () => {
           router.refresh();
         }
       } else {
-        // ✅ NextAuth Registration (API Call)
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -135,7 +132,7 @@ const PartnerAuth = () => {
             password,
             gender,
             country,
-            role: "partner", // 👈 পার্টনার রোল সেট করা হলো
+            role: "partner", 
           }),
         });
 
@@ -152,7 +149,6 @@ const PartnerAuth = () => {
         setIsLogin(true);
       }
     } catch (error: unknown) {
-      // ✅ Fix for 'any' type error
       let errorMessage = "Something went wrong. Please try again.";
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -168,7 +164,6 @@ const PartnerAuth = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">

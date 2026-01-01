@@ -10,10 +10,8 @@ interface ScholarshipCardProps {
   yearlyStipend: string;
 }
 
-// ✅ Fix: Helper function moved outside the component
 const isFree = (value: string) => value.toLowerCase() === "free";
 
-// ✅ Fix: Sub-component moved outside the main component
 const FeeItem = ({ label, value }: { label: string; value: string }) => (
   <div className="flex justify-between items-center py-2 border-b border-border last:border-0">
     <span className="text-sm text-muted-foreground">{label}</span>

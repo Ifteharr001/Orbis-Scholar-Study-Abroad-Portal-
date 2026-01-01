@@ -36,7 +36,6 @@ import {
 import { ChevronDown, ChevronUp, Search, Loader2 } from "lucide-react";
 import NewsSection from "@/app/components/NewsSection";
 
-// স্কলারশিপ ডাটার টাইপ ডেফিনিশন (Location অ্যাড করা হয়েছে)
 interface Scholarship {
   id: string;
   universityId: string;
@@ -50,7 +49,6 @@ interface Scholarship {
   scholarshipType: string;
 }
 
-// Filter Component
 const FilterSection = ({ 
   title, 
   children, 
@@ -89,19 +87,16 @@ const ScholarshipsPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Filters States (সবগুলো ফিল্টার এখানে)
   const [scholarshipTypeFilter, setScholarshipTypeFilter] = useState("");
   const [degreeFilter, setDegreeFilter] = useState("");
   const [universityFilter, setUniversityFilter] = useState("");
   const [languageFilter, setLanguageFilter] = useState("");
   
-  // ✅ নতুন ফিল্টার স্টেটস
   const [locationFilter, setLocationFilter] = useState(""); 
   const [majorFilter, setMajorFilter] = useState(""); 
   const [tuitionFilter, setTuitionFilter] = useState(""); 
   const [accommodationFilter, setAccommodationFilter] = useState(""); 
 
-  // ২. ডাটাবেস থেকে ডাটা আনার জন্য useEffect
   useEffect(() => {
     const fetchScholarships = async () => {
       try {
@@ -119,21 +114,18 @@ const ScholarshipsPage = () => {
 
     fetchScholarships();
   }, []);
-
-  // Get unique values for filters (Dynamically from fetched data)
   const uniqueUniversities = useMemo(() => [...new Set(allScholarships.map(s => s.university))].sort(), [allScholarships]);
   const uniqueDegrees = useMemo(() => [...new Set(allScholarships.map(s => s.degree))].sort(), [allScholarships]);
   const uniqueLanguages = useMemo(() => [...new Set(allScholarships.map(s => s.language))].sort(), [allScholarships]);
   const uniqueScholarshipTypes = useMemo(() => [...new Set(allScholarships.map(s => s.scholarshipType))].sort(), [allScholarships]);
   
-  // ✅ নতুন ইউনিক ভ্যালু জেনারেটর
   const uniqueLocations = useMemo(() => [...new Set(allScholarships.map(s => s.location))].filter(Boolean).sort(), [allScholarships]);
   const uniqueMajors = useMemo(() => [...new Set(allScholarships.map(s => s.program))].sort(), [allScholarships]);
 
-  // Filter scholarships logic (আপডেট করা হয়েছে)
+
   const filteredScholarships = useMemo(() => {
     return allScholarships.filter(scholarship => {
-      // 1. Text Search
+    
       const matchesSearch = searchQuery === "" || 
         scholarship.program.toLowerCase().includes(searchQuery.toLowerCase()) ||
         scholarship.university.toLowerCase().includes(searchQuery.toLowerCase());
@@ -151,7 +143,7 @@ const ScholarshipsPage = () => {
       const matchesUniversity = universityFilter === "" || universityFilter === "all" ||
         scholarship.university === universityFilter;
 
-      // 3. ✅ New Filters Logic
+      // 3. New Filters Logic
       const matchesLocation = locationFilter === "" || locationFilter === "all" || 
         scholarship.location === locationFilter;
 
@@ -301,7 +293,7 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 3. ✅ Major/Subject (New) */}
+                  {/* 3. Major/Subject (New) */}
                   <FilterSection title="MAJOR / SUBJECT">
                     <Select onValueChange={handleFilterChange(setMajorFilter)}>
                       <SelectTrigger>
@@ -331,7 +323,7 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 5. ✅ Location (New) */}
+                  {/* 5. Location (New) */}
                   <FilterSection title="CITY / PROVINCE">
                     <Select onValueChange={handleFilterChange(setLocationFilter)}>
                       <SelectTrigger>
@@ -361,7 +353,7 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 7. ✅ Tuition Fees (New) */}
+                  {/* 7. Tuition Fees (New) */}
                   <FilterSection title="TUITION FEES">
                     <Select onValueChange={handleFilterChange(setTuitionFilter)}>
                       <SelectTrigger>
@@ -377,7 +369,7 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 8. ✅ Accommodation Fees (New) */}
+                  {/* 8. Accommodation Fees (New) */}
                   <FilterSection title="ACCOMMODATION FEES">
                     <Select onValueChange={handleFilterChange(setAccommodationFilter)}>
                       <SelectTrigger>

@@ -5,25 +5,22 @@ import Image from "next/image";
 import { X, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ভিডিও ডাটার জন্য ইন্টারফেস
 interface Video {
   thumbnail: string;
   title: string;
   duration: string;
-  videoUrl?: string; // অপশনাল
+  videoUrl?: string; 
 }
 
-// প্রপস ইন্টারফেস
 interface GallerySectionProps {
-  images?: string[]; // ইমেজের লিঙ্কের অ্যারে
-  videos?: Video[];  // ভিডিও অবজেক্টের অ্যারে
+  images?: string[]; 
+  videos?: Video[];  
 }
 
 const GallerySection = ({ images = [], videos = [] }: GallerySectionProps) => {
   const [activeTab, setActiveTab] = useState<"images" | "videos">("images");
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  // যদি কোনো ইমেজ বা ভিডিও না থাকে, তবে কিছুই দেখাবে না (অথবা মেসেজ দেখাতে পারেন)
   if (images.length === 0 && videos.length === 0) {
     return <div className="text-muted-foreground">No gallery items available.</div>;
   }

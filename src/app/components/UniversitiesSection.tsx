@@ -100,7 +100,6 @@ const UniversitiesSection = () => {
 
                   {/* Programs */}
                   <div className="flex flex-wrap gap-1.5 mt-3">
-                    {/* ✅ Fix: এখানে ': any' সরিয়ে দেওয়া হয়েছে, যাতে টাইপ অটোমেটিক ডিটেক্ট হয় */}
                     {university.programs?.slice(0, 2).map((program, index) => (
                       <span
                         key={index}

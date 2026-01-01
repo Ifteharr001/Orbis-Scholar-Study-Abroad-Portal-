@@ -7,7 +7,6 @@ export async function GET() {
     await connect();
     const universities = await University.find({}).limit(4).lean();
     
-    // Serialize MongoDB documents to remove Document methods
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const serialized = universities.map((doc: Record<string, any>) => ({
       _id: doc._id?.toString(),
@@ -43,7 +42,6 @@ export async function POST(request: Request) {
     await connect();
     const body = await request.json();
     
-    // Validate required fields
     if (!body.name || !body.location) {
       return NextResponse.json(
         { error: "Missing required fields: name and location" }, 
@@ -60,7 +58,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     
-    // Return 400 for validation errors, 500 for server errors
     const status = errorMessage.includes("validation") ? 400 : 500;
     
     return NextResponse.json(

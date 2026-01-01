@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { signIn } from "next-auth/react"; // ✅ NextAuth import
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner"; // ✅ Sonner Toast
+import { toast } from "sonner"; 
 import signupIllustration from "@/assets/signup-illustration.png";
 
 // Zod স্কিমা
@@ -76,7 +76,6 @@ const AuthPage = () => {
 
   const router = useRouter();
 
-  // ভ্যালিডেশন ফাংশন
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -120,7 +119,6 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        // ✅ NextAuth Login Logic
         const result = await signIn("credentials", {
           redirect: false,
           email,
@@ -136,12 +134,12 @@ const AuthPage = () => {
           toast.success("Welcome back!", {
             description: "You have successfully logged in.",
           });
-          // সফল হলে হোমপেজে বা ইউজার ড্যাশবোর্ডে রিডাইরেক্ট
+          
           router.push("/"); 
           router.refresh();
         }
       } else {
-        // ✅ NextAuth Registration Logic (API Call)
+       
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -152,7 +150,7 @@ const AuthPage = () => {
             phone: countryCode + phone,
             gender,
             country,
-            role: "student", // 👈 স্টুডেন্ট রোল সেট করা হলো
+            role: "student", 
           }),
         });
 
@@ -166,7 +164,7 @@ const AuthPage = () => {
           description: "Please login to continue.",
         });
         
-        // রেজিস্ট্রেশন সফল হলে লগিন ফর্মে সুইচ করা হচ্ছে
+     
         setIsLogin(true);
       }
     } catch (error: unknown) {
@@ -185,7 +183,7 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side - Branding */}
+      
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">

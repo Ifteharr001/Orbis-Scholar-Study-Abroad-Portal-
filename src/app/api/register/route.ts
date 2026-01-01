@@ -5,10 +5,10 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    // ১. রিকোয়েস্ট বডি থেকে ডাটা নেওয়া
+    
     const { fullName, email, password, role, phone, gender, country } = await req.json();
 
-    // ২. বেসিক ভ্যালিডেশন (নাম, ইমেইল, পাসওয়ার্ড না থাকলে এরর)
+   
     if (!fullName || !email || !password) {
       return NextResponse.json(
         { message: "Missing required fields (Name, Email, or Password)" },
@@ -16,10 +16,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // ৩. ডাটাবেস কানেকশন
+
     await connect();
 
-    // ৪. ইউজার আগে থেকেই আছে কিনা চেক করা
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -28,15 +28,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // ৫. পাসওয়ার্ড হ্যাশ করা (সিকিউরিটির জন্য)
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ৬. নতুন ইউজার তৈরি করা
+    
     await User.create({
-      name: fullName, // স্কিমাতে 'name' আছে, কিন্তু ফর্ম থেকে 'fullName' আসছে
+      name: fullName,
       email,
       password: hashedPassword,
-      role: role || "student", // রোল না থাকলে ডিফল্ট 'student'
+      role: role || "student", 
       phone,
       gender,
       country,

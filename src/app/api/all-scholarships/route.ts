@@ -6,7 +6,6 @@ export async function GET() {
   try {
     await connect();
     
-    // location ফিল্ডটি select এ অ্যাড করা হয়েছে
     const universities = await University.find({}).select("name _id scholarships location").lean();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,9 +16,9 @@ export async function GET() {
       return uni.scholarships.map((sch: any, index: number) => ({
         id: `${uni._id}-${index}`,
         universityId: uni._id,
-        program: sch.name,         // এটিই Major/Subject হিসেবে কাজ করবে
+        program: sch.name,        
         university: uni.name,
-        location: uni.location,    // ✅ নতুন: লোকেশন ফিল্টার করার জন্য
+        location: uni.location,    
         degree: sch.type,
         language: "English",
         tuitionFee: sch.tuitionFee,

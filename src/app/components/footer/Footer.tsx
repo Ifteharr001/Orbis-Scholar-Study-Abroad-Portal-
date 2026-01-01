@@ -22,8 +22,6 @@ const Footer = () => {
     { title: "Airport Pickup", href: "/services/airport" },
   ];
 
-  // Note: This array was present in your source code but not used in the render. 
-  // I kept it as per your instruction not to remove any code.
   const destinations = [
     { title: "Study in USA", href: "/destinations/usa" },
     { title: "Study in UK", href: "/destinations/uk" },

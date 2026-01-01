@@ -71,7 +71,6 @@ const contactLinks = [
   const { role, isAuthenticated, signOut } = useAuth();
   
   return (
-    // ✅ Fix 1: z-index increased to z-[100] to stay above everything
     <header className="sticky top-0 z-[100] w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Top bar */}
       <div className="hidden md:block bg-primary text-primary-foreground">
@@ -89,7 +88,7 @@ const contactLinks = [
           <div className="flex items-center gap-4 text-sm font-medium">
            {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                {/* ড্যাশবোর্ড বাটন */}
+               
                 <Link
                   href={role === "partner" ? "/partner/dashboard" : "/student/dashboard"}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -100,7 +99,7 @@ const contactLinks = [
 
                 <div className="h-4 w-[1px] bg-primary-foreground/30"></div>
 
-                {/* লগআউট বাটন */}
+             
                 <button
                   onClick={async () => {
                     await signOut();
@@ -121,10 +120,8 @@ const contactLinks = [
                   Student Login
                 </Link>
                 
-                {/* 👇 সেপারেটর */}
                 <span className="text-primary-foreground/30">|</span>
 
-                {/* 👇 Partner Login with School Icon */}
                 <Link
                   href="/partnerAuth"
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -153,7 +150,6 @@ const contactLinks = [
         </Link>
 
         {/* Desktop Navigation */}
-        {/* ✅ Fix 2: Added relative and z-[101] */}
         <NavigationMenu className="hidden lg:flex relative z-[101]">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -199,7 +195,6 @@ const contactLinks = [
 
             <NavigationMenuItem className="relative">
               <NavigationMenuTrigger  className="text-sm font-medium">About</NavigationMenuTrigger>
-              {/* ✅ Fix 3: Reverted to standard positioning but with solid background to prevent see-through */}
               <NavigationMenuContent>
                 <ul className="grid w-[200px] gap-2 p-4 bg-popover/100 rounded-md shadow-lg">
                   {aboutLinks.map((link) => (
@@ -222,7 +217,6 @@ const contactLinks = [
 
 <NavigationMenuItem className="relative">
               <NavigationMenuTrigger className="text-sm font-medium">Expo</NavigationMenuTrigger>
-              {/* ✅ Fix 3: Reverted to standard positioning but with solid background to prevent see-through */}
               <NavigationMenuContent>
                 <ul className="grid w-[200px] gap-2 p-4 bg-popover/100 rounded-md shadow-lg">
                   {expoLinks.map((link) => (

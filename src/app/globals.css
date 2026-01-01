@@ -118,7 +118,6 @@
     @apply bg-gradient-to-r from-primary to-secondary;
   }
   
-  /* এই লাইনটা মিসিং ছিল, তাই কালার আসছিল না */
   .bg-gradient-secondary {
     @apply bg-gradient-to-r from-primary to-secondary text-primary-foreground;
   }

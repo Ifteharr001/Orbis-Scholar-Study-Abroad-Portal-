@@ -61,7 +61,7 @@ const HeroImageCarousel = ({ className }: HeroImageCarouselProps) => {
       onMouseLeave={() => setPaused(false)}
     >
       <Carousel
-        setApi={setApi} // <--- FIX: Arrow function soriye direct setApi dilam
+        setApi={setApi}
         opts={{ loop: true, align: "start" }}
         className="w-full"
       >
@@ -71,7 +71,6 @@ const HeroImageCarousel = ({ className }: HeroImageCarouselProps) => {
               <Image
                 src={slide.src}
                 alt={slide.alt}
-                // FIX: aspect-[4/5] warning remove kore aspect-4/5 dilam
                 className="w-full object-cover aspect-4/5" 
                 priority={true}
                 quality={100}

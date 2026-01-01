@@ -26,7 +26,6 @@ export const authOptions: AuthOptions = {
           throw new Error("No user found with this email");
         }
 
-        // 👇 লজিক: ইউজার যদি ভুল জায়গা থেকে লগইন করার চেষ্টা করে
         if (credentials.loginType === "student" && user.role !== "student") {
           throw new Error("This is a Partner account. Please login from Partner portal.");
         }
