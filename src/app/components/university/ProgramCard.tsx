@@ -3,6 +3,8 @@
 import { GraduationCap, Globe, Clock, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProgramCardProps {
   name: string;
@@ -25,6 +27,22 @@ const ProgramCard = ({
   hasScholarship = true,
   onApply,
 }: ProgramCardProps) => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleApplyClick = () => {
+    if (onApply) {
+      onApply();
+      return;
+    }
+
+    
+    if (!isAuthenticated) {
+      router.push("/userAuth"); 
+    } else {
+      router.push("/apply"); 
+    }
+  };
   return (
     <div className="rounded-xl border border-border bg-card p-6 hover:shadow-lg transition-shadow">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -65,7 +83,7 @@ const ProgramCard = ({
                 Scholarship Available
               </Badge>
             )}
-            <Button onClick={onApply} className="bg-gradient-primary hover:opacity-90">
+            <Button onClick={handleApplyClick} className="bg-gradient-primary hover:opacity-90">
               Apply Now
             </Button>
           </div>
