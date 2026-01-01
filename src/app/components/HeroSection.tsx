@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, GraduationCap, BookOpen, Award, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,12 +16,15 @@ import HeroImageCarousel from "./HeroImageCarousel";
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIntake, setSelectedIntake] = useState("");
+  const [selectedDegree, setSelectedDegree] = useState("");
+  const router = useRouter();
 
   const programTypes = [
-    { icon: GraduationCap, label: "Bachelor", color: "bg-primary" },
-    { icon: BookOpen, label: "Masters", color: "bg-secondary" },
-    { icon: Award, label: "PhD", color: "bg-green-600" }, // success color fix
-    { icon: FileText, label: "Diploma", color: "bg-blue-500" }, // info color fix
+    { icon: GraduationCap, label: "Bachelor", value: "Bachelor", color: "bg-primary" },
+    { icon: BookOpen, label: "Masters", value: "Master", color: "bg-secondary" },
+    { icon: Award, label: "PhD", value: "PhD", color: "bg-green-600" },
+    { icon: FileText, label: "Diploma", value: "Diploma", color: "bg-blue-500" },
   ];
 
   const intakeDates = [
@@ -29,6 +33,21 @@ const HeroSection = () => {
     "Spring 2026",
     "Fall 2026",
   ];
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.append("q", searchQuery);
+    if (selectedDegree) params.append("degree", selectedDegree);
+    if (selectedIntake) params.append("intake", selectedIntake);
+    
+    router.push(`/universities?${params.toString()}`);
+  };
+
+  const handleDegreeClick = (degree: string) => {
+    const params = new URLSearchParams();
+    params.append("degree", degree);
+    router.push(`/universities?${params.toString()}`);
+  };
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -69,6 +88,7 @@ const HeroSection = () => {
                       placeholder="University name, course, or country..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                       className="pl-10"
                     />
                   </div>
@@ -77,7 +97,7 @@ const HeroSection = () => {
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Intake
                   </label>
-                  <Select>
+                  <Select value={selectedIntake} onValueChange={setSelectedIntake}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select intake" />
                     </SelectTrigger>
@@ -91,7 +111,10 @@ const HeroSection = () => {
                   </Select>
                 </div>
               </div>
-              <Button className="w-full mt-4 bg-gradient-primary hover:opacity-90 transition-opacity">
+              <Button 
+                onClick={handleSearch}
+                className="w-full mt-4 bg-gradient-primary hover:opacity-90 transition-opacity"
+              >
                 <Search className="h-4 w-4 mr-2" />
                 Find Universities
               </Button>
@@ -102,7 +125,8 @@ const HeroSection = () => {
               {programTypes.map((program) => (
                 <button
                   key={program.label}
-                  className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium shadow-sm border border-border hover:border-primary transition-colors"
+                  onClick={() => handleDegreeClick(program.value)}
+                  className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium shadow-sm border border-border hover:border-primary transition-colors cursor-pointer"
                 >
                   <span className={`flex h-6 w-6 items-center justify-center rounded-full ${program.color}`}>
                     <program.icon className="h-3.5 w-3.5 text-white" />
