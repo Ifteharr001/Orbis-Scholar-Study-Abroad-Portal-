@@ -1,10 +1,10 @@
-import NextAuth, { AuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { connect } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -26,6 +26,7 @@ export const authOptions: AuthOptions = {
           throw new Error("No user found with this email");
         }
 
+        // Role Validation based on Portal
         if (credentials.loginType === "student" && user.role !== "student") {
           throw new Error("This is a Partner account. Please login from Partner portal.");
         }
@@ -40,6 +41,7 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid password");
         }
 
+        // Return user object (NextAuth will match this with the User type in d.ts)
         return {
           id: user._id.toString(),
           name: user.name,
@@ -50,16 +52,15 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user }: any) {
+    // এখানে এখন আর 'any' টাইপ দেওয়ার দরকার নেই
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
       }
       return token;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.id;
@@ -72,7 +73,7 @@ export const authOptions: AuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/userAuth",
+    signIn: "/userAuth", 
   },
 };
 

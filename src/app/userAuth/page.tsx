@@ -18,10 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// Zod স্কিমা
+// Zod স্কিমা (আপনার কোডই ঠিক আছে)
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -41,6 +41,7 @@ const signupSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// ... (Country & Codes Arrays - Same as your code) ...
 const countries = [
   "India", "Nepal", "Bangladesh", "Pakistan", "Sri Lanka", "Nigeria", 
   "Kenya", "Ghana", "Philippines", "Vietnam", "Indonesia", "Malaysia",
@@ -59,6 +60,7 @@ const countryCodes = [
 ];
 
 const AuthPage = () => {
+  // ... (State Variables - Same as your code) ...
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,6 +78,7 @@ const AuthPage = () => {
 
   const router = useRouter();
 
+  // ... (validateForm - Same as your code) ...
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -118,28 +121,28 @@ const AuthPage = () => {
     setIsSubmitting(true);
 
     try {
-      if (isLogin) {
+    if (isLogin) {
         const result = await signIn("credentials", {
           redirect: false,
           email,
           password,
           loginType: "student",
+          callbackUrl: "/student/dashboard", 
         });
 
-        if (result?.error) {
+       if (result?.error) {
           toast.error("Login failed", {
-            description: "Invalid email or password",
+            description: result.error || "Invalid email or password",
           });
+          setIsSubmitting(false); // লোডিং বন্ধ করুন
         } else {
-          toast.success("Welcome back!", {
-            description: "You have successfully logged in.",
+          toast.success("Login Successful!", {
+            description: "Redirecting to dashboard...",
           });
-          
-          router.push("/"); 
-          router.refresh();
-        }
+  window.location.replace("/student/dashboard");
+}
       } else {
-       
+        // ... (Registration logic remains same) ...
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -150,7 +153,7 @@ const AuthPage = () => {
             phone: countryCode + phone,
             gender,
             country,
-            role: "student", 
+            role: "student",
           }),
         });
 
@@ -164,7 +167,6 @@ const AuthPage = () => {
           description: "Please login to continue.",
         });
         
-     
         setIsLogin(true);
       }
     } catch (error: unknown) {
@@ -182,8 +184,9 @@ const AuthPage = () => {
   };
 
   return (
+    // ... (Your JSX remains exactly the same) ...
     <div className="min-h-screen flex bg-background">
-      
+      {/* ... Left Side ... */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
@@ -206,7 +209,7 @@ const AuthPage = () => {
         </div>
       </div>
 
-      {/* Right Side - Form */}
+      {/* ... Right Side (Form) ... */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
@@ -214,6 +217,7 @@ const AuthPage = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* ... Form Fields (Same as your code) ... */}
             {!isLogin && (
               <>
                 <div className="space-y-1.5">

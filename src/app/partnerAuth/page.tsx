@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// Zod স্কিমা
+// ... (Zod Schemas & Constants remain same) ...
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -47,7 +47,7 @@ const countries = [
 ];
 
 const PartnerAuth = () => {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(false); // Default to signup for partners usually, or change to true
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -104,25 +104,27 @@ const PartnerAuth = () => {
 
     try {
       if (isLogin) {
+        // ✅ Corrected signIn logic
         const result = await signIn("credentials", {
-          redirect: false,
+          redirect: false, // Prevents auto-redirect
           email,
           password,
-          loginType: "partner",
+          loginType: "partner", // Important for role validation
         });
 
-        if (result?.error) {
-          toast.error("Login failed", {
-            description: "Invalid email or password",
-          });
-        } else {
-          toast.success("Welcome back!", {
-            description: "Redirecting to Partner Dashboard...",
-          });
-          router.push("/partner/dashboard");
-          router.refresh();
-        }
+       if (result?.error) {
+  toast.error("Login failed", {
+    description: result.error || "Invalid email or password",
+  });
+} else {
+  toast.success("Welcome back!", {
+    description: "You have successfully logged in.",
+  });
+  
+  window.location.href = "/partner/dashboard";
+}
       } else {
+        // Registration Logic
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -132,7 +134,7 @@ const PartnerAuth = () => {
             password,
             gender,
             country,
-            role: "partner", 
+            role: "partner", // Explicitly setting role
           }),
         });
 
@@ -163,6 +165,7 @@ const PartnerAuth = () => {
   };
 
   return (
+    // ... (Your JSX remains exactly the same) ...
     <div className="min-h-screen flex bg-background">
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
@@ -351,7 +354,7 @@ const PartnerAuth = () => {
             <p className="text-center text-sm text-muted-foreground pt-2">
               {isLogin ? (
                 <>
-                  Do not have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <button type="button" onClick={() => { setIsLogin(false); setErrors({}); }} className="text-primary hover:underline font-medium">
                     Sign up
                   </button>
