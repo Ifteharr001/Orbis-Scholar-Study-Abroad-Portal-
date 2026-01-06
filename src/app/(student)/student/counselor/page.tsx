@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Phone, Mail, Video, MessageCircle, Calendar, Star, MapPin, Clock, Users, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Phone, Mail, Video, MessageCircle, Calendar, Star, MapPin, Clock, Users, Send, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,42 +9,91 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Counselor {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  location: string;
+  languages: string[];
+  specializations: string[];
+  rating: number;
+  totalStudents: number;
+  successRate: number;
+  experience: string;
+  availability: string;
+  bio: string;
+  image?: string;
+}
 
 export default function MyCounselorPage() {
+  const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState("");
+  const [counselor, setCounselor] = useState<Counselor | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const counselor = {
-    name: "Sarah Johnson",
-    title: "Senior Education Counselor",
-    email: "sarah.johnson@orbischolar.com",
-    phone: "+880 1712-123456",
-    whatsapp: "+880 1712-123456",
-    location: "Dhaka Office, Bangladesh",
-    languages: ["English", "Bangla"],
-    specializations: ["UK Universities", "USA Universities", "Scholarship Applications"],
-    rating: 4.9,
-    totalStudents: 245,
-    successRate: 94,
-    experience: "8+ years",
-    availability: "Mon - Fri, 9:00 AM - 6:00 PM",
-    bio: "I'm passionate about helping students achieve their dreams of studying abroad. With over 8 years of experience in international education consulting, I've helped hundreds of students secure admissions to top universities worldwide.",
-  };
+  // ১. ডাটা ফেচ করা
+  useEffect(() => {
+    const fetchCounselor = async () => {
+      if (isAuthenticated) {
+        try {
+          const res = await fetch("/api/student/counselor");
+          const data = await res.json();
+          setCounselor(data.counselor);
+        } catch (error) {
+          console.error("Failed to fetch counselor info");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-  const recentActivities = [
-    { action: "Reviewed your SOP draft", time: "2 hours ago" },
-    { action: "Sent university shortlist", time: "Yesterday" },
-    { action: "Updated visa checklist", time: "3 days ago" },
-    { action: "Scheduled orientation call", time: "1 week ago" },
-  ];
+    fetchCounselor();
+  }, [isAuthenticated]);
 
   const handleSendMessage = () => {
     if (!message.trim()) {
       toast.error("Please enter a message");
       return;
     }
+    // এখানে ভবিষ্যতে মেসেজ API ইন্টিগ্রেট করা যাবে
     toast.success("Message sent to your counselor!");
     setMessage("");
   };
+
+  // স্ট্যাটিক অ্যাক্টিভিটি (ফিউচারে ডাইনামিক করা যাবে)
+  const recentActivities = [
+    { action: "Reviewed your SOP draft", time: "2 hours ago" },
+    { action: "Sent university shortlist", time: "Yesterday" },
+    { action: "Updated visa checklist", time: "3 days ago" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // যদি কাউন্সিলর অ্যাসাইন করা না থাকে
+  if (!counselor) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+        <div className="bg-muted p-4 rounded-full">
+            <Users className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <h2 className="text-xl font-semibold">No Counselor Assigned Yet</h2>
+        <p className="text-muted-foreground max-w-md">
+          We are currently matching you with the best counselor for your profile. Please check back later or contact support.
+        </p>
+        <Button onClick={() => window.location.href = '/contact'}>Contact Support</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,9 +112,9 @@ export default function MyCounselorPage() {
                 {/* Avatar & Basic Info */}
                 <div className="flex flex-col items-center text-center md:items-start md:text-left">
                   <Avatar className="w-28 h-28 mb-4">
-                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarImage src={counselor.image} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-                      {counselor.name.split(' ').map(n => n[0]).join('')}
+                      {counselor.name ? counselor.name.split(' ').map(n => n[0]).join('').substring(0, 2) : "C"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex items-center gap-1 mb-2">
@@ -168,9 +217,9 @@ export default function MyCounselorPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border">
                 <Mail className="w-5 h-5 text-primary" />
-                <div>
+                <div className="overflow-hidden">
                   <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm font-medium text-foreground">{counselor.email}</p>
+                  <p className="text-sm font-medium text-foreground truncate" title={counselor.email}>{counselor.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border">
@@ -207,11 +256,18 @@ export default function MyCounselorPage() {
                 <Video className="w-4 h-4" />
                 Start Video Call
               </Button>
-              <Button className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
+              <Button 
+                className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" 
+                variant="outline"
+                onClick={() => window.open(`tel:${counselor.phone}`)}
+              >
                 <Phone className="w-4 h-4" />
                 Call Now
               </Button>
-              <Button className="w-full gap-2 justify-start bg-green-600 hover:bg-green-700 text-white border-none">
+              <Button 
+                className="w-full gap-2 justify-start bg-green-600 hover:bg-green-700 text-white border-none"
+                onClick={() => window.open(`https://wa.me/${counselor.whatsapp?.replace(/[^0-9]/g, '')}`, '_blank')}
+              >
                 <MessageCircle className="w-4 h-4" />
                 WhatsApp
               </Button>
@@ -219,7 +275,11 @@ export default function MyCounselorPage() {
                 <Calendar className="w-4 h-4" />
                 Book Appointment
               </Button>
-              <Button className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
+              <Button 
+                className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" 
+                variant="outline"
+                onClick={() => window.open(`mailto:${counselor.email}`)}
+              >
                 <Mail className="w-4 h-4" />
                 Send Email
               </Button>

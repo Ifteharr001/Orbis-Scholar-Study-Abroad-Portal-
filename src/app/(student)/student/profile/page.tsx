@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { User, Mail, Phone, MapPin, GraduationCap, Bell, Shield, Eye, Moon, Globe, Camera, Save, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Mail, Phone, MapPin, GraduationCap, Bell, Shield, Eye, Moon, Globe, Camera, Save, LogOut, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,18 +17,21 @@ import { useSession, signOut } from "next-auth/react";
 export default function ProfileSettingsPage() {
   const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Profile state
   const [profile, setProfile] = useState({
-    fullName: session?.user?.name || "Rahim Ahmed",
-    email: session?.user?.email || "rahim.ahmed@email.com",
-    phone: "+880 1712-345678",
-    country: "Bangladesh",
-    programPreference: "Masters",
-    gender: "Male"
+    fullName: "",
+    email: "",
+    phone: "",
+    country: "",
+    programPreference: "",
+    gender: "",
+    image: ""
   });
 
-  // Settings state
+  // Settings state (Static for now, can be dynamic later)
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -39,15 +42,71 @@ export default function ProfileSettingsPage() {
     language: "en"
   });
 
-  const handleSaveProfile = () => {
-    toast.success("Profile updated successfully!");
-    setIsEditing(false);
+  // ১. ডাটা ফেচ করা
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/student/profile");
+        const data = await res.json();
+        
+        if (res.ok) {
+          setProfile({
+            fullName: data.fullName || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            country: data.country || "",
+            programPreference: data.programPreference || "Masters",
+            gender: data.gender || "Male",
+            image: data.image || ""
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (session) {
+      fetchProfile();
+    }
+  }, [session]);
+
+  // ২. ডাটা সেভ করা
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/student/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+
+      if (!res.ok) throw new Error("Failed to update");
+
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+      
+      // অপশনাল: সেশন আপডেট করার জন্য পেজ রিফ্রেশ বা update() মেথড কল করা যেতে পারে
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
     toast.success("Logged out successfully");
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -59,21 +118,17 @@ export default function ProfileSettingsPage() {
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-muted border border-border w-full justify-start overflow-x-auto">
-          <TabsTrigger value="profile" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <User className="w-4 h-4 mr-2" />
-            Profile
+          <TabsTrigger value="profile">
+            <User className="w-4 h-4 mr-2" /> Profile
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
+          <TabsTrigger value="notifications">
+            <Bell className="w-4 h-4 mr-2" /> Notifications
           </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <Shield className="w-4 h-4 mr-2" />
-            Security
+          <TabsTrigger value="security">
+            <Shield className="w-4 h-4 mr-2" /> Security
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <Eye className="w-4 h-4 mr-2" />
-            Preferences
+          <TabsTrigger value="preferences">
+            <Eye className="w-4 h-4 mr-2" /> Preferences
           </TabsTrigger>
         </TabsList>
 
@@ -100,9 +155,9 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center gap-6">
                 <div className="relative group">
                   <Avatar className="w-24 h-24 border-2 border-border">
-                    <AvatarImage src={session?.user?.image || "/placeholder.svg"} />
+                    <AvatarImage src={profile.image || session?.user?.image || "/placeholder.svg"} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                      {profile.fullName.split(' ').map(n => n[0]).join('')}
+                      {profile.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').substring(0,2) : "U"}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -114,7 +169,7 @@ export default function ProfileSettingsPage() {
                 <div>
                   <h3 className="text-xl font-semibold text-foreground">{profile.fullName}</h3>
                   <p className="text-muted-foreground">{profile.email}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Student ID: STU-2024-0847</p>
+                  <p className="text-sm text-muted-foreground mt-1">Role: Student</p>
                 </div>
               </div>
 
@@ -145,9 +200,8 @@ export default function ProfileSettingsPage() {
                     id="email"
                     type="email"
                     value={profile.email}
-                    onChange={(e) => setProfile({...profile, email: e.target.value})}
-                    disabled={!isEditing}
-                    className="bg-background border-border disabled:opacity-70"
+                    disabled={true} // Email usually shouldn't be editable easily
+                    className="bg-muted border-border opacity-70 cursor-not-allowed"
                   />
                 </div>
 
@@ -161,6 +215,7 @@ export default function ProfileSettingsPage() {
                     value={profile.phone}
                     onChange={(e) => setProfile({...profile, phone: e.target.value})}
                     disabled={!isEditing}
+                    placeholder="+880..."
                     className="bg-background border-border disabled:opacity-70"
                   />
                 </div>
@@ -176,7 +231,7 @@ export default function ProfileSettingsPage() {
                     disabled={!isEditing}
                   >
                     <SelectTrigger className="bg-background border-border disabled:opacity-70">
-                      <SelectValue />
+                      <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Bangladesh">Bangladesh</SelectItem>
@@ -199,7 +254,7 @@ export default function ProfileSettingsPage() {
                     disabled={!isEditing}
                   >
                     <SelectTrigger className="bg-background border-border disabled:opacity-70">
-                      <SelectValue />
+                      <SelectValue placeholder="Select Program" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Bachelors">Bachelors Degree</SelectItem>
@@ -221,7 +276,7 @@ export default function ProfileSettingsPage() {
                     disabled={!isEditing}
                   >
                     <SelectTrigger className="bg-background border-border disabled:opacity-70">
-                      <SelectValue />
+                      <SelectValue placeholder="Select Gender" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Male">Male</SelectItem>
@@ -234,9 +289,9 @@ export default function ProfileSettingsPage() {
 
               {isEditing && (
                 <div className="flex justify-end pt-4">
-                  <Button onClick={handleSaveProfile} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Save className="w-4 h-4" />
-                    Save Changes
+                  <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               )}
@@ -274,30 +329,6 @@ export default function ProfileSettingsPage() {
                   onCheckedChange={(checked) => setSettings({...settings, smsNotifications: checked})}
                 />
               </div>
-              <Separator className="bg-border" />
-
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5">
-                  <Label className="text-base font-medium">Application Updates</Label>
-                  <p className="text-sm text-muted-foreground">Get notified about your application status changes</p>
-                </div>
-                <Switch 
-                  checked={settings.applicationUpdates}
-                  onCheckedChange={(checked) => setSettings({...settings, applicationUpdates: checked})}
-                />
-              </div>
-              <Separator className="bg-border" />
-
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5">
-                  <Label className="text-base font-medium">Promotional Emails</Label>
-                  <p className="text-sm text-muted-foreground">Receive scholarship offers and news</p>
-                </div>
-                <Switch 
-                  checked={settings.promotionalEmails}
-                  onCheckedChange={(checked) => setSettings({...settings, promotionalEmails: checked})}
-                />
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -320,30 +351,6 @@ export default function ProfileSettingsPage() {
                   onCheckedChange={(checked) => setSettings({...settings, twoFactorAuth: checked})}
                 />
               </div>
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-medium">Change Password</Label>
-                  <p className="text-sm text-muted-foreground mb-4">Update your password regularly for better security</p>
-                </div>
-                <div className="grid gap-4 max-w-md">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" placeholder="Enter current password" className="bg-background border-border" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" placeholder="Enter new password" className="bg-background border-border" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" placeholder="Confirm new password" className="bg-background border-border" />
-                  </div>
-                  <Button className="w-fit bg-primary text-primary-foreground hover:bg-primary/90">Update Password</Button>
-                </div>
-              </div>
-
               <Separator className="bg-border" />
 
               <div className="pt-4">
@@ -376,47 +383,6 @@ export default function ProfileSettingsPage() {
                   checked={settings.darkMode}
                   onCheckedChange={(checked) => setSettings({...settings, darkMode: checked})}
                 />
-              </div>
-              <Separator className="bg-border" />
-
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5 flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <Label className="text-base font-medium">Language</Label>
-                    <p className="text-sm text-muted-foreground">Choose your preferred language</p>
-                  </div>
-                </div>
-                <Select 
-                  value={settings.language}
-                  onValueChange={(value) => setSettings({...settings, language: value})}
-                >
-                  <SelectTrigger className="w-40 bg-background border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="bn">বাংলা</SelectItem>
-                    <SelectItem value="hi">हिंदी</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Danger Zone */}
-          <Card className="border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10">
-            <CardHeader>
-              <CardTitle className="text-destructive">Danger Zone</CardTitle>
-              <CardDescription>Irreversible actions for your account</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Delete Account</p>
-                  <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
-                </div>
-                <Button variant="destructive">Delete Account</Button>
               </div>
             </CardContent>
           </Card>

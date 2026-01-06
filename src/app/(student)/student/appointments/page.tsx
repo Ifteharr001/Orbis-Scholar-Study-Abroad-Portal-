@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Clock, Video, MapPin, User, Plus, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Calendar, Clock, Video, MapPin, User, Plus, CheckCircle2, XCircle, CalendarDays, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,98 +13,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isPast, isFuture, isToday } from "date-fns";
 import { toast } from "sonner";
 
-// Data Definitions
-const upcomingAppointments = [
-  {
-    id: 1,
-    title: "University Selection Consultation",
-    counselor: "Sarah Johnson",
-    date: "2024-01-15",
-    time: "10:00 AM",
-    duration: "30 mins",
-    type: "video",
-    status: "confirmed",
-  },
-  {
-    id: 2,
-    title: "Visa Document Review",
-    counselor: "Michael Chen",
-    date: "2024-01-18",
-    time: "2:30 PM",
-    duration: "45 mins",
-    type: "in-person",
-    status: "pending",
-  },
-  {
-    id: 3,
-    title: "Scholarship Application Help",
-    counselor: "Sarah Johnson",
-    date: "2024-01-22",
-    time: "11:00 AM",
-    duration: "30 mins",
-    type: "video",
-    status: "confirmed",
-  },
-];
-
-const pastAppointments = [
-  {
-    id: 4,
-    title: "Initial Consultation",
-    counselor: "Sarah Johnson",
-    date: "2024-01-05",
-    time: "9:00 AM",
-    duration: "60 mins",
-    type: "video",
-    status: "completed",
-  },
-  {
-    id: 5,
-    title: "Document Verification",
-    counselor: "Michael Chen",
-    date: "2024-01-02",
-    time: "3:00 PM",
-    duration: "30 mins",
-    type: "in-person",
-    status: "completed",
-  },
-  {
-    id: 6,
-    title: "IELTS Preparation Tips",
-    counselor: "Sarah Johnson",
-    date: "2023-12-28",
-    time: "10:30 AM",
-    duration: "45 mins",
-    type: "video",
-    status: "cancelled",
-  },
-];
+interface Appointment {
+  _id: string;
+  topic: string;
+  counselorId: {
+    _id: string;
+    name: string;
+    image?: string;
+  };
+  date: string;
+  time: string;
+  duration: string;
+  type: "video" | "in-person";
+  status: "confirmed" | "pending" | "completed" | "cancelled";
+  meetingLink?: string;
+}
 
 const timeSlots = [
   "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
   "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM"
 ];
 
-// Helper Component for Badges
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "confirmed":
-      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400">Confirmed</Badge>;
-    case "pending":
-      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</Badge>;
-    case "completed":
-      return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400">Completed</Badge>;
-    case "cancelled":
-      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">Cancelled</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
+    case "confirmed": return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Confirmed</Badge>;
+    case "pending": return <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</Badge>;
+    case "completed": return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Completed</Badge>;
+    case "cancelled": return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Cancelled</Badge>;
+    default: return <Badge variant="secondary">{status}</Badge>;
   }
 };
 
 export default function AppointmentsPage() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isBooking, setIsBooking] = useState(false);
+
+  // Booking Form States
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
@@ -112,23 +60,88 @@ export default function AppointmentsPage() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [notes, setNotes] = useState("");
 
-  const handleBookAppointment = () => {
+  const fetchAppointments = useCallback(async () => {
+    try {
+      const res = await fetch("/api/student/appointments");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAppointments(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch appointments", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  const handleBookAppointment = async () => {
     if (!selectedDate || !selectedTime || !selectedType || !selectedTopic) {
       toast.error("Please fill in all required fields");
       return;
     }
-    toast.success("Appointment booked successfully!");
-    setIsBookingOpen(false);
-    setSelectedDate(undefined);
-    setSelectedTime("");
-    setSelectedType("");
-    setSelectedTopic("");
-    setNotes("");
+
+    setIsBooking(true);
+
+    try {
+      const res = await fetch("/api/student/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: selectedTopic === "general" ? "General Consultation" : 
+                 selectedTopic === "university" ? "University Selection" : 
+                 selectedTopic === "visa" ? "Visa Guidance" : 
+                 selectedTopic === "scholarship" ? "Scholarship Help" : "Document Review",
+          type: selectedType,
+          date: selectedDate,
+          time: selectedTime,
+          notes
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+
+      toast.success("Appointment booked successfully!");
+      
+      setIsBookingOpen(false);
+      setSelectedDate(undefined);
+      setSelectedTime("");
+      setSelectedType("");
+      setSelectedTopic("");
+      setNotes("");
+      
+      fetchAppointments();
+
+    } catch (error) {
+      // ✅ ফিক্স: এখানে error টাইপ চেক করা হয়েছে
+      const errorMessage = error instanceof Error ? error.message : "Failed to book appointment";
+      toast.error(errorMessage);
+    } finally {
+      setIsBooking(false);
+    }
   };
+
+  const upcomingAppointments = appointments.filter(app => {
+    const appDate = new Date(app.date);
+    return (isFuture(appDate) || isToday(appDate)) && app.status !== "completed" && app.status !== "cancelled";
+  });
+
+  const pastAppointments = appointments.filter(app => {
+    const appDate = new Date(app.date);
+    return (isPast(appDate) && !isToday(appDate)) || app.status === "completed" || app.status === "cancelled";
+  });
+
+  if (loading) {
+    return <div className="flex justify-center h-[60vh] items-center"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>;
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Appointments</h1>
@@ -222,7 +235,7 @@ export default function AppointmentsPage() {
               <div className="space-y-2">
                 <Label>Additional Notes</Label>
                 <Textarea 
-                  placeholder="Any specific topics or questions you want to discuss..."
+                  placeholder="Any specific topics or questions..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="bg-background border-border"
@@ -231,7 +244,9 @@ export default function AppointmentsPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsBookingOpen(false)}>Cancel</Button>
-              <Button onClick={handleBookAppointment}>Book Appointment</Button>
+              <Button onClick={handleBookAppointment} disabled={isBooking}>
+                {isBooking ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Book Appointment"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -277,18 +292,14 @@ export default function AppointmentsPage() {
       {/* Appointments Tabs */}
       <Tabs defaultValue="upcoming" className="space-y-6">
         <TabsList className="bg-muted border border-border">
-          <TabsTrigger value="upcoming" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            Upcoming ({upcomingAppointments.length})
-          </TabsTrigger>
-          <TabsTrigger value="past" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            Past ({pastAppointments.length})
-          </TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming ({upcomingAppointments.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({pastAppointments.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-4">
           {upcomingAppointments.length > 0 ? (
             upcomingAppointments.map((appointment) => (
-              <AppointmentCard key={appointment.id} appointment={appointment} />
+              <AppointmentCard key={appointment._id} appointment={appointment} />
             ))
           ) : (
             <Card className="border-border">
@@ -303,17 +314,20 @@ export default function AppointmentsPage() {
         </TabsContent>
 
         <TabsContent value="past" className="space-y-4">
-          {pastAppointments.map((appointment) => (
-            <AppointmentCard key={appointment.id} appointment={appointment} showActions={false} />
-          ))}
+          {pastAppointments.length > 0 ? (
+            pastAppointments.map((appointment) => (
+              <AppointmentCard key={appointment._id} appointment={appointment} showActions={false} />
+            ))
+          ) : (
+            <p className="text-center text-muted-foreground py-10">No past appointments found.</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-// Sub-component for rendering individual appointment cards
-function AppointmentCard({ appointment, showActions = true }: { appointment: typeof upcomingAppointments[0]; showActions?: boolean }) {
+function AppointmentCard({ appointment, showActions = true }: { appointment: Appointment; showActions?: boolean }) {
   return (
     <Card className="hover:shadow-md transition-shadow border-border">
       <CardContent className="p-5">
@@ -324,10 +338,10 @@ function AppointmentCard({ appointment, showActions = true }: { appointment: typ
               <span className="text-xs uppercase">{format(new Date(appointment.date), "MMM")}</span>
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold text-foreground">{appointment.title}</h3>
+              <h3 className="font-semibold text-foreground">{appointment.topic}</h3>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
-                <span>{appointment.counselor}</span>
+                <span>{appointment.counselorId?.name || "Counselor"}</span>
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
@@ -335,11 +349,7 @@ function AppointmentCard({ appointment, showActions = true }: { appointment: typ
                   <span>{appointment.time}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  {appointment.type === "video" ? (
-                    <Video className="w-4 h-4" />
-                  ) : (
-                    <MapPin className="w-4 h-4" />
-                  )}
+                  {appointment.type === "video" ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
                   <span className="capitalize">{appointment.type === "video" ? "Video Call" : "In-Person"}</span>
                 </div>
                 <span className="text-muted-foreground hidden sm:inline">•</span>
