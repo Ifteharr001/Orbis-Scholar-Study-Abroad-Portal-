@@ -47,23 +47,35 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
+          image: user.image, // ✅ ১. ইমেজটি এখানে পাস করা হলো
         };
       },
     }),
   ],
   callbacks: {
-    // এখানে এখন আর 'any' টাইপ দেওয়ার দরকার নেই
-    async jwt({ token, user }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user, trigger, session }: any) {
+      // প্রথমবার লগিন করার সময়
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.image = user.image; // ✅ ইমেজ টোকেনে রাখা হলো
       }
+
+      // ✅ ২. যখন ক্লায়েন্ট সাইড থেকে update() কল করা হবে
+      if (trigger === "update" && session) {
+        token.name = session.user.name;
+        token.image = session.user.image;
+      }
+
       return token;
     },
-    async session({ session, token }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: any) {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.id;
+        session.user.image = token.image; // ✅ ৩. টোকেন থেকে ইমেজ সেশনে দেওয়া হলো
       }
       return session;
     },

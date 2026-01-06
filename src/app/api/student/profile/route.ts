@@ -21,8 +21,8 @@ export async function GET() {
       phone: user.phone || "",
       country: user.country || "",
       gender: user.gender || "",
-      programPreference: user.programPreference || "Masters", // আপনার মডেলে এই ফিল্ড থাকতে হবে, না থাকলে ডিফল্ট দেখাবে
-      image: user.image || ""
+      programPreference: user.programPreference || "Masters",
+      image: user.image || "" // ✅ ডাটাবেস থেকে ইমেজ পাঠানো হচ্ছে
     });
 
   } catch (error) {
@@ -30,14 +30,15 @@ export async function GET() {
   }
 }
 
-// ২. প্রোফাইল আপডেট করা
+// ২. প্রোফাইল আপডেট করা (FIXED)
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { fullName, phone, country, gender, programPreference } = body;
+    
+    const { fullName, phone, country, gender, programPreference, image } = body;
 
     await connect();
 
@@ -49,8 +50,8 @@ export async function PATCH(req: Request) {
         phone, 
         country, 
         gender,
-        programPreference 
-        // নোট: আপনার User মডেলে 'programPreference' ফিল্ডটি যোগ করে নিয়েন যদি না থাকে
+        programPreference,
+        image // ✅ এখন ডাটাবেসে ইমেজ সেভ হবে
       },
       { new: true }
     );
@@ -58,6 +59,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ message: "Profile updated successfully", user: updatedUser });
 
   } catch (error) {
+    console.error("Profile Update Error:", error);
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }

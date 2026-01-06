@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { User, Mail, Phone, MapPin, GraduationCap, Bell, Shield, Eye, Moon, Globe, Camera, Save, LogOut, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,16 @@ import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 
 export default function ProfileSettingsPage() {
-  const { data: session } = useSession();
+  // ✅ ১. update মেথডটি বের করে আনা হলো
+  const { data: session, update } = useSession();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
+  // ✅ ২. ফাইল ইনপুটের জন্য রেফারেন্স তৈরি
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Profile state
   const [profile, setProfile] = useState({
     fullName: "",
@@ -31,7 +36,7 @@ export default function ProfileSettingsPage() {
     image: ""
   });
 
-  // Settings state (Static for now, can be dynamic later)
+  // Settings state
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -42,7 +47,7 @@ export default function ProfileSettingsPage() {
     language: "en"
   });
 
-  // ১. ডাটা ফেচ করা
+  // ডাটা ফেচ করা
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -72,7 +77,25 @@ export default function ProfileSettingsPage() {
     }
   }, [session]);
 
-  // ২. ডাটা সেভ করা
+  // ✅ ৩. ছবি সিলেক্ট করার ফাংশন
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // ফাইলকে Base64 স্ট্রিং-এ কনভার্ট করা হচ্ছে প্রিভিউ এবং সেভ করার জন্য
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile((prev) => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ✅ ৪. ক্যামেরা বাটনে ক্লিক করলে ফাইল ইনপুট ট্রিগার হবে
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  // ডাটা সেভ করা এবং সেশন আপডেট করা
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
@@ -84,10 +107,19 @@ export default function ProfileSettingsPage() {
 
       if (!res.ok) throw new Error("Failed to update");
 
+      // ✅ ৫. সেশন আপডেট করা (যাতে সাইডবারে নাম/ছবি সাথে সাথে চেঞ্জ হয়)
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          name: profile.fullName,
+          image: profile.image, // ছবিও আপডেট হবে
+        },
+      });
+
       toast.success("Profile updated successfully!");
       setIsEditing(false);
       
-      // অপশনাল: সেশন আপডেট করার জন্য পেজ রিফ্রেশ বা update() মেথড কল করা যেতে পারে
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -151,6 +183,16 @@ export default function ProfileSettingsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              
+              {/* ✅ ৬. লুকানো ফাইল ইনপুট */}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+
               {/* Avatar Section */}
               <div className="flex items-center gap-6">
                 <div className="relative group">
@@ -160,8 +202,14 @@ export default function ProfileSettingsPage() {
                       {profile.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').substring(0,2) : "U"}
                     </AvatarFallback>
                   </Avatar>
+                  
+                  {/* ✅ ৭. ক্যামেরা বাটনে ক্লিক ইভেন্ট যোগ করা হয়েছে */}
                   {isEditing && (
-                    <button className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+                    <button 
+                      onClick={triggerFileInput}
+                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
+                      title="Upload Photo"
+                    >
                       <Camera className="w-4 h-4" />
                     </button>
                   )}
@@ -200,7 +248,7 @@ export default function ProfileSettingsPage() {
                     id="email"
                     type="email"
                     value={profile.email}
-                    disabled={true} // Email usually shouldn't be editable easily
+                    disabled={true} 
                     className="bg-muted border-border opacity-70 cursor-not-allowed"
                   />
                 </div>
