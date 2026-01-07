@@ -13,11 +13,10 @@ import { Check, X, Download, HelpCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
-// ডাটা টাইপ ইন্টারফেস
 interface Offer {
-  _id: string; // MongoDB ID
+  _id: string;
   universityName: string;
-  course: string;
+  programName: string;
   status: string;
   scholarship: string;
   expiryDate: string;
@@ -30,7 +29,7 @@ interface Offer {
 }
 
 export default function OffersPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   
   // ১. স্টেট ম্যানেজমেন্ট
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -38,16 +37,25 @@ export default function OffersPage() {
   const [selectedOffers, setSelectedOffers] = useState<string[]>([]); // number[] থেকে string[] করা হলো (_id এর জন্য)
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
 
-  // ২. ডাটা ফেচ করা
+// ২. ডাটা ফেচ করা
   useEffect(() => {
     const fetchOffers = async () => {
-      if (isAuthenticated) {
+      // এখানে user?.email আপনার অথেনটিকেশন স্টেট থেকে আসতে হবে
+      // যদি আপনার ভেরিয়েবলের নাম ভিন্ন হয় (যেমন session.user.email), তবে সেটি ব্যবহার করুন
+      if (isAuthenticated && user?.email) { 
         try {
-          const res = await fetch("/api/student/offers");
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setOffers(data);
+          // ১. URL-এ ইমেইল যোগ করা হলো
+          const res = await fetch(`/api/student/offers?email=${user.email}`);
+          
+          const result = await res.json(); // নাম পরিবর্তন করে result দিলাম বোঝার সুবিধার জন্য
+
+          // ২. রেসপন্স স্ট্রাকচার অনুযায়ী ডাটা সেট করা (backend returns { data: [...] })
+          if (result.success && Array.isArray(result.data)) {
+            setOffers(result.data);
+          } else {
+             console.error("Invalid data format:", result);
           }
+
         } catch (error) {
           console.error("Failed to fetch offers", error);
         } finally {
@@ -57,7 +65,8 @@ export default function OffersPage() {
     };
 
     fetchOffers();
-  }, [isAuthenticated]);
+  // dependency array-তে user.email যোগ করা হলো যাতে ইমেইল লোড হলে আবার কল হয়
+  }, [isAuthenticated, user?.email]);
 
   // স্ট্যাটাস কালার হেল্পার
   const getStatusColor = (status: string) => {
@@ -142,7 +151,7 @@ export default function OffersPage() {
                   />
                   <div>
                     <h2 className="text-base font-semibold text-foreground">{offer.universityName}</h2>
-                    <p className="text-sm text-muted-foreground">{offer.course}</p>
+                    <p className="text-sm text-muted-foreground">{offer.programName}</p>
                   </div>
                 </div>
                 <span className={cn("text-sm font-medium", getStatusColor(offer.status))}>
@@ -167,30 +176,43 @@ export default function OffersPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 ml-7">
-                <Button 
-                  size="sm" 
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
-                >
-                  Accept Offer
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-muted-foreground text-xs hover:text-foreground px-2 h-8"
-                >
-                  <Download className="w-3 h-3 mr-1.5" />
-                  Letter
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-cyan-600 dark:text-cyan-400 text-xs hover:bg-cyan-50 dark:hover:bg-cyan-900/20 px-2 h-8"
-                >
-                  <HelpCircle className="w-3 h-3 mr-1.5" />
-                  Clarify
-                </Button>
-              </div>
+<div className="flex flex-wrap items-center gap-3 ml-7">
+  
+  {/* ১. Accept Offer Button */}
+  <Button 
+    size="sm" 
+    disabled={!offer.status.includes("Offer") && !offer.status.includes("Approved")}
+    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
+  >
+    Accept Offer
+  </Button>
+
+  {/* ২. Letter (Download) Button */}
+  <Button 
+    variant="ghost" 
+    size="sm" 
+    // লজিক: অফার না থাকলে লেটার থাকার কথা না
+    disabled={!offer.status.includes("Offer") && !offer.status.includes("Approved")}
+    className="text-muted-foreground text-xs hover:text-foreground px-2 h-8"
+  >
+    <Download className="w-3 h-3 mr-1.5" />
+    Letter
+  </Button>
+
+  {/* ৩. Clarify Button */}
+  <Button 
+    variant="ghost" 
+    size="sm"
+    // লজিক: এটা চাইলে সব সময় অন রাখতে পারেন, অথবা অফার পেলেই অন করতে পারেন
+    // আমি এখানে অফার পেলেই অন করার লজিক দিলাম
+    disabled={!offer.status.includes("Offer") && !offer.status.includes("Approved")} 
+    className="text-cyan-600 dark:text-cyan-400 text-xs hover:bg-cyan-50 dark:hover:bg-cyan-900/20 px-2 h-8"
+  >
+    <HelpCircle className="w-3 h-3 mr-1.5" />
+    Clarify
+  </Button>
+  
+</div>
             </div>
           ))}
         </div>
@@ -219,7 +241,7 @@ export default function OffersPage() {
                 <tr className="border-b border-border">
                   <td className="py-3 px-4 text-sm text-muted-foreground">Program</td>
                   {selectedOffersData.map((offer) => (
-                    <td key={offer._id} className="py-3 px-4 text-sm text-foreground">{offer.course}</td>
+                    <td key={offer._id} className="py-3 px-4 text-sm text-foreground">{offer.programName}</td>
                   ))}
                 </tr>
                 <tr className="border-b border-border">

@@ -1,26 +1,38 @@
-import mongoose from "mongoose";
+import { NextResponse } from "next/server";
+import { connect } from "@/lib/db";
+import Application from "@/models/Application";
 
-const ApplicationSchema = new mongoose.Schema({
-  studentEmail: { type: String, required: true },
-  universityName: { type: String, required: true },
-  course: { type: String, required: true },
-  status: { 
-    type: String, 
-    enum: ["Applied", "In Review", "Offer Received", "Conditional Offer", "Visa Processing", "Enrolled", "Rejected", "Waiting List"], 
-    default: "Applied" 
-  },
-  appliedDate: { type: Date, default: Date.now },
-  applicationId: { type: String },
-  
-  // ✅ নতুন ফিল্ডস (Offers & Scholarships এর জন্য)
-  scholarship: { type: String, default: "N/A" },
-  tuitionFee: { type: String, default: "N/A" },
-  expiryDate: { type: String, default: "N/A" },
-  location: { type: String, default: "N/A" },
-  duration: { type: String, default: "N/A" },
-  startDate: { type: String, default: "N/A" },
-  accommodation: { type: String, default: "Not specified" },
-  workPermit: { type: String, default: "No" },
-});
+// GET Method: অফার লোড করার জন্য
+export async function GET(req: Request) {
+  try {
+    await connect();
 
-export default mongoose.models.Application || mongoose.model("Application", ApplicationSchema);
+    // URL থেকে ইমেইল বের করা (যেমন: ?email=student@example.com)
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get("email");
+
+    if (!email) {
+      return NextResponse.json(
+        { message: "Student email is required" },
+        { status: 400 }
+      );
+    }
+
+    const applications = await Application.find({ studentEmail: email }).sort({ createdAt: -1 });
+
+    return NextResponse.json({ 
+      success: true, 
+      data: applications 
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error("Fetch Offers Error:", error);
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown server error";
+
+    return NextResponse.json(
+      { message: "Server Error", error: errorMessage },
+      { status: 500 }
+    );
+  }
+}

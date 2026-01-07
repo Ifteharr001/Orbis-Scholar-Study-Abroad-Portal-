@@ -120,11 +120,11 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
               <h2 className="text-2xl font-bold text-primary mb-6">Programs</h2>
               <div className="space-y-4">
                 {universityData.programs && universityData.programs.length > 0 ? (
-                  // ✅ এখানে ': any' সরিয়ে ফেলা হয়েছে। TS অটোমেটিক টাইপ বুঝবে।
                   universityData.programs.map((program, index) => (
                     <ProgramCard
                       key={index}
                       name={program.name}
+                      universityName={universityData.name}
                       degree={program.degree}
                       language={program.language}
                       duration={program.duration}
@@ -236,7 +236,9 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
             <section id="admission">
               <h2 className="text-2xl font-bold text-primary mb-6">Admission Process</h2>
               <div className="space-y-6">
-                {/* Application Fee */}
+                {/* 
+                
+              ication Fee */}
                 <div className="bg-card rounded-xl border border-border p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <CreditCard className="h-5 w-5 text-primary" />

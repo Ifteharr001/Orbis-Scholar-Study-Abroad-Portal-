@@ -121,12 +121,15 @@ export default function UniversityProgramPage() {
               </CardContent>
 
               <CardFooter className="pt-2 mt-auto">
-                {/* ✅ এখানে বাটনটি পরিবর্তন করা হয়েছে */}
-                <Link href={`/university/${program.universityId}`} className="w-full">
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    View Details <Eye className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+               <Link 
+  // ✅ কুয়েরি প্যারামিটার হিসেবে ডাটা পাঠানো হচ্ছে
+  href={`/student/apply?program=${encodeURIComponent(program.program)}&university=${encodeURIComponent(program.university)}`} 
+  className="w-full"
+>
+  <Button className="w-full">
+    Apply No
+  </Button>
+</Link>
               </CardFooter>
             </Card>
           ))}
