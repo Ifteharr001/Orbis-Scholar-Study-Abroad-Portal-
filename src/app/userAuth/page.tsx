@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-// ✅ ১. useSearchParams যোগ করা হয়েছে
+import { useState, Suspense } from "react"; // ✅ ১. Suspense ইম্পোর্ট করা হয়েছে
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -59,7 +58,8 @@ const countryCodes = [
   { code: "+44", country: "UK" },
 ];
 
-const AuthPage = () => {
+// ✅ ২. মেইন লজিক কম্পোনেন্ট (নাম পরিবর্তন করে AuthForm করা হয়েছে)
+const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,8 +76,6 @@ const AuthPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const router = useRouter();
-  
-  // ✅ ২. URL থেকে callbackUrl ধরা হচ্ছে
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/student/dashboard";
 
@@ -142,7 +140,6 @@ const AuthPage = () => {
             description: "Redirecting...",
           });
           
-          // ✅ ৪. ফাস্ট রিডাইরেক্ট
           router.refresh();
           router.push(callbackUrl);
         }
@@ -416,6 +413,15 @@ const AuthPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// ✅ ৩. মেইন পেজ যা সাসপেন্স দিয়ে র‍্যাপ করা হয়েছে
+const AuthPage = () => {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <AuthForm />
+    </Suspense>
   );
 };
 
