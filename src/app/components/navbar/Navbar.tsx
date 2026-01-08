@@ -27,10 +27,11 @@ const Navbar = () => {
   const [openMobileSubmenu, setOpenMobileSubmenu] = useState<string | null>(null);
 
   const services = [
-    { title: "Admission Assistance", href: "/services/admission", description: "Complete guidance for university admissions" },
-    { title: "Visa Support", href: "/services/visa", description: "Expert visa application assistance" },
-    { title: "Scholarship Guidance", href: "/services/scholarship", description: "Find and apply for scholarships" },
-    { title: "Career Counseling", href: "/services/career", description: "Professional career guidance" },
+    { title: "All Services", href: "/services", description: "View Our All Services" },
+    { title: "Admission Assistance", href: "/services/695fce0a98bd3056f18d1c94", description: "Complete guidance for university admissions" },
+    { title: "Visa Support", href: "/services/695fce5f98bd3056f18d1c99", description: "Expert visa application assistance" },
+    { title: "Scholarship Guidance", href: "/services/695fce6c98bd3056f18d1c9e", description: "Find and apply for scholarships" },
+    
   ];
   const toggleMobileSubmenu = (menu: string) => {
     setOpenMobileSubmenu(openMobileSubmenu === menu ? null : menu);
