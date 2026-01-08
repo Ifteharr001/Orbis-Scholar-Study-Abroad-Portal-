@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+// ✅ ১. useSearchParams যোগ করা হয়েছে
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
@@ -21,7 +22,7 @@ import {
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// Zod স্কিমা (আপনার কোডই ঠিক আছে)
+// Zod স্কিমা
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -41,7 +42,6 @@ const signupSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// ... (Country & Codes Arrays - Same as your code) ...
 const countries = [
   "India", "Nepal", "Bangladesh", "Pakistan", "Sri Lanka", "Nigeria", 
   "Kenya", "Ghana", "Philippines", "Vietnam", "Indonesia", "Malaysia",
@@ -60,7 +60,6 @@ const countryCodes = [
 ];
 
 const AuthPage = () => {
-  // ... (State Variables - Same as your code) ...
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,8 +76,11 @@ const AuthPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const router = useRouter();
+  
+  // ✅ ২. URL থেকে callbackUrl ধরা হচ্ছে
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/student/dashboard";
 
-  // ... (validateForm - Same as your code) ...
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -127,22 +129,24 @@ const AuthPage = () => {
           email,
           password,
           loginType: "student",
-          callbackUrl: "/student/dashboard", 
+          callbackUrl: callbackUrl, 
         });
 
        if (result?.error) {
           toast.error("Login failed", {
             description: result.error || "Invalid email or password",
           });
-          setIsSubmitting(false); // লোডিং বন্ধ করুন
+          setIsSubmitting(false);
         } else {
           toast.success("Login Successful!", {
-            description: "Redirecting to dashboard...",
+            description: "Redirecting...",
           });
-  window.location.replace("/student/dashboard");
-}
+          
+          // ✅ ৪. ফাস্ট রিডাইরেক্ট
+          router.refresh();
+          router.push(callbackUrl);
+        }
       } else {
-        // ... (Registration logic remains same) ...
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -184,7 +188,6 @@ const AuthPage = () => {
   };
 
   return (
-    // ... (Your JSX remains exactly the same) ...
     <div className="min-h-screen flex bg-background">
       {/* ... Left Side ... */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
@@ -217,7 +220,6 @@ const AuthPage = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* ... Form Fields (Same as your code) ... */}
             {!isLogin && (
               <>
                 <div className="space-y-1.5">

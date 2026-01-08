@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface ProgramCardProps {
   name: string;
-  universityName: string; // University Name গ্রহণ করার জন্য
+  universityName: string;
   degree: string;
   language: string;
   duration: string;
@@ -33,24 +33,21 @@ const ProgramCard = ({
   const { isAuthenticated } = useAuth();
 
   const handleApplyClick = () => {
-    // ১. কাস্টম অন-ক্লিক থাকলে সেটা রান করবে
     if (onApply) {
       onApply();
       return;
     }
 
-    // ২. লগইন না থাকলে লগইন পেজে পাঠাবে
-    if (!isAuthenticated) {
-      router.push("/userAuth");
-    } else {
-      // ৩. লগইন থাকলে অ্যাপ্লাই পেজে পাঠাবে এবং সাথে ডেটা নিয়ে যাবে
-      // URLSearchParams ব্যবহার করা হয়েছে যাতে স্পেস বা স্পেশাল ক্যারেক্টার নিয়ে সমস্যা না হয়
-      const params = new URLSearchParams({
-        programName: name,
-        universityName: universityName,
-      });
+    const params = new URLSearchParams({
+      programName: name,
+      universityName: universityName,
+    });
+    const targetUrl = `/apply?${params.toString()}`;
 
-      router.push(`/apply?${params.toString()}`);
+    if (!isAuthenticated) {
+      router.push(`/userAuth?callbackUrl=${encodeURIComponent(targetUrl)}`);
+    } else {
+      router.push(targetUrl);
     }
   };
 
@@ -58,10 +55,8 @@ const ProgramCard = ({
     <div className="rounded-xl border border-border bg-card p-6 hover:shadow-lg transition-shadow">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
-          {/* Program Name */}
           <h3 className="text-lg font-semibold text-foreground mb-1">{name}</h3>
           
-          {/* University Name (Show here) */}
           <p className="text-sm text-muted-foreground mb-3 font-medium">
             {universityName}
           </p>

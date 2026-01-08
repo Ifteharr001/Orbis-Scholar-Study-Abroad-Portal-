@@ -11,71 +11,97 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        loginType: { label: "Login Type", type: "text" }, 
+        loginType: { label: "Login Type", type: "text" },
       },
       async authorize(credentials) {
+        // ১. লগইন শুরু
+        console.log("🟢 Login Attempt for:", credentials?.email);
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Please enter an email and password");
         }
 
-        await connect();
+        try {
+          // ২. ডাটাবেস কানেকশন
+          console.log("⏳ Connecting to DB...");
+          await connect();
+          console.log("✅ DB Connected!");
 
-        const user = await User.findOne({ email: credentials.email });
+          // ৩. ইউজার খোঁজা
+          const user = await User.findOne({ email: credentials.email });
+          
+          if (!user) {
+            console.log("❌ User not found in DB");
+            throw new Error("No user found with this email");
+          }
+          console.log("✅ User found:", user.email);
 
-        if (!user) {
-          throw new Error("No user found with this email");
+          // ৪. রোল ভ্যালিডেশন
+          if (credentials.loginType === "student" && user.role !== "student") {
+            throw new Error("This is a Partner account. Please login from Partner portal.");
+          }
+          
+          if (credentials.loginType === "partner" && user.role !== "partner") {
+            throw new Error("This is a Student account. Please login from Student portal.");
+          }
+
+          // ৫. পাসওয়ার্ড চেক
+          console.log("⏳ Verifying password...");
+          const isValid = await bcrypt.compare(credentials.password, user.password as string);
+
+          if (!isValid) {
+            console.log("❌ Invalid Password");
+            throw new Error("Invalid password");
+          }
+
+          console.log("🎉 Login Successful!");
+
+          // Return user object
+          // ❌ Note: এখানে image রিটার্ন করছি না, কারণ এটা কুকি সাইজ বাড়িয়ে দেয়
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          console.error("🛑 Authorization Error:", error.message);
+          throw new Error(error.message || "Internal Server Error");
         }
-
-        // Role Validation based on Portal
-        if (credentials.loginType === "student" && user.role !== "student") {
-          throw new Error("This is a Partner account. Please login from Partner portal.");
-        }
-        
-        if (credentials.loginType === "partner" && user.role !== "partner") {
-          throw new Error("This is a Student account. Please login from Student portal.");
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password as string);
-
-        if (!isValid) {
-          throw new Error("Invalid password");
-        }
-
-        // Return user object (NextAuth will match this with the User type in d.ts)
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          image: user.image, // ✅ ১. ইমেজটি এখানে পাস করা হলো
-        };
       },
     }),
   ],
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user, trigger, session }: any) {
-      // প্রথমবার লগিন করার সময়
+      // ১. প্রথমবার লগইন করার সময়
       if (user) {
         token.role = user.role;
         token.id = user.id;
-        token.image = user.image; // ✅ ইমেজ টোকেনে রাখা হলো
+        // token.image = user.image; // ❌ এই লাইনটি বাদ দিয়েছি (Cookie overflow ফিক্স)
       }
 
-      // ✅ ২. যখন ক্লায়েন্ট সাইড থেকে update() কল করা হবে
+      // ২. প্রোফাইল আপডেট করার সময় (trigger === "update")
       if (trigger === "update" && session) {
-        token.name = session.user.name;
-        token.image = session.user.image;
+        // ✅ শুধু নাম আপডেট হবে, ইমেজ নয়
+        if (session.user.name) {
+          token.name = session.user.name;
+        }
+        
+        // ❌ আগে এই লাইনটি ছিল যা এরর দিচ্ছিল:
+        // token.image = session.user.image;  <--- (REMOVED)
       }
-
       return token;
     },
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: any) {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.id;
-        session.user.image = token.image; // ✅ ৩. টোকেন থেকে ইমেজ সেশনে দেওয়া হলো
+        // session.user.image = token.image; // ❌ সেশনেও ইমেজ দরকার নেই
       }
       return session;
     },
@@ -87,6 +113,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/userAuth", 
   },
+  debug: process.env.NODE_ENV === "development",
 };
 
 const handler = NextAuth(authOptions);

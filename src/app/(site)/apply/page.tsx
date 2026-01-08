@@ -25,8 +25,10 @@ const ApplyForm = () => {
   const urlProgramName = searchParams.get("programName") || ""; 
   const urlUniversityName = searchParams.get("universityName") || "";
 
+  // ✅ ফিক্স: isSubmitting স্টেট কম্পোনেন্টের ভেতরে আনা হয়েছে
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // ✅ ফিক্স ২: useEffect বাদ দিয়েছি। সরাসরি useState-এ ভ্যালু সেট করেছি।
-  // এতে Infinite Loop এরর হবে না এবং পেজ ফাস্ট লোড হবে।
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -46,9 +48,9 @@ const ApplyForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
-      // লোডিং টোস্ট দেখানো যেতে পারে (অপশনাল)
       const promise = fetch("/api/student/apply", {
         method: "POST",
         headers: {
@@ -69,12 +71,15 @@ const ApplyForm = () => {
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
   return (
     <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} disabled={isSubmitting}>
             <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -100,6 +105,7 @@ const ApplyForm = () => {
                 value={formData.firstName}
                 onChange={(e) => handleInputChange("firstName", e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -109,6 +115,7 @@ const ApplyForm = () => {
                 value={formData.lastName}
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -118,6 +125,7 @@ const ApplyForm = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -127,12 +135,13 @@ const ApplyForm = () => {
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
              <div className="space-y-2">
               <Label htmlFor="gender">Gender</Label>
               <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
-                <SelectTrigger>
+                <SelectTrigger disabled={isSubmitting}>
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,7 +154,7 @@ const ApplyForm = () => {
              <div className="space-y-2">
               <Label htmlFor="country">Country *</Label>
               <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
-                <SelectTrigger>
+                <SelectTrigger disabled={isSubmitting}>
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,6 +170,7 @@ const ApplyForm = () => {
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 rows={2}
+                disabled={isSubmitting}
               />
             </div>
           </CardContent>
@@ -186,7 +196,7 @@ const ApplyForm = () => {
             <div className="space-y-2 sm:col-span-2">
               <Label>Select Intake *</Label>
               <Select onValueChange={(value) => handleInputChange("intakePreference", value)}>
-                <SelectTrigger>
+                <SelectTrigger disabled={isSubmitting}>
                   <SelectValue placeholder="Select preferred intake" />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,8 +209,10 @@ const ApplyForm = () => {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit">Submit Application</Button>
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>Cancel</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Application"}
+          </Button>
         </div>
       </form>
     </div>

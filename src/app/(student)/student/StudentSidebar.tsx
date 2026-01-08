@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react"; // ✅ useEffect যুক্ত করা হয়েছে
 import { 
   LayoutDashboard, 
   FileText, 
@@ -17,7 +18,6 @@ import {
   HelpCircle 
 } from "lucide-react";
 import { cn } from "@/lib/utils"; 
-// ✅ Avatar কম্পোনেন্ট ইম্পোর্ট করতে হবে (shadcn/ui থেকে)
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const menuItems = [
@@ -37,6 +37,30 @@ const menuItems = [
 const StudentSidebar = () => {
   const pathname = usePathname();
   const { data: session } = useSession(); 
+  
+  // ✅ ১. স্টেট ভেরিয়েবলগুলো কম্পোনেন্টের ভেতরে আনা হয়েছে
+  const [userImage, setUserImage] = useState("");
+  const [userName, setUserName] = useState("");
+
+  // ✅ ২. ডাটাবেস থেকে লেটেস্ট ছবি ও নাম আনার জন্য useEffect
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (session?.user?.email) {
+        try {
+          const res = await fetch("/api/student/me");
+          const data = await res.json();
+          
+          if (data.image) setUserImage(data.image);
+          if (data.name) setUserName(data.name);
+
+        } catch (error) {
+          console.error("Failed to load profile data", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [session]); // session লোড হলে বা পাল্টালে এটি রান হবে
 
   return (
     <div className="h-full w-full bg-background border-r border-border flex flex-col">
@@ -80,28 +104,35 @@ const StudentSidebar = () => {
         </ul>
       </nav>
 
-      {/* User Profile (Fixed Image Display) */}
-      <div className="p-4 border-t border-border bg-muted/5">
-        <div className="flex items-center gap-3">
-          
-          {/* ✅ পরিবর্তন: এখানে Avatar ব্যবহার করা হয়েছে যাতে ছবি দেখায় */}
-          <Avatar className="h-10 w-10 border border-border">
-            <AvatarImage src={session?.user?.image || ""} alt="User Image" className="object-cover" />
-            <AvatarFallback className="bg-gradient-to-br from-orange-400 to-orange-600 text-white font-semibold">
-              {session?.user?.name?.charAt(0).toUpperCase() || "S"}
-            </AvatarFallback>
-          </Avatar>
+     <div className="p-4 border-t border-border bg-muted/5">
+  <div className="flex items-center gap-3">
+    
+    {/* Avatar Section */}
+    <Avatar className="h-10 w-10 border border-border">
+      <AvatarImage 
+        src={userImage || session?.user?.image || ""} 
+        alt="User Image" 
+        className="object-cover" 
+      />
+      <AvatarFallback className="bg-gradient-to-br from-orange-400 to-orange-600 text-white font-semibold">
+        {/* নামের প্রথম অক্ষর ডাটাবেস থেকে নেওয়া হচ্ছে */}
+        {(userName || session?.user?.name || "S").charAt(0).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
 
-          <div className="overflow-hidden">
-            <p className="font-medium text-foreground text-sm truncate">
-              {session?.user?.name || "Student"}
-            </p>
-            <p className="text-xs text-muted-foreground truncate max-w-[140px]">
-              {session?.user?.email || "student@example.com"}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="overflow-hidden">
+      {/* ✅ Name Section: ডাটাবেসের নাম আগে দেখাবে */}
+      <p className="font-medium text-foreground text-sm truncate">
+        {userName || session?.user?.name || "Student"}
+      </p>
+      
+      {/* Email Section */}
+      <p className="text-xs text-muted-foreground truncate max-w-[140px]">
+        {session?.user?.email || "student@example.com"}
+      </p>
+    </div>
+  </div>
+</div>
     </div>
   );
 };
