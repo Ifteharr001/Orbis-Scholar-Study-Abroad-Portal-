@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, ChangeEvent } from "react";
-import { User, Mail, Phone, MapPin, GraduationCap, Bell, Shield, Eye, Moon, Globe, Camera, Save, LogOut, Loader2 } from "lucide-react";
+import { User, Mail, Phone, MapPin, GraduationCap, Bell, Shield, Eye, Moon, Camera, Save, LogOut, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,14 +15,12 @@ import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 
 export default function ProfileSettingsPage() {
-  // ✅ ১. update মেথডটি বের করে আনা হলো
   const { data: session, update } = useSession();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
-  // ✅ ২. ফাইল ইনপুটের জন্য রেফারেন্স তৈরি
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile state
@@ -40,21 +38,17 @@ export default function ProfileSettingsPage() {
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
-    applicationUpdates: true,
-    promotionalEmails: false,
     twoFactorAuth: false,
     darkMode: false,
-    language: "en"
   });
 
-  // ডাটা ফেচ করা
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await fetch("/api/student/profile");
-        const data = await res.json();
         
         if (res.ok) {
+          const data = await res.json();
           setProfile({
             fullName: data.fullName || "",
             email: data.email || "",
@@ -66,7 +60,8 @@ export default function ProfileSettingsPage() {
           });
         }
       } catch (error) {
-        console.error("Failed to load profile");
+        console.error("Failed to load profile", error);
+        toast.error("Failed to load profile data");
       } finally {
         setIsLoading(false);
       }
@@ -77,11 +72,14 @@ export default function ProfileSettingsPage() {
     }
   }, [session]);
 
-  // ✅ ৩. ছবি সিলেক্ট করার ফাংশন
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // ফাইলকে Base64 স্ট্রিং-এ কনভার্ট করা হচ্ছে প্রিভিউ এবং সেভ করার জন্য
+      if (file.size > 5 * 1024 * 1024) { // 5MB Limit check
+          toast.error("File size too large (Max 5MB)");
+          return;
+      }
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfile((prev) => ({ ...prev, image: reader.result as string }));
@@ -90,12 +88,10 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  // ✅ ৪. ক্যামেরা বাটনে ক্লিক করলে ফাইল ইনপুট ট্রিগার হবে
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
-  // ডাটা সেভ করা এবং সেশন আপডেট করা
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
@@ -107,13 +103,13 @@ export default function ProfileSettingsPage() {
 
       if (!res.ok) throw new Error("Failed to update");
 
-      // ✅ ৫. সেশন আপডেট করা (যাতে সাইডবারে নাম/ছবি সাথে সাথে চেঞ্জ হয়)
+      // Update session to reflect changes immediately
       await update({
         ...session,
         user: {
           ...session?.user,
           name: profile.fullName,
-          image: profile.image, // ছবিও আপডেট হবে
+          image: profile.image,
         },
       });
 
@@ -121,6 +117,7 @@ export default function ProfileSettingsPage() {
       setIsEditing(false);
       
     } catch (error) {
+      console.error(error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
@@ -141,15 +138,18 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
+      
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Profile & Settings</h1>
-        <p className="text-muted-foreground">Manage your account information and preferences</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold text-foreground">Profile & Settings</h1>
+            <p className="text-muted-foreground mt-1">Manage your account information and preferences</p>
+        </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="bg-muted border border-border w-full justify-start overflow-x-auto">
+        <TabsList className="bg-muted border border-border w-full md:w-auto justify-start overflow-x-auto">
           <TabsTrigger value="profile">
             <User className="w-4 h-4 mr-2" /> Profile
           </TabsTrigger>
@@ -164,7 +164,7 @@ export default function ProfileSettingsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab */}
+        {/* --- Profile Tab --- */}
         <TabsContent value="profile" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
@@ -182,32 +182,30 @@ export default function ProfileSettingsPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               
-              {/* ✅ ৬. লুকানো ফাইল ইনপুট */}
               <input 
                 type="file" 
                 ref={fileInputRef} 
                 className="hidden" 
-                accept="image/*"
+                accept="image/png, image/jpeg, image/jpg"
                 onChange={handleImageUpload}
               />
 
               {/* Avatar Section */}
               <div className="flex items-center gap-6">
                 <div className="relative group">
-                  <Avatar className="w-24 h-24 border-2 border-border">
-                    <AvatarImage src={profile.image || session?.user?.image || "/placeholder.svg"} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                      {profile.fullName ? profile.fullName.split(' ').map(n => n[0]).join('').substring(0,2) : "U"}
+                  <Avatar className="w-24 h-24 border-4 border-background shadow-md">
+                    <AvatarImage src={profile.image || session?.user?.image || "/placeholder.svg"} className="object-cover" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                      {profile.fullName ? profile.fullName.substring(0, 2).toUpperCase() : "U"}
                     </AvatarFallback>
                   </Avatar>
                   
-                  {/* ✅ ৭. ক্যামেরা বাটনে ক্লিক ইভেন্ট যোগ করা হয়েছে */}
                   {isEditing && (
                     <button 
                       onClick={triggerFileInput}
-                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
+                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all shadow-lg cursor-pointer ring-2 ring-background"
                       title="Upload Photo"
                     >
                       <Camera className="w-4 h-4" />
@@ -215,9 +213,11 @@ export default function ProfileSettingsPage() {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground">{profile.fullName}</h3>
-                  <p className="text-muted-foreground">{profile.email}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Role: Student</p>
+                  <h3 className="text-xl font-bold text-foreground">{profile.fullName || "User Name"}</h3>
+                  <p className="text-muted-foreground">{profile.email || "user@example.com"}</p>
+                  <span className="inline-block mt-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded dark:bg-blue-900/30 dark:text-blue-400">
+                    Student Account
+                  </span>
                 </div>
               </div>
 
@@ -225,38 +225,35 @@ export default function ProfileSettingsPage() {
 
               {/* Form Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    Full Name
+                    <User className="w-4 h-4 text-muted-foreground" /> Full Name
                   </Label>
                   <Input 
                     id="fullName"
                     value={profile.fullName}
                     onChange={(e) => setProfile({...profile, fullName: e.target.value})}
                     disabled={!isEditing}
-                    className="bg-background border-border disabled:opacity-70"
+                    className="bg-background"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    Email Address
+                    <Mail className="w-4 h-4 text-muted-foreground" /> Email Address
                   </Label>
                   <Input 
                     id="email"
-                    type="email"
                     value={profile.email}
                     disabled={true} 
-                    className="bg-muted border-border opacity-70 cursor-not-allowed"
+                    className="bg-muted opacity-70 cursor-not-allowed"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    Phone Number
+                    <Phone className="w-4 h-4 text-muted-foreground" /> Phone Number
                   </Label>
                   <Input 
                     id="phone"
@@ -264,21 +261,20 @@ export default function ProfileSettingsPage() {
                     onChange={(e) => setProfile({...profile, phone: e.target.value})}
                     disabled={!isEditing}
                     placeholder="+880..."
-                    className="bg-background border-border disabled:opacity-70"
+                    className="bg-background"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="country" className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    Country
+                    <MapPin className="w-4 h-4 text-muted-foreground" /> Country
                   </Label>
                   <Select 
                     value={profile.country} 
                     onValueChange={(value) => setProfile({...profile, country: value})}
-                    disabled={!isEditing}
+                    disabled={!isEditing} // ✅ Disabled prop on Select works correctly here
                   >
-                    <SelectTrigger className="bg-background border-border disabled:opacity-70">
+                    <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
                     <SelectContent>
@@ -287,21 +283,21 @@ export default function ProfileSettingsPage() {
                       <SelectItem value="Pakistan">Pakistan</SelectItem>
                       <SelectItem value="Nepal">Nepal</SelectItem>
                       <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
+                      <SelectItem value="Nigeria">Nigeria</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="program" className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-muted-foreground" />
-                    Program Preference
+                    <GraduationCap className="w-4 h-4 text-muted-foreground" /> Program Preference
                   </Label>
                   <Select 
                     value={profile.programPreference} 
                     onValueChange={(value) => setProfile({...profile, programPreference: value})}
                     disabled={!isEditing}
                   >
-                    <SelectTrigger className="bg-background border-border disabled:opacity-70">
+                    <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select Program" />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,15 +311,14 @@ export default function ProfileSettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="gender" className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    Gender
+                    <User className="w-4 h-4 text-muted-foreground" /> Gender
                   </Label>
                   <Select 
                     value={profile.gender} 
                     onValueChange={(value) => setProfile({...profile, gender: value})}
                     disabled={!isEditing}
                   >
-                    <SelectTrigger className="bg-background border-border disabled:opacity-70">
+                    <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select Gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -336,8 +331,8 @@ export default function ProfileSettingsPage() {
               </div>
 
               {isEditing && (
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                <div className="flex justify-end pt-4 border-t border-border">
+                  <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2 min-w-[140px]">
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
@@ -347,7 +342,7 @@ export default function ProfileSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
+        {/* --- Notifications Tab --- */}
         <TabsContent value="notifications" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
@@ -355,22 +350,21 @@ export default function ProfileSettingsPage() {
               <CardDescription>Choose how you want to receive updates</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <Label className="text-base font-medium">Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                  <p className="text-sm text-muted-foreground">Receive application updates via email</p>
                 </div>
                 <Switch 
                   checked={settings.emailNotifications}
                   onCheckedChange={(checked) => setSettings({...settings, emailNotifications: checked})}
                 />
               </div>
-              <Separator className="bg-border" />
-              
-              <div className="flex items-center justify-between py-3">
+              <Separator />
+              <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <Label className="text-base font-medium">SMS Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive updates via text message</p>
+                  <p className="text-sm text-muted-foreground">Receive urgent alerts via text message</p>
                 </div>
                 <Switch 
                   checked={settings.smsNotifications}
@@ -381,7 +375,7 @@ export default function ProfileSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Security Tab */}
+        {/* --- Security Tab --- */}
         <TabsContent value="security" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
@@ -389,20 +383,19 @@ export default function ProfileSettingsPage() {
               <CardDescription>Manage your account security</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <Label className="text-base font-medium">Two-Factor Authentication</Label>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                  <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                 </div>
                 <Switch 
                   checked={settings.twoFactorAuth}
                   onCheckedChange={(checked) => setSettings({...settings, twoFactorAuth: checked})}
                 />
               </div>
-              <Separator className="bg-border" />
-
-              <div className="pt-4">
-                <Button variant="destructive" onClick={handleLogout} className="gap-2">
+              <Separator />
+              <div className="pt-2">
+                <Button variant="destructive" onClick={handleLogout} className="gap-2 w-full sm:w-auto">
                   <LogOut className="w-4 h-4" />
                   Logout from Account
                 </Button>
@@ -411,7 +404,7 @@ export default function ProfileSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Preferences Tab */}
+        {/* --- Preferences Tab --- */}
         <TabsContent value="preferences" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
@@ -419,12 +412,14 @@ export default function ProfileSettingsPage() {
               <CardDescription>Customize your experience</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between py-3">
-                <div className="space-y-0.5 flex items-center gap-3">
-                  <Moon className="w-5 h-5 text-muted-foreground" />
-                  <div>
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-muted rounded-full">
+                     <Moon className="w-5 h-5 text-foreground" />
+                  </div>
+                  <div className="space-y-0.5">
                     <Label className="text-base font-medium">Dark Mode</Label>
-                    <p className="text-sm text-muted-foreground">Switch to dark theme</p>
+                    <p className="text-sm text-muted-foreground">Toggle dark theme appearance</p>
                   </div>
                 </div>
                 <Switch 
@@ -435,6 +430,7 @@ export default function ProfileSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );

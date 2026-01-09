@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// ... (Zod Schemas & Constants remain same) ...
+// --- Schemas ---
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -47,7 +47,7 @@ const countries = [
 ];
 
 const PartnerAuth = () => {
-  const [isLogin, setIsLogin] = useState(false); // Default to signup for partners usually, or change to true
+  const [isLogin, setIsLogin] = useState(false); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,6 +55,7 @@ const PartnerAuth = () => {
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +63,7 @@ const PartnerAuth = () => {
 
   const router = useRouter();
 
+  // --- Validation Logic ---
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -96,6 +98,7 @@ const PartnerAuth = () => {
     return true;
   };
 
+  // --- Submit Handler ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -104,27 +107,30 @@ const PartnerAuth = () => {
 
     try {
       if (isLogin) {
-        // ✅ Corrected signIn logic
+        // ✅ Login Logic
         const result = await signIn("credentials", {
-          redirect: false, // Prevents auto-redirect
+          redirect: false, 
           email,
           password,
-          loginType: "partner", // Important for role validation
+          loginType: "partner", // ব্যাকএন্ডে এই টাইপ চেক করা হচ্ছে
         });
 
-       if (result?.error) {
-  toast.error("Login failed", {
-    description: result.error || "Invalid email or password",
-  });
-} else {
-  toast.success("Welcome back!", {
-    description: "You have successfully logged in.",
-  });
-  
-  window.location.href = "/partner/dashboard";
-}
+        if (result?.error) {
+          toast.error("Login failed", {
+            description: "Invalid email or password", // জেনেরিক এরর মেসেজ
+          });
+        } else {
+          toast.success("Login Successful", {
+            description: "Redirecting to dashboard...",
+          });
+          
+          // 🚀 Router Push (Better UX than window.location)
+          router.refresh(); // সেশন আপডেট নিশ্চিত করতে
+          router.push("/partner/dashboard");
+        }
+
       } else {
-        // Registration Logic
+        // ✅ Registration Logic
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -134,7 +140,7 @@ const PartnerAuth = () => {
             password,
             gender,
             country,
-            role: "partner", // Explicitly setting role
+            role: "partner", // রোল হার্ডকোড করা হলো
           }),
         });
 
@@ -144,10 +150,11 @@ const PartnerAuth = () => {
           throw new Error(data.message || "Registration failed");
         }
 
-        toast.success("Account created!", {
-          description: "Please login to continue.",
+        toast.success("Account created successfully!", {
+          description: "Please login with your new credentials.",
         });
         
+        // অটোমেটিক লগইন মোডে নিয়ে যাওয়া
         setIsLogin(true);
       }
     } catch (error: unknown) {
@@ -165,22 +172,21 @@ const PartnerAuth = () => {
   };
 
   return (
-    // ... (Your JSX remains exactly the same) ...
     <div className="min-h-screen flex bg-background">
+      {/* Left Side - Illustration */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
-            Apply with <span className="text-primary">StudyAbroad</span>
+            Partner with <span className="text-primary">StudyAbroad</span>
           </h1>
           <p className="text-lg text-muted-foreground">
-            Get Unlimited Access To World Class Universitys
+            Grow your business by connecting students to world-class universities.
           </p>
-          <p className="text-foreground font-medium">Be Our Partner</p>
           <div className="mt-8 relative w-full h-auto">
             <Image
               src={signupIllustration}
               alt="Partner applying online"
-              className="w-full max-w-sm mx-auto"
+              className="w-full max-w-sm mx-auto object-contain"
               priority
             />
           </div>
@@ -191,29 +197,25 @@ const PartnerAuth = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
-            {isLogin ? "Partner Login" : "Partner Sign up"}
+            {isLogin ? "Partner Login" : "Become a Partner"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <>
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="fullName">Full name</Label>
-                  <Input
-                    id="fullName"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={errors.fullName ? "border-destructive" : ""}
-                    disabled={isSubmitting}
-                  />
-                  {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
-                </div>
-              </>
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName">Full name</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={errors.fullName ? "border-destructive" : ""}
+                  disabled={isSubmitting}
+                />
+                {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
+              </div>
             )}
 
-            {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email">Email address</Label>
               <Input
@@ -230,43 +232,42 @@ const PartnerAuth = () => {
 
             {!isLogin && (
               <>
-                {/* Gender */}
-                <div className="space-y-1.5">
-                  <Label>Gender</Label>
-                  <Select value={gender} onValueChange={setGender}>
-                    <SelectTrigger className={errors.gender ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Gender</Label>
+                    <Select value={gender} onValueChange={setGender}>
+                      <SelectTrigger className={errors.gender ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
+                  </div>
 
-                {/* Country */}
-                <div className="space-y-1.5">
-                  <Label>Country</Label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger className={errors.country ? "border-destructive" : ""}>
-                      <SelectValue placeholder="select one country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((c) => (
-                        <SelectItem key={c} value={c.toLowerCase()}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
+                  <div className="space-y-1.5">
+                    <Label>Country</Label>
+                    <Select value={country} onValueChange={setCountry}>
+                      <SelectTrigger className={errors.country ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
+                  </div>
                 </div>
               </>
             )}
 
-            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -282,9 +283,9 @@ const PartnerAuth = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
@@ -292,7 +293,6 @@ const PartnerAuth = () => {
 
             {!isLogin && (
               <>
-                {/* Confirm Password */}
                 <div className="space-y-1.5">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <div className="relative">
@@ -308,62 +308,53 @@ const PartnerAuth = () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
-                {/* Terms */}
                 <div className="flex items-start gap-2 pt-2">
                   <Checkbox
                     id="terms"
                     checked={termsAccepted}
-                    onCheckedChange={(checked: boolean) => setTermsAccepted(checked)}
+                    // ✅ TypeScript Fix: Type Casting
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                     className={errors.terms ? "border-destructive" : ""}
                   />
                   <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
-                    By joining, I read and agree to the{" "}
-                    <Link href="/terms" className="text-primary underline">Terms & Conditions</Link>,{" "}
-                    <Link href="/privacy" className="text-primary underline">Privacy policy</Link>, and{" "}
-                    <Link href="/refund" className="text-primary underline">Return and Refund Policy</Link>.
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+                    <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                   </label>
                 </div>
                 {errors.terms && <p className="text-xs text-destructive">{errors.terms}</p>}
               </>
             )}
 
-            {isLogin && (
-              <div className="text-right">
-                <button type="button" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90 mt-4"
+              className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Please wait..." : isLogin ? "Sign In" : "Sign up"}
+              {isSubmitting ? "Processing..." : isLogin ? "Login to Dashboard" : "Create Partner Account"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground pt-2">
               {isLogin ? (
                 <>
-                  Don&apos;t have an account?{" "}
+                  New Partner?{" "}
                   <button type="button" onClick={() => { setIsLogin(false); setErrors({}); }} className="text-primary hover:underline font-medium">
-                    Sign up
+                    Register here
                   </button>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
+                  Already a Partner?{" "}
                   <button type="button" onClick={() => { setIsLogin(true); setErrors({}); }} className="text-primary hover:underline font-medium">
-                    Sign in
+                    Login here
                   </button>
                 </>
               )}

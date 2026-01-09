@@ -4,8 +4,19 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import VisaProcess from "@/models/VisaProcess";
 
-// ডিফল্ট টাস্ক লিস্ট (যদি ডাটাবেসে না থাকে)
-const DEFAULT_TASKS = [
+// ✅ 1. টাইপ ফিক্স: আমরা টাইপস্ক্রিপ্টকে বলে দিচ্ছি status টি সাধারণ string না, এটি ফিক্সড ভ্যালু।
+interface ITask {
+  id: number;
+  name: string;
+  status: "done" | "pending" | "locked" | "verified"; // Exact literals
+  auto: boolean;
+  hasLink: boolean;
+  hasUpload: boolean;
+  fileUrl?: string;
+  fileName?: string;
+}
+
+const DEFAULT_TASKS: ITask[] = [
   { id: 1, name: "CAS/Offer Letter Received", status: "done", auto: true, hasLink: false, hasUpload: false },
   { id: 2, name: "Visa Application Form (DS-160)", status: "pending", auto: false, hasLink: true, hasUpload: false },
   { id: 3, name: "Visa Fee Payment", status: "pending", auto: false, hasLink: false, hasUpload: true },
@@ -24,49 +35,72 @@ const DEFAULT_PACKING = [
   { name: "Electronics & Adapters", checked: false },
 ];
 
-// ১. ডাটা ফেচ করা
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     await connect();
+    
     let process = await VisaProcess.findOne({ studentEmail: session.user.email });
 
-    // যদি ডাটা না থাকে, ডিফল্ট তৈরি করো
     if (!process) {
       process = await VisaProcess.create({
         studentEmail: session.user.email,
-        progress: 10,
-        tasks: DEFAULT_TASKS,
+        progress: 15, 
+        tasks: DEFAULT_TASKS, // ✅ এখন আর এরর দিবে না কারণ টাইপ মিলছে
         packingList: DEFAULT_PACKING
       });
     }
 
     return NextResponse.json(process);
-  } catch (error) {
+  } catch (error: unknown) { // ✅ catch ব্লকে unknown টাইপ হ্যান্ডেল করা
+    console.error("Visa Process GET Error:", error);
     return NextResponse.json({ error: "Failed to load visa process" }, { status: 500 });
   }
 }
 
-// ২. ডাটা আপডেট করা (টাস্ক, অ্যাপয়েন্টমেন্ট, প্যাকিং ইত্যাদি)
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const body = await req.json();
+    const { tasks, packingList, travel, medicalDate, embassyDate } = body;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {};
+
+    if (tasks) updateData.tasks = tasks;
+    if (packingList) updateData.packingList = packingList;
+    if (travel) updateData.travel = travel;
+    if (medicalDate) updateData.medicalDate = medicalDate;
+    if (embassyDate) updateData.embassyDate = embassyDate;
+
+    if (tasks) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const totalTasks = tasks.length;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const completedTasks = tasks.filter((t: any) => t.status === "done" || t.status === "verified").length;
+        updateData.progress = Math.round((completedTasks / totalTasks) * 100);
+    }
+
     await connect();
 
-    // যে ফিল্ডগুলো পাঠানো হয়েছে শুধু সেগুলো আপডেট হবে (Partial Update)
     const updatedProcess = await VisaProcess.findOneAndUpdate(
       { studentEmail: session.user.email },
-      { $set: body }, // যেমন: { "tasks.1.status": "done" } বা পুরো tasks অ্যারে
+      { $set: updateData },
       { new: true }
     );
 
     return NextResponse.json(updatedProcess);
-  } catch (error) {
+
+  } catch (error: unknown) { // ✅ এখানেও ফিক্স করা হলো
+    console.error("Visa Process Update Error:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }

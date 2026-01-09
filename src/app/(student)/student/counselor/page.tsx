@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Phone, Mail, Video, MessageCircle, Calendar, Star, MapPin, Clock, Users, Send, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,17 +35,21 @@ export default function MyCounselorPage() {
   const [message, setMessage] = useState("");
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
-  // ১. ডাটা ফেচ করা
   useEffect(() => {
     const fetchCounselor = async () => {
       if (isAuthenticated) {
         try {
           const res = await fetch("/api/student/counselor");
+          if (!res.ok) {
+              throw new Error("Failed to fetch");
+          }
           const data = await res.json();
           setCounselor(data.counselor);
         } catch (error) {
-          console.error("Failed to fetch counselor info");
+          console.error("Failed to fetch counselor info", error);
+          setFetchError(true);
         } finally {
           setLoading(false);
         }
@@ -59,12 +64,11 @@ export default function MyCounselorPage() {
       toast.error("Please enter a message");
       return;
     }
-    // এখানে ভবিষ্যতে মেসেজ API ইন্টিগ্রেট করা যাবে
+    // Future API integration for sending messages
     toast.success("Message sent to your counselor!");
     setMessage("");
   };
 
-  // স্ট্যাটিক অ্যাক্টিভিটি (ফিউচারে ডাইনামিক করা যাবে)
   const recentActivities = [
     { action: "Reviewed your SOP draft", time: "2 hours ago" },
     { action: "Sent university shortlist", time: "Yesterday" },
@@ -79,7 +83,18 @@ export default function MyCounselorPage() {
     );
   }
 
-  // যদি কাউন্সিলর অ্যাসাইন করা না থাকে
+  if (fetchError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <h2 className="text-xl font-semibold">Error Loading Counselor Info</h2>
+          <p className="text-muted-foreground">Unable to load your counselors information at this time.</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      );
+  }
+
+  // If no counselor is assigned
   if (!counselor) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
@@ -112,7 +127,7 @@ export default function MyCounselorPage() {
                 {/* Avatar & Basic Info */}
                 <div className="flex flex-col items-center text-center md:items-start md:text-left">
                   <Avatar className="w-28 h-28 mb-4">
-                    <AvatarImage src={counselor.image} />
+                    <AvatarImage src={counselor.image} alt={counselor.name} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
                       {counselor.name ? counselor.name.split(' ').map(n => n[0]).join('').substring(0, 2) : "C"}
                     </AvatarFallback>
@@ -264,16 +279,21 @@ export default function MyCounselorPage() {
                 <Phone className="w-4 h-4" />
                 Call Now
               </Button>
-              <Button 
-                className="w-full gap-2 justify-start bg-green-600 hover:bg-green-700 text-white border-none"
-                onClick={() => window.open(`https://wa.me/${counselor.whatsapp?.replace(/[^0-9]/g, '')}`, '_blank')}
-              >
-                <MessageCircle className="w-4 h-4" />
-                WhatsApp
-              </Button>
-              <Button className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
-                <Calendar className="w-4 h-4" />
-                Book Appointment
+              {counselor.whatsapp && (
+                  <Button 
+                    className="w-full gap-2 justify-start bg-green-600 hover:bg-green-700 text-white border-none"
+                    onClick={() => window.open(`https://wa.me/${counselor.whatsapp?.replace(/[^0-9]/g, '')}`, '_blank')}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp
+                  </Button>
+              )}
+              {/* Updated: Links to the appointments page */}
+              <Button asChild className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
+                <Link href="/student/appointments">
+                    <Calendar className="w-4 h-4" />
+                    Book Appointment
+                </Link>
               </Button>
               <Button 
                 className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" 

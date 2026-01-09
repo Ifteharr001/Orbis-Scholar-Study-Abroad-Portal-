@@ -5,10 +5,12 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
     
-    const { fullName, email, password, role, phone, gender, country } = await req.json();
+    // নতুন ফিল্ড programPreference সহ ডাটা রিসিভ করা হচ্ছে
+    const { fullName, email, password, role, phone, gender, country, programPreference } = body;
 
-   
+    // ১. বেসিক ভ্যালিডেশন
     if (!fullName || !email || !password) {
       return NextResponse.json(
         { message: "Missing required fields (Name, Email, or Password)" },
@@ -16,10 +18,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // ২. পাসওয়ার্ড লেন্থ চেক (মডেলের সাথে মিলিয়ে)
+    if (password.length < 6) {
+      return NextResponse.json(
+        { message: "Password must be at least 6 characters long" },
+        { status: 400 }
+      );
+    }
 
     await connect();
 
-
+    // ৩. ডুপ্লিকেট ইউজার চেক
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -28,18 +37,24 @@ export async function POST(req: Request) {
       );
     }
 
-    
+    // ৪. সিকিউরিটি চেক: কেউ যেন রেজিস্ট্রেশন করে 'Admin' বা 'Counselor' হতে না পারে
+    // পাবলিক রেজিস্ট্রেশনে শুধু 'student' অথবা 'partner' হতে পারবে
+    const safeRole = (role === "partner") ? "partner" : "student";
+
+    // ৫. পাসওয়ার্ড হ্যাশ করা
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    
+    // ৬. ইউজার তৈরি করা
     await User.create({
-      name: fullName,
+      name: fullName, // ফ্রন্টএন্ড পাঠাচ্ছে fullName, মডেলে সেভ হচ্ছে name হিসেবে
       email,
       password: hashedPassword,
-      role: role || "student", 
+      role: safeRole, // 🔒 স্যানিটাইজড রোল
       phone,
       gender,
       country,
+      // নতুন ফিল্ড (ডিফল্ট মান হ্যান্ডেল করা হলো)
+      programPreference: programPreference || "Masters", 
     });
 
     return NextResponse.json(

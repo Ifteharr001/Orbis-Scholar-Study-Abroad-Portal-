@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react"; // ✅ ১. Suspense ইম্পোর্ট করা হয়েছে
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// Zod স্কিমা
+// --- Zod Schemas ---
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -33,6 +33,7 @@ const signupSchema = z.object({
   phone: z.string().trim().min(5, { message: "Phone number is required" }),
   gender: z.string().min(1, { message: "Please select gender" }),
   country: z.string().min(1, { message: "Please select country" }),
+  programPreference: z.string().min(1, { message: "Please select a program" }), // ✅ নতুন ফিল্ড
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string(),
   terms: z.boolean().refine((val) => val === true, { message: "You must accept the terms" }),
@@ -58,17 +59,23 @@ const countryCodes = [
   { code: "+44", country: "UK" },
 ];
 
-// ✅ ২. মেইন লজিক কম্পোনেন্ট (নাম পরিবর্তন করে AuthForm করা হয়েছে)
+const programs = ["Bachelors", "Masters", "PhD", "Diploma"]; // ✅ স্টুডেন্ট প্রেফারেন্স অপশন
+
+// --- Main Form Component ---
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
+  
+  // Form States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  const [countryCode, setCountryCode] = useState("+880"); // ডিফল্ট বাংলাদেশ
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
+  const [programPreference, setProgramPreference] = useState(""); // ✅ নতুন স্টেট
+
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -79,6 +86,7 @@ const AuthForm = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/student/dashboard";
 
+  // --- Validation ---
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -97,6 +105,7 @@ const AuthForm = () => {
         phone: countryCode + phone,
         gender,
         country,
+        programPreference,
         password,
         confirmPassword,
         terms: termsAccepted,
@@ -114,6 +123,7 @@ const AuthForm = () => {
     return true;
   };
 
+  // --- Handle Submit ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -121,29 +131,31 @@ const AuthForm = () => {
     setIsSubmitting(true);
 
     try {
-    if (isLogin) {
+      if (isLogin) {
+        // ✅ Login Logic
         const result = await signIn("credentials", {
           redirect: false,
           email,
           password,
-          loginType: "student",
+          loginType: "student", // ব্যাকএন্ডে রোল চেক করবে
           callbackUrl: callbackUrl, 
         });
 
-       if (result?.error) {
+        if (result?.error) {
           toast.error("Login failed", {
-            description: result.error || "Invalid email or password",
+            description: "Invalid email or password",
           });
           setIsSubmitting(false);
         } else {
           toast.success("Login Successful!", {
-            description: "Redirecting...",
+            description: "Welcome to your dashboard",
           });
           
           router.refresh();
           router.push(callbackUrl);
         }
       } else {
+        // ✅ Registration Logic
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -154,6 +166,7 @@ const AuthForm = () => {
             phone: countryCode + phone,
             gender,
             country,
+            programPreference, // ✅ ডাটাবেসে সেভ হবে
             role: "student",
           }),
         });
@@ -165,13 +178,13 @@ const AuthForm = () => {
         }
 
         toast.success("Account created!", {
-          description: "Please login to continue.",
+          description: "Please login with your new account.",
         });
         
-        setIsLogin(true);
+        setIsLogin(true); // অটোমেটিক লগইন স্ক্রিনে পাঠানো
       }
     } catch (error: unknown) {
-      let errorMessage = "Something went wrong. Please try again.";
+      let errorMessage = "Something went wrong.";
       if (error instanceof Error) {
         errorMessage = error.message;
       }
@@ -186,34 +199,34 @@ const AuthForm = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* ... Left Side ... */}
+      {/* Left Side (Illustration) */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
             Apply with <span className="text-primary">StudyAbroad</span>
           </h1>
           <p className="text-lg text-muted-foreground">
-            Get Unlimited Access To World Class Universitys
+            Get Unlimited Access To World Class Universities
           </p>
-          <Link href="/partner" className="text-primary hover:underline font-medium inline-block">
+          <Link href="/partnerAuth" className="text-primary hover:underline font-medium inline-block">
             Become a Partner
           </Link>
           <div className="mt-8 relative w-full h-auto">
             <Image
               src={signupIllustration}
               alt="Student applying online"
-              className="w-full max-w-sm mx-auto"
+              className="w-full max-w-sm mx-auto object-contain"
               priority
             />
           </div>
         </div>
       </div>
 
-      {/* ... Right Side (Form) ... */}
+      {/* Right Side (Form) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
-            {isLogin ? "Student Login" : "Student Sign up"}
+            {isLogin ? "Student Login" : "Student Registration"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -276,36 +289,56 @@ const AuthForm = () => {
 
             {!isLogin && (
               <>
-                <div className="space-y-1.5">
-                  <Label>Gender</Label>
-                  <Select value={gender} onValueChange={setGender}>
-                    <SelectTrigger className={errors.gender ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                    <Label>Gender</Label>
+                    <Select value={gender} onValueChange={setGender}>
+                        <SelectTrigger className={errors.gender ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                    <Label>Country</Label>
+                    <Select value={country} onValueChange={setCountry}>
+                        <SelectTrigger className={errors.country ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {countries.map((c) => (
+                            <SelectItem key={c} value={c.toLowerCase()}>
+                            {c}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
+                    </div>
                 </div>
 
+                {/* ✅ Program Preference Added */}
                 <div className="space-y-1.5">
-                  <Label>Country</Label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger className={errors.country ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select one country" />
+                  <Label>Interested Program</Label>
+                  <Select value={programPreference} onValueChange={setProgramPreference}>
+                    <SelectTrigger className={errors.programPreference ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Select Program Level" />
                     </SelectTrigger>
                     <SelectContent>
-                      {countries.map((c) => (
-                        <SelectItem key={c} value={c.toLowerCase()}>
-                          {c}
+                      {programs.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
+                  {errors.programPreference && <p className="text-xs text-destructive">{errors.programPreference}</p>}
                 </div>
               </>
             )}
@@ -325,9 +358,9 @@ const AuthForm = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
@@ -350,9 +383,9 @@ const AuthForm = () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
@@ -362,34 +395,26 @@ const AuthForm = () => {
                   <Checkbox
                     id="terms"
                     checked={termsAccepted}
-                    onCheckedChange={(checked: boolean) => setTermsAccepted(checked)}
+                    // ✅ Type Fix
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                     className={errors.terms ? "border-destructive" : ""}
                   />
                   <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
                     By joining, I read and agree to the{" "}
-                    <Link href="/terms" className="text-primary underline">Terms & Conditions</Link>,{" "}
-                    <Link href="/privacy" className="text-primary underline">Privacy policy</Link>, and{" "}
-                    <Link href="/refund" className="text-primary underline">Return and Refund Policy</Link>.
+                    <Link href="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+                    <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                   </label>
                 </div>
                 {errors.terms && <p className="text-xs text-destructive">{errors.terms}</p>}
               </>
             )}
 
-            {isLogin && (
-              <div className="text-right">
-                <button type="button" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90 mt-4"
+              className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Please wait..." : isLogin ? "Sign In" : "Sign up"}
+              {isSubmitting ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground pt-2">
@@ -416,7 +441,7 @@ const AuthForm = () => {
   );
 };
 
-// ✅ ৩. মেইন পেজ যা সাসপেন্স দিয়ে র‍্যাপ করা হয়েছে
+// Main Page with Suspense
 const AuthPage = () => {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>

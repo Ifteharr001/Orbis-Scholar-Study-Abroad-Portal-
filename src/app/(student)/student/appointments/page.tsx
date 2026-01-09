@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Video, MapPin, User, Plus, CheckCircle2, XCircle, CalendarDays, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Calendar, Clock, Video, MapPin, User, Plus, CheckCircle2, XCircle, CalendarDays, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,20 +17,21 @@ import { cn } from "@/lib/utils";
 import { format, isPast, isFuture, isToday } from "date-fns";
 import { toast } from "sonner";
 
+// ✅ ইন্টারফেস আপডেট (Optional Fields সহ)
 interface Appointment {
   _id: string;
   topic: string;
-  counselorId: {
+  counselorId?: {
     _id: string;
     name: string;
     image?: string;
   };
   date: string;
   time: string;
-  duration: string;
+  duration?: string; // এটি ব্যাকএন্ডে নাও থাকতে পারে
   type: "video" | "in-person";
   status: "confirmed" | "pending" | "completed" | "cancelled";
-  meetingLink?: string;
+  meetingLink?: string; // ভিডিও কলের লিংক
 }
 
 const timeSlots = [
@@ -37,12 +39,13 @@ const timeSlots = [
   "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM"
 ];
 
+// স্ট্যাটাস ব্যাজ ফাংশন
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "confirmed": return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Confirmed</Badge>;
-    case "pending": return <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</Badge>;
-    case "completed": return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Completed</Badge>;
-    case "cancelled": return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Cancelled</Badge>;
+    case "confirmed": return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">Confirmed</Badge>;
+    case "pending": return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-yellow-200">Pending</Badge>;
+    case "completed": return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200">Completed</Badge>;
+    case "cancelled": return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200">Cancelled</Badge>;
     default: return <Badge variant="secondary">{status}</Badge>;
   }
 };
@@ -60,15 +63,20 @@ export default function AppointmentsPage() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [notes, setNotes] = useState("");
 
+  // ১. ডাটা ফেচিং (API Path Fixed)
   const fetchAppointments = useCallback(async () => {
     try {
       const res = await fetch("/api/student/appointments");
+      
+      if (!res.ok) throw new Error("Failed to fetch");
+      
       const data = await res.json();
       if (Array.isArray(data)) {
         setAppointments(data);
       }
     } catch (error) {
       console.error("Failed to fetch appointments", error);
+      toast.error("Could not load appointments");
     } finally {
       setLoading(false);
     }
@@ -78,6 +86,7 @@ export default function AppointmentsPage() {
     fetchAppointments();
   }, [fetchAppointments]);
 
+  // ২. বুকিং হ্যান্ডলার
   const handleBookAppointment = async () => {
     if (!selectedDate || !selectedTime || !selectedType || !selectedTopic) {
       toast.error("Please fill in all required fields");
@@ -87,16 +96,13 @@ export default function AppointmentsPage() {
     setIsBooking(true);
 
     try {
-      const res = await fetch("/api/student/appointments", {
+      const res = await fetch("/api/student/appointment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic: selectedTopic === "general" ? "General Consultation" : 
-                 selectedTopic === "university" ? "University Selection" : 
-                 selectedTopic === "visa" ? "Visa Guidance" : 
-                 selectedTopic === "scholarship" ? "Scholarship Help" : "Document Review",
+          topic: selectedTopic, // এখন আমরা ড্রপডাউন ভ্যালুটাই পাঠাব
           type: selectedType,
-          date: selectedDate,
+          date: selectedDate, // Date Object -> ISO String অটো কনভার্ট হবে
           time: selectedTime,
           notes
         }),
@@ -108,6 +114,7 @@ export default function AppointmentsPage() {
 
       toast.success("Appointment booked successfully!");
       
+      // রিসেট ফর্ম
       setIsBookingOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
@@ -115,10 +122,10 @@ export default function AppointmentsPage() {
       setSelectedTopic("");
       setNotes("");
       
+      // লিস্ট রিফ্রেশ
       fetchAppointments();
 
     } catch (error) {
-      // ✅ ফিক্স: এখানে error টাইপ চেক করা হয়েছে
       const errorMessage = error instanceof Error ? error.message : "Failed to book appointment";
       toast.error(errorMessage);
     } finally {
@@ -126,6 +133,7 @@ export default function AppointmentsPage() {
     }
   };
 
+  // ৩. ফিল্টারিং লজিক
   const upcomingAppointments = appointments.filter(app => {
     const appDate = new Date(app.date);
     return (isFuture(appDate) || isToday(appDate)) && app.status !== "completed" && app.status !== "cancelled";
@@ -142,6 +150,8 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-6">
+      
+      {/* Header & Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Appointments</h1>
@@ -158,9 +168,11 @@ export default function AppointmentsPage() {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Book New Appointment</DialogTitle>
-              <DialogDescription>Schedule a session with your counselor</DialogDescription>
+              <DialogDescription>Schedule a session with your assigned counselor</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              
+              {/* Topic Select */}
               <div className="space-y-2">
                 <Label>Topic *</Label>
                 <Select value={selectedTopic} onValueChange={setSelectedTopic}>
@@ -168,15 +180,16 @@ export default function AppointmentsPage() {
                     <SelectValue placeholder="Select topic" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="university">University Selection</SelectItem>
-                    <SelectItem value="visa">Visa Guidance</SelectItem>
-                    <SelectItem value="scholarship">Scholarship Help</SelectItem>
-                    <SelectItem value="documents">Document Review</SelectItem>
-                    <SelectItem value="general">General Consultation</SelectItem>
+                    <SelectItem value="University Selection">University Selection</SelectItem>
+                    <SelectItem value="Visa Guidance">Visa Guidance</SelectItem>
+                    <SelectItem value="Scholarship Help">Scholarship Help</SelectItem>
+                    <SelectItem value="Document Review">Document Review</SelectItem>
+                    <SelectItem value="General Consultation">General Consultation</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Type Select */}
               <div className="space-y-2">
                 <Label>Appointment Type *</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
@@ -190,6 +203,7 @@ export default function AppointmentsPage() {
                 </Select>
               </div>
 
+              {/* Date Picker */}
               <div className="space-y-2">
                 <Label>Select Date *</Label>
                 <Popover>
@@ -210,7 +224,7 @@ export default function AppointmentsPage() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
+                      disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6} // শনি-রবি বন্ধ
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
@@ -218,6 +232,7 @@ export default function AppointmentsPage() {
                 </Popover>
               </div>
 
+              {/* Time Select */}
               <div className="space-y-2">
                 <Label>Select Time *</Label>
                 <Select value={selectedTime} onValueChange={setSelectedTime}>
@@ -256,8 +271,8 @@ export default function AppointmentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-border">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-blue-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{upcomingAppointments.length}</p>
@@ -267,8 +282,8 @@ export default function AppointmentsPage() {
         </Card>
         <Card className="border-border">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{pastAppointments.filter(a => a.status === "completed").length}</p>
@@ -278,8 +293,8 @@ export default function AppointmentsPage() {
         </Card>
         <Card className="border-border">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-              <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+              <XCircle className="w-6 h-6 text-red-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{pastAppointments.filter(a => a.status === "cancelled").length}</p>
@@ -291,9 +306,9 @@ export default function AppointmentsPage() {
 
       {/* Appointments Tabs */}
       <Tabs defaultValue="upcoming" className="space-y-6">
-        <TabsList className="bg-muted border border-border">
-          <TabsTrigger value="upcoming">Upcoming ({upcomingAppointments.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({pastAppointments.length})</TabsTrigger>
+        <TabsList className="bg-muted border border-border w-full md:w-auto">
+          <TabsTrigger value="upcoming" className="flex-1 md:flex-none">Upcoming ({upcomingAppointments.length})</TabsTrigger>
+          <TabsTrigger value="past" className="flex-1 md:flex-none">Past ({pastAppointments.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-4">
@@ -302,12 +317,12 @@ export default function AppointmentsPage() {
               <AppointmentCard key={appointment._id} appointment={appointment} />
             ))
           ) : (
-            <Card className="border-border">
+            <Card className="border-border border-dashed">
               <CardContent className="p-12 text-center">
-                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">No Upcoming Appointments</h3>
-                <p className="text-muted-foreground mb-4">You dont have any scheduled appointments</p>
-                <Button onClick={() => setIsBookingOpen(true)}>Book Your First Appointment</Button>
+                <p className="text-muted-foreground mb-4">You dont have any scheduled appointments.</p>
+                <Button onClick={() => setIsBookingOpen(true)} variant="outline">Book Your First Appointment</Button>
               </CardContent>
             </Card>
           )}
@@ -327,51 +342,70 @@ export default function AppointmentsPage() {
   );
 }
 
+// Sub Component: Appointment Card
 function AppointmentCard({ appointment, showActions = true }: { appointment: Appointment; showActions?: boolean }) {
+  
+  const handleJoinMeeting = () => {
+    if (appointment.meetingLink) {
+      window.open(appointment.meetingLink, "_blank");
+    } else {
+      toast.error("Meeting link not available yet.");
+    }
+  };
+
+  const handleCancel = () => {
+      toast.info("Please contact support to cancel confirm appointments.");
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow border-border">
       <CardContent className="p-5">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex gap-4">
+            {/* Date Box */}
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-primary shrink-0">
               <span className="text-lg font-bold">{format(new Date(appointment.date), "dd")}</span>
               <span className="text-xs uppercase">{format(new Date(appointment.date), "MMM")}</span>
             </div>
+            
             <div className="space-y-1">
-              <h3 className="font-semibold text-foreground">{appointment.topic}</h3>
+              <h3 className="font-semibold text-foreground text-lg">{appointment.topic}</h3>
+              
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
-                <span>{appointment.counselorId?.name || "Counselor"}</span>
+                <span>{appointment.counselorId?.name || "Assigned Counselor"}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
+              
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-1">
+                <div className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded text-xs">
+                  <Clock className="w-3.5 h-3.5" />
                   <span>{appointment.time}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {appointment.type === "video" ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                <div className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded text-xs">
+                  {appointment.type === "video" ? <Video className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
                   <span className="capitalize">{appointment.type === "video" ? "Video Call" : "In-Person"}</span>
                 </div>
-                <span className="text-muted-foreground hidden sm:inline">•</span>
-                <span className="text-muted-foreground">{appointment.duration}</span>
               </div>
             </div>
           </div>
           
-          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-2 w-full md:w-auto mt-2 md:mt-0">
+          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 w-full md:w-auto mt-2 md:mt-0">
             {getStatusBadge(appointment.status)}
+            
             {showActions && appointment.status !== "cancelled" && (
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-1">
                 {appointment.type === "video" && appointment.status === "confirmed" && (
-                  <Button size="sm" className="gap-1 bg-primary text-primary-foreground">
-                    <Video className="w-4 h-4" />
+                  <Button size="sm" className="gap-1 bg-primary text-primary-foreground h-8" onClick={handleJoinMeeting}>
+                    <Video className="w-3.5 h-3.5" />
                     Join
                   </Button>
                 )}
-                <Button size="sm" variant="outline">Reschedule</Button>
-                <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                  Cancel
-                </Button>
+                {/* Cancel Button */}
+                {appointment.status === "pending" && (
+                    <Button size="sm" variant="ghost" className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                )}
               </div>
             )}
           </div>

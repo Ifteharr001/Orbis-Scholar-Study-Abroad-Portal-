@@ -8,12 +8,20 @@ import User from "@/models/User";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     await connect();
-    const user = await User.findOne({ email: session.user.email }).select("-password");
 
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // 🚀 Performance Update: .lean() ব্যবহার করা হয়েছে
+    const user = await User.findOne({ email: session.user.email })
+      .select("-password")
+      .lean();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     return NextResponse.json({
       fullName: user.name,
@@ -22,39 +30,51 @@ export async function GET() {
       country: user.country || "",
       gender: user.gender || "",
       programPreference: user.programPreference || "Masters",
-      image: user.image || "" // ✅ ডাটাবেস থেকে ইমেজ পাঠানো হচ্ছে
+      image: user.image || "", 
+      bio: user.bio || "" // Bio ফিল্ডটিও পাঠালাম (যদি লাগে)
     });
 
   } catch (error) {
+    console.error("Profile Fetch Error:", error);
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
   }
 }
 
-// ২. প্রোফাইল আপডেট করা (FIXED)
+// ২. প্রোফাইল আপডেট করা
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const body = await req.json();
     
-    const { fullName, phone, country, gender, programPreference, image } = body;
+    const { fullName, phone, country, gender, programPreference, image, bio } = body;
+
+    // ১. ভ্যালিডেশন: নাম খালি রাখা যাবে না
+    if (!fullName) {
+        return NextResponse.json({ error: "Full Name is required" }, { status: 400 });
+    }
 
     await connect();
 
-    // ডাটাবেস আপডেট
+    // ২. ডাটাবেস আপডেট
     const updatedUser = await User.findOneAndUpdate(
       { email: session.user.email },
       { 
-        name: fullName, 
-        phone, 
-        country, 
-        gender,
-        programPreference,
-        image // ✅ এখন ডাটাবেসে ইমেজ সেভ হবে
+        $set: {
+            name: fullName, 
+            phone, 
+            country, 
+            gender,
+            programPreference,
+            image,
+            bio
+        }
       },
-      { new: true }
-    );
+      { new: true } // আপডেটেড ডাটা রিটার্ন করবে
+    ).select("-password");
 
     return NextResponse.json({ message: "Profile updated successfully", user: updatedUser });
 

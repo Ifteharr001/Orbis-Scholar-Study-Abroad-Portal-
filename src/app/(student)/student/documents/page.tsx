@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Eye, X, FileText, Check, Loader2, RefreshCw } from "lucide-react";
+import { Upload, Eye, X, FileText, Check, Loader2, RefreshCw, AlertCircle, Badge } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,21 +23,22 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// ডাটা টাইপ ইন্টারফেস (MongoDB এর সাথে মিল রেখে)
+// Data Type Interface
 interface Document {
-  _id?: string; // MongoDB ID
+  _id?: string;
   name: string;
   status: "Pending" | "Verified" | "Rejected" | "Not Uploaded";
   feedback?: string;
   fileName?: string;
   category: "required" | "rejected" | "optional";
   fileUrl?: string;
+  uploadedAt?: string;
 }
 
-// ডিফল্ট রিকোয়ারড ডকুমেন্ট লিস্ট (ডাটাবেসে না থাকলেও এগুলো দেখাবে)
-const REQUIRED_DEFAULTS: Document[] = [
-  { name: "Academic Transcript", status: "Not Uploaded", category: "required" },
-  { name: "Passport Copy", status: "Not Uploaded", category: "required" },
+// Default Required Documents
+const REQUIRED_DEFAULTS: Partial<Document>[] = [
+  { name: "Academic Transcript", category: "required" },
+  { name: "Passport Copy", category: "required" },
 ];
 
 const documentTypes = [
@@ -54,13 +56,13 @@ const documentTypes = [
 const getStatusStyles = (status: string) => {
   switch (status) {
     case "Verified":
-      return "text-green-600 dark:text-green-400 font-medium";
+      return "text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded";
     case "Pending":
-      return "text-orange-500 dark:text-orange-400 font-medium";
+      return "text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded";
     case "Rejected":
-      return "text-white bg-red-500 px-3 py-1 rounded text-xs font-medium";
+      return "text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded";
     case "Not Uploaded":
-      return "text-muted-foreground";
+      return "text-muted-foreground bg-muted px-2 py-0.5 rounded";
     default:
       return "text-muted-foreground";
   }
@@ -82,22 +84,35 @@ export default function DocumentsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<string>("");
 
-  // ১. ডাটা ফেচ করা
+  // 1. Fetch Documents
   const fetchDocuments = useCallback(async () => {
     try {
       const res = await fetch("/api/student/documents");
+      if (!res.ok) throw new Error("Failed to fetch");
+      
       const data = await res.json();
 
       if (Array.isArray(data)) {
-        // মার্জিং লজিক: API ডাটা + ডিফল্ট রিকোয়ারড ডকুমেন্টস
-        // যদি API তে রিকোয়ারড ডক না থাকে, তবে "Not Uploaded" হিসেবে দেখাবে
-        const mergedDocs = [...data];
+        // Merge Logic: API Data + Default Required Docs
+        const mergedDocs: Document[] = [...data];
 
         REQUIRED_DEFAULTS.forEach((defDoc) => {
           const exists = data.find((d) => d.name === defDoc.name);
           if (!exists) {
-            mergedDocs.push({ ...defDoc, _id: `temp-${defDoc.name}` });
+            mergedDocs.push({
+              _id: `temp-${defDoc.name?.replace(/\s+/g, '-').toLowerCase()}`,
+              name: defDoc.name!,
+              status: "Not Uploaded",
+              category: "required",
+            });
           }
+        });
+
+        // Sort: Required first, then others
+        mergedDocs.sort((a, b) => {
+            if (a.category === 'required' && b.category !== 'required') return -1;
+            if (a.category !== 'required' && b.category === 'required') return 1;
+            return 0;
         });
 
         setDocuments(mergedDocs);
@@ -120,21 +135,30 @@ export default function DocumentsPage() {
     }
   };
 
-  // ২. কমন আপলোড ফাংশন (API Call)
+  // 2. Common Upload Function
   const processUpload = async (docName: string, category: string = "optional") => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+        toast.error("No file selected");
+        return;
+    }
 
     setIsUploading(true);
 
     try {
-      // রিয়েল প্রজেক্টে এখানে FormData ব্যবহার করে ফাইল আপলোড করতে হবে
-      // আপাতত আমরা JSON পাঠাচ্ছি (আপনার আগের API অনুযায়ী)
+      // In a real app, you would upload to cloud storage (S3/Cloudinary) here
+      // and get a URL. We are simulating this by sending metadata to our API.
+      // The API (previous step) expects: name, fileName, fileUrl, category
+      
+      // Simulating a file URL
+      const fakeUrl = URL.createObjectURL(selectedFile);
+
       const res = await fetch("/api/student/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: docName,
           fileName: selectedFile.name,
+          fileUrl: fakeUrl, // Sending the fake URL
           category: category,
         }),
       });
@@ -145,10 +169,9 @@ export default function DocumentsPage() {
         description: `${docName} has been processed successfully.`,
       });
 
-      // লিস্ট রিফ্রেশ করা
       await fetchDocuments();
 
-      // সব ডায়ালগ বন্ধ করা
+      // Reset all states
       setUploadDialogOpen(false);
       setReplaceDialogOpen(false);
       setFixDialogOpen(false);
@@ -171,7 +194,6 @@ export default function DocumentsPage() {
       toast.error("Missing Information", { description: "Please select a document type and file." });
       return;
     }
-    // যদি রিকোয়ারড লিস্টে থাকে তবে ক্যাটাগরি 'required' হবে, নাহলে 'optional'
     const isRequired = REQUIRED_DEFAULTS.some(d => d.name === selectedDocType);
     processUpload(selectedDocType, isRequired ? "required" : "optional");
   };
@@ -183,7 +205,6 @@ export default function DocumentsPage() {
 
   const handleFixReupload = () => {
     if (!selectedFile || !selectedDocument) return;
-    // ফিক্স করলে সেটা আবার 'required' বা আগের ক্যাটাগরিতেই যাবে, স্ট্যাটাস Pending হবে (API হ্যান্ডেল করবে)
     processUpload(selectedDocument.name, selectedDocument.category);
   };
 
@@ -213,25 +234,30 @@ export default function DocumentsPage() {
     switch (doc.status) {
       case "Verified":
         return (
-          <Button variant="outline" size="sm" className="text-muted-foreground hover:bg-muted" onClick={() => openViewDialog(doc)}>
+          <Button variant="ghost" size="sm" onClick={() => openViewDialog(doc)}>
             <Eye className="w-4 h-4 mr-1" /> View
           </Button>
         );
       case "Pending":
         return (
-          <Button variant="outline" size="sm" className="text-muted-foreground hover:bg-muted" onClick={() => openReplaceDialog(doc)}>
-            <RefreshCw className="w-4 h-4 mr-1" /> Replace
-          </Button>
+          <div className="flex gap-2">
+             <Button variant="ghost" size="sm" onClick={() => openViewDialog(doc)}>
+                <Eye className="w-4 h-4" />
+             </Button>
+             <Button variant="outline" size="sm" onClick={() => openReplaceDialog(doc)}>
+                <RefreshCw className="w-4 h-4 mr-1" /> Replace
+             </Button>
+          </div>
         );
       case "Rejected":
         return (
-          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white border-none" onClick={() => openFixDialog(doc)}>
+          <Button size="sm" variant="destructive" onClick={() => openFixDialog(doc)}>
             Fix & Re-upload
           </Button>
         );
       case "Not Uploaded":
         return (
-          <Button variant="outline" size="sm" className="text-muted-foreground hover:bg-muted" onClick={() => handleUploadNew(doc)}>
+          <Button variant="outline" size="sm" onClick={() => handleUploadNew(doc)}>
             <Upload className="w-4 h-4 mr-1" /> Upload
           </Button>
         );
@@ -240,9 +266,8 @@ export default function DocumentsPage() {
     }
   };
 
-  // ফিল্টারিং
   const requiredDocuments = documents.filter(d => d.category === "required");
-  const rejectedDocuments = documents.filter(d => d.status === "Rejected"); // স্ট্যাটাস দিয়ে চেক করা ভালো
+  const rejectedDocuments = documents.filter(d => d.status === "Rejected");
   const optionalDocuments = documents.filter(d => d.category === "optional" && d.status !== "Rejected");
 
   if (loading) {
@@ -254,13 +279,13 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Documents</h1>
-          <p className="text-muted-foreground">Upload and manage your files safely.</p>
+          <h1 className="text-3xl font-bold text-foreground">Documents</h1>
+          <p className="text-muted-foreground mt-1">Upload and manage your required files for application.</p>
         </div>
         <Button 
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -271,29 +296,59 @@ export default function DocumentsPage() {
           }}
         >
           <Upload className="w-4 h-4 mr-2" />
-          Upload Document
+          Upload New Document
         </Button>
       </div>
 
+      {/* Rejected Documents Alert Section */}
+      {rejectedDocuments.length > 0 && (
+        <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-red-600 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" /> Action Required
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2">
+                {rejectedDocuments.map((doc, idx) => (
+                <div key={doc._id || idx} className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-4 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium text-foreground">{doc.name}</h3>
+                        <span className={cn("text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700")}>Rejected</span>
+                    </div>
+                    <div className="bg-white dark:bg-background p-3 rounded border border-red-100 text-sm text-muted-foreground mb-4">
+                        <span className="font-semibold text-red-600 mr-1">Feedback:</span> 
+                        {doc.feedback || "Document is not clear or incorrect."}
+                    </div>
+                    <Button size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={() => openFixDialog(doc)}>
+                        Fix & Re-upload
+                    </Button>
+                </div>
+                ))}
+            </div>
+        </div>
+      )}
+
       {/* Required Documents */}
-      <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm">
-        <h2 className="text-base font-semibold text-foreground mb-1">Required Documents</h2>
-        <p className="text-sm text-muted-foreground mb-4">These are mandatory for your active applications.</p>
-        
-        <div className="space-y-0 divide-y divide-border">
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground border-b pb-2">Required Documents</h2>
+        <div className="bg-card border border-border rounded-lg shadow-sm divide-y divide-border">
           {requiredDocuments.map((doc, idx) => (
-            <div key={doc._id || idx} className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-muted-foreground" />
+            <div key={doc._id || idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className={cn("p-2.5 rounded-lg", doc.status === "Verified" ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground")}>
+                    <FileText className="w-5 h-5" />
+                </div>
                 <div>
-                  <span className="text-sm font-medium text-foreground">{doc.name}</span>
-                  {doc.fileName && (
-                    <p className="text-xs text-muted-foreground">{doc.fileName}</p>
+                  <p className="font-medium text-foreground">{doc.name}</p>
+                  {doc.fileName ? (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Check className="w-3 h-3 text-green-500" /> {doc.fileName}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Mandatory</p>
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4">
-                <span className={cn("text-sm", getStatusStyles(doc.status))}>{doc.status}</span>
+              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                <span className={cn("text-xs", getStatusStyles(doc.status))}>{doc.status}</span>
                 {getActionButton(doc)}
               </div>
             </div>
@@ -301,84 +356,52 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Rejected Documents (যদি থাকে) */}
-      {rejectedDocuments.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm">
-          <h2 className="text-base font-semibold text-foreground mb-1">Rejected Documents</h2>
-          <p className="text-sm text-muted-foreground mb-4">Please review the feedback and re-upload these documents.</p>
-          
-          <div className="space-y-3">
-            {rejectedDocuments.map((doc, idx) => (
-              <div key={doc._id || idx} className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-100 dark:border-red-900/30">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <X className="w-5 h-5 text-red-500 mt-0.5" />
-                    <div>
-                      <span className="text-sm font-medium text-foreground">{doc.name}</span>
-                      {doc.fileName && (
-                        <p className="text-xs text-muted-foreground">{doc.fileName}</p>
-                      )}
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                        <span className="font-medium">Feedback:</span> {doc.feedback || "Please re-upload clearly."}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between md:justify-end gap-4">
-                    <span className={getStatusStyles(doc.status)}>{doc.status}</span>
-                    {getActionButton(doc)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Optional Documents */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-foreground mb-1">Optional Documents</h2>
-        <p className="text-sm text-muted-foreground mb-4">These documents can strengthen your application but are not mandatory.</p>
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground border-b pb-2">Optional Documents</h2>
         
         {optionalDocuments.length === 0 ? (
-           <p className="text-sm text-muted-foreground italic">No optional documents uploaded yet.</p>
+            <div className="text-center py-10 bg-muted/20 border border-dashed rounded-lg">
+                <p className="text-muted-foreground text-sm">You haven t uploaded any optional documents yet.</p>
+            </div>
         ) : (
-          <div className="space-y-0 divide-y divide-border">
+            <div className="bg-card border border-border rounded-lg shadow-sm divide-y divide-border">
             {optionalDocuments.map((doc, idx) => (
-              <div key={doc._id || idx} className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">{doc.name}</span>
-                    {doc.fileName && (
-                      <p className="text-xs text-muted-foreground">{doc.fileName}</p>
-                    )}
-                  </div>
+                <div key={doc._id || idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-4">
+                    <div className="p-2.5 rounded-lg bg-muted text-muted-foreground">
+                        <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                    <p className="font-medium text-foreground">{doc.name}</p>
+                    <p className="text-xs text-muted-foreground">{doc.fileName}</p>
+                    </div>
                 </div>
-                <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4">
-                  <span className={cn("text-sm", getStatusStyles(doc.status))}>{doc.status}</span>
-                  {getActionButton(doc)}
+                <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                    <span className={cn("text-xs", getStatusStyles(doc.status))}>{doc.status}</span>
+                    {getActionButton(doc)}
                 </div>
-              </div>
+                </div>
             ))}
-          </div>
+            </div>
         )}
       </div>
 
-      {/* --- DIALOGS (Upload / Replace / Fix / View) --- */}
+      {/* --- DIALOGS --- */}
 
       {/* 1. Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
-            <DialogDescription>Select a document type and upload your file.</DialogDescription>
+            <DialogDescription>Select document type and upload your file (PDF/Image).</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Document Type</Label>
-              <Select value={selectedDocType} onValueChange={setSelectedDocType}>
+              <Select value={selectedDocType} onValueChange={setSelectedDocType} disabled={!!selectedDocument}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select document type" />
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((type) => (
@@ -390,94 +413,75 @@ export default function DocumentsPage() {
             <div className="space-y-2">
               <Label>File</Label>
               <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
-              {selectedFile && (
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> {selectedFile.name}
-                </p>
-              )}
             </div>
           </div>
-          <div className="flex justify-end gap-3">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleUpload} disabled={isUploading}>
-              {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-              Upload
+              {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Upload"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 2. Replace Dialog */}
-      <Dialog open={replaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
+      {/* 2. Replace / Fix Dialog (Reused for simplicity) */}
+      <Dialog open={replaceDialogOpen || fixDialogOpen} onOpenChange={(open) => {
+          if(!open) { setReplaceDialogOpen(false); setFixDialogOpen(false); }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Replace Document</DialogTitle>
-            <DialogDescription>Upload a new version of {selectedDocument?.name}.</DialogDescription>
+            <DialogTitle>{fixDialogOpen ? "Fix & Re-upload" : "Replace Document"}</DialogTitle>
+            <DialogDescription>Upload a new version for {selectedDocument?.name}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>New File</Label>
-              <Input type="file" accept=".pdf,.jpg,.png" onChange={handleFileChange} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setReplaceDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleReplace} disabled={isUploading}>
-              {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Replace Document"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 3. Fix Dialog */}
-      <Dialog open={fixDialogOpen} onOpenChange={setFixDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Fix & Re-upload</DialogTitle>
-            <DialogDescription>Address feedback and upload corrected file.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-             {selectedDocument?.feedback && (
-               <div className="bg-red-50 p-3 rounded text-sm text-red-600 border border-red-100">
-                 Feedback: {selectedDocument.feedback}
-               </div>
+             {fixDialogOpen && selectedDocument?.feedback && (
+                <div className="bg-red-50 p-3 rounded text-sm text-red-600 border border-red-100">
+                  <span className="font-semibold">Reason:</span> {selectedDocument.feedback}
+                </div>
              )}
             <div className="space-y-2">
-              <Label>Corrected File</Label>
-              <Input type="file" accept=".pdf,.jpg,.png" onChange={handleFileChange} />
+              <Label>Select New File</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
             </div>
           </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setFixDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleFixReupload} className="bg-cyan-500 hover:bg-cyan-600 text-white" disabled={isUploading}>
-               {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Re-upload Document"}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setReplaceDialogOpen(false); setFixDialogOpen(false); }}>Cancel</Button>
+            <Button onClick={fixDialogOpen ? handleFixReupload : handleReplace} disabled={isUploading}>
+              {isUploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Upload New Version"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 4. View Dialog */}
+      {/* 3. View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>View Document</DialogTitle>
           </DialogHeader>
           {selectedDocument && (
-            <div className="py-4 text-center">
-              <div className="bg-muted/50 rounded-lg p-6 border border-border">
-                <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-medium text-foreground">{selectedDocument.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{selectedDocument.fileName}</p>
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <span className={cn("text-sm", getStatusStyles(selectedDocument.status))}>{selectedDocument.status}</span>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
-                <Button variant="outline" disabled>Download (Demo)</Button>
-              </div>
-            </div>
-          )}
+  <div className="py-6 text-center space-y-4">
+    <div className="bg-muted/30 p-8 rounded-lg border border-dashed flex flex-col items-center justify-center">
+      <FileText className="w-12 h-12 text-primary mb-2" />
+      <h3 className="font-semibold">{selectedDocument.name}</h3>
+      <p className="text-sm text-muted-foreground">{selectedDocument.fileName}</p>
+      
+      <Badge className="mt-2 bg-transparent border border-border text-foreground hover:bg-muted">
+        {selectedDocument.status}
+      </Badge>
+    </div>
+    
+    <div className="flex justify-center gap-3">
+      <Button 
+        variant="outline" 
+        onClick={() => window.open(selectedDocument.fileUrl, '_blank')} 
+        disabled={!selectedDocument.fileUrl}
+      >
+        Open in New Tab
+      </Button>
+    </div>
+  </div>
+)}
         </DialogContent>
       </Dialog>
 

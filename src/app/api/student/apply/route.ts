@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
-import { connect } from "@/lib/db"; 
-import Application from "@/models/Application"; 
+import { connect } from "@/lib/db";
+import Application from "@/models/Application";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 export async function POST(req: Request) {
   try {
-    await connect(); 
+    // ১. সিকিউরিটি চেক: ইউজার লগইন করা আছে কিনা?
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json(
+        { message: "Unauthorized: Please login first" },
+        { status: 401 }
+      );
+    }
+
+    await connect();
 
     const body = await req.json();
     
+    // ডাটা ডিসট্রাকচারিং (email বডি থেকে নেব না, সেশন থেকে নেব)
     const { 
       firstName, 
       lastName, 
-      email, 
       phone, 
       gender, 
       country, 
@@ -20,16 +33,35 @@ export async function POST(req: Request) {
       intakePreference 
     } = body;
 
-    if (!email || !universityName || !programName) {
+    // ২. ভ্যালিডেশন
+    if (!universityName || !programName) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: "Missing required fields (University or Program)" },
         { status: 400 }
       );
     }
 
-    // নতুন অ্যাপ্লিকেশন তৈরি
+    // ৩. ডুপ্লিকেট চেক: একই স্টুডেন্ট কি একই প্রোগ্রামে আগে অ্যাপ্লাই করেছে?
+    const existingApplication = await Application.findOne({
+      studentEmail: session.user.email,
+      universityName: universityName,
+      programName: programName,
+    });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { message: "You have already applied to this program." },
+        { status: 409 } // 409 Conflict
+      );
+    }
+
+    // ৪. সেইফ অ্যাপ্লিকেশন আইডি তৈরি (Date + Random Number)
+    // শুধু Date.now() দিলে একই মিলিসেকেন্ডে দুইজন অ্যাপ্লাই করলে আইডি মিলে যেতে পারে
+    const uniqueId = `APP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // ৫. নতুন অ্যাপ্লিকেশন তৈরি
     const newApplication = new Application({
-      studentEmail: email, // ফ্রন্টএন্ডের 'email' মডেলে 'studentEmail' হিসেবে যাবে
+      studentEmail: session.user.email, // 🔒 সেশন থেকে নেওয়া ইমেইল (সিকিউর)
       firstName,
       lastName,
       phone,
@@ -41,7 +73,7 @@ export async function POST(req: Request) {
       intakePreference,
       status: "Applied",
       appliedDate: new Date(),
-      applicationId: `APP-${Date.now()}`, // একটি ইউনিক আইডি জেনারেট করা হলো
+      applicationId: uniqueId,
     });
 
     await newApplication.save();
@@ -51,11 +83,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
 
-  } 
-
-
-
-catch (error) {
+  } catch (error: unknown) { // টাইপ সেফটি
     console.error("Application Error:", error);
     
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";

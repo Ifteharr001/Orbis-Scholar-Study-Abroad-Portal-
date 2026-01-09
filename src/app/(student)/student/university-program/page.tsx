@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link"; // ✅ Link ইম্পোর্ট করা হয়েছে
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, GraduationCap, Loader2, Eye, DollarSign, Clock } from "lucide-react";
-import { toast } from "sonner";
+import { Search, MapPin, GraduationCap, Loader2, DollarSign, Clock } from "lucide-react";
 
 interface Program {
   id: string;
-  universityId: string; // ✅ এই ID দিয়ে আমরা রাউটিং করব
+  universityId: string;
   program: string;
   university: string;
   location: string;
@@ -45,12 +44,13 @@ export default function UniversityProgramPage() {
     fetchPrograms();
   }, []);
 
+  // ✅ FIX: এখানে সেফটি চেক যোগ করা হয়েছে যাতে null ভ্যালু থাকলে ক্র্যাশ না করে
   const filteredPrograms = useMemo(() => {
+    const lowerSearch = searchQuery.toLowerCase();
     return programs.filter(p => 
-      searchQuery === "" ||
-      p.university.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      p.program.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.location.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.university || "").toLowerCase().includes(lowerSearch) || 
+      (p.program || "").toLowerCase().includes(lowerSearch) ||
+      (p.location || "").toLowerCase().includes(lowerSearch)
     );
   }, [programs, searchQuery]);
 
@@ -121,15 +121,14 @@ export default function UniversityProgramPage() {
               </CardContent>
 
               <CardFooter className="pt-2 mt-auto">
-               <Link 
-  // ✅ কুয়েরি প্যারামিটার হিসেবে ডাটা পাঠানো হচ্ছে
-  href={`/student/apply?program=${encodeURIComponent(program.program)}&university=${encodeURIComponent(program.university)}`} 
-  className="w-full"
->
-  <Button className="w-full">
-    Apply No
-  </Button>
-</Link>
+                <Link 
+                  href={`/university/${program.universityId}`} 
+                  className="w-full"
+                >
+                  <Button className="w-full">
+                    View University
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}

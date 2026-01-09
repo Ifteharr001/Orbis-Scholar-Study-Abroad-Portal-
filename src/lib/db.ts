@@ -1,20 +1,24 @@
 import mongoose from "mongoose";
 
-const MONGODB_URL = process.env.MONGODB_URL!;
+// পরিবেশ ভেরিয়েবল চেক (URI বা URL যেটাই থাকুক কাজ করবে)
+const MONGODB_URL = process.env.MONGODB_URL || process.env.MONGODB_URI;
 
 if (!MONGODB_URL) {
-  throw new Error("❌ MONGODB_URL is not defined in .env.local");
+  throw new Error("❌ Please define MONGODB_URL or MONGODB_URI in your .env file");
 }
 
+// TypeScript এর জন্য গ্লোবাল ক্যাশ ইন্টারফেস
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
 }
 
 declare global {
+  // eslint-disable-next-line no-var
   var mongoose: MongooseCache;
 }
 
+// গ্লোবাল ভেরিয়েবল থেকে ক্যাশ নেওয়া (যাতে হট রিলোডে কানেকশন না হারায়)
 let cached = global.mongoose;
 
 if (!cached) {
@@ -22,22 +26,21 @@ if (!cached) {
 }
 
 export const connect = async () => {
-  // ১. যদি আগের কানেকশন থাকে, সেটাই ব্যবহার করবে (এটিই স্পিড বাড়াবে)
+  // ১. যদি আগের কানেকশন থাকে, সেটাই ব্যবহার করবে (এটাই স্পিড বাড়াবে)
   if (cached.conn) {
-    // console.log("🚀 Using cached MongoDB connection"); // ডিবাগিং এর জন্য চাইলে কমেন্ট আউট করতে পারেন
     return cached.conn;
   }
 
   // ২. কানেকশন না থাকলে নতুন কানেকশন তৈরি করবে
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
-      maxPoolSize: 10, // একসাথে ১০টির বেশি কানেকশন খুলবে না (সার্ভার স্লো হওয়া আটকাবে)
-      serverSelectionTimeoutMS: 5000, // ৫ সেকেন্ডের মধ্যে কানেক্ট না হলে এরর দিবে (অযথা লোডিং হয়ে থাকবে না)
-      socketTimeoutMS: 45000, // সকেট টাইমআউট
+      bufferCommands: false, // বাফারিং বন্ধ রাখা (ফাস্ট এরর হ্যান্ডলিং)
+      maxPoolSize: 10,       // কানেকশন লিমিট (সার্ভার ওভারলোড আটকাতে)
+      serverSelectionTimeoutMS: 5000, // ৫ সেকেন্ডে কানেক্ট না হলে এরর দিবে
+      socketTimeoutMS: 45000,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URL, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URL!, opts).then((mongoose) => {
       console.log("✅ New MongoDB connection established");
       return mongoose;
     });

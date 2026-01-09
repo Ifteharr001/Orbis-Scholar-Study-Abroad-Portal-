@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { 
-  CheckCircle2, Circle, Clock, Download, ExternalLink, Upload, 
+  CheckCircle2, Circle, Clock, ExternalLink, Upload, 
   Plane, MapPin, Calendar as CalendarIcon, FileText, Lock, 
-  ChevronDown, ChevronUp, X, Eye, Loader2 
+  ChevronDown, ChevronUp, Eye, Loader2 
 } from "lucide-react";
 
 // Task Interface
@@ -36,7 +36,7 @@ interface PackingItem {
   checked: boolean;
 }
 
-// ✅ নতুন ইন্টারফেস: আপডেটের ডাটা টাইপ ডিফাইন করা
+// Update Payload Interface
 interface VisaUpdatePayload {
   tasks?: Task[];
   progress?: number;
@@ -89,10 +89,12 @@ export default function VisaPreDeparturePage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // ১. ডাটা ফেচ করা
+  // 1. Fetch Data
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/student/visa-process");
+      if (!res.ok) throw new Error("Failed to fetch data");
+      
       const data = await res.json();
       
       if (data) {
@@ -114,6 +116,7 @@ export default function VisaPreDeparturePage() {
       }
     } catch (error) {
       console.error("Failed to load visa data", error);
+      toast.error("Failed to load visa process details.");
     } finally {
       setLoading(false);
     }
@@ -123,7 +126,7 @@ export default function VisaPreDeparturePage() {
     fetchData();
   }, [fetchData]);
 
-  // ২. আপডেট ফাংশন (API Call) - ✅ ফিক্স: 'any' এর বদলে সঠিক ইন্টারফেস ব্যবহার করা হয়েছে
+  // 2. Update Function (API Call)
   const updateVisaProcess = async (updates: VisaUpdatePayload) => {
     try {
       const res = await fetch("/api/student/visa-process", {
@@ -133,9 +136,10 @@ export default function VisaPreDeparturePage() {
       });
       if (!res.ok) throw new Error("Update failed");
       
-      // আপডেট সফল হলে UI রিফ্রেশ (অথবা লোকাল স্টেট আপডেট)
-      fetchData(); 
+      // Optionally refetch to ensure sync, or rely on optimistic updates
+      // fetchData(); 
     } catch (error) {
+      console.error(error);
       toast.error("Failed to save changes");
     }
   };
@@ -143,22 +147,21 @@ export default function VisaPreDeparturePage() {
   // --- Handlers ---
 
   const handleTaskUpdate = async (taskId: number, newStatus: string, fileData?: { fileName: string, fileUrl: string }) => {
-    // এখানে status কে কাস্ট করে নেওয়া হচ্ছে যাতে টাইপ মিসম্যাচ না হয়
     const updatedTasks = visaTasks.map(t => 
       t.id === taskId 
         ? { ...t, status: newStatus as Task["status"], ...(fileData || {}) } 
         : t
     );
     
-    // প্রোগ্রেস ক্যালকুলেশন
+    // Progress Calculation
     const completedCount = updatedTasks.filter(t => t.status === "done").length;
     const newProgress = Math.round((completedCount / updatedTasks.length) * 100);
 
-    // লোকাল স্টেট আপডেট
+    // Optimistic Update
     setVisaTasks(updatedTasks);
     setVisaProgress(newProgress);
 
-    // API কল
+    // API Call
     await updateVisaProcess({ 
       tasks: updatedTasks, 
       progress: newProgress 
@@ -167,6 +170,7 @@ export default function VisaPreDeparturePage() {
 
   const handleUpload = async () => {
     if (selectedFile && selectedTask) {
+      // Create a fake URL for demo purposes. In production, upload to server/S3 first.
       const dummyUrl = URL.createObjectURL(selectedFile); 
       
       await handleTaskUpdate(selectedTask.id, "done", { 
@@ -177,6 +181,8 @@ export default function VisaPreDeparturePage() {
       setUploadDialogOpen(false);
       setSelectedFile(null);
       toast.success(`${selectedTask.name} uploaded successfully!`);
+    } else {
+        toast.error("Please select a file.");
     }
   };
 
@@ -196,7 +202,7 @@ export default function VisaPreDeparturePage() {
     await updateVisaProcess({ packingList: newPackingList });
   };
 
-  // Appointments সেভ করা
+  // Auto-save appointments
   useEffect(() => {
     if (!loading && (medicalDate || embassyDate)) {
       const timer = setTimeout(() => {
@@ -206,7 +212,7 @@ export default function VisaPreDeparturePage() {
     }
   }, [medicalDate, embassyDate, loading]);
 
-  // Travel Info সেভ করা
+  // Travel Info Handler
   const handleTravelChange = (field: string, value: string) => {
     setTravelData(prev => ({ ...prev, [field]: value }));
   };
@@ -233,10 +239,10 @@ export default function VisaPreDeparturePage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "done": return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Done</Badge>;
-      case "pending": return <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">Pending</Badge>;
-      case "verified": return <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400">Verified</Badge>;
-      case "locked": return <Badge className="bg-gray-100 text-gray-500 dark:bg-muted dark:text-muted-foreground">Locked</Badge>;
+      case "done": return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400">Done</Badge>;
+      case "pending": return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400">Pending</Badge>;
+      case "verified": return <Badge className="bg-cyan-100 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400">Verified</Badge>;
+      case "locked": return <Badge className="bg-gray-100 text-gray-500 hover:bg-gray-100 dark:bg-muted dark:text-muted-foreground">Locked</Badge>;
       default: return null;
     }
   };
@@ -251,11 +257,11 @@ export default function VisaPreDeparturePage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center h-[60vh] items-center"><Loader2 className="animate-spin h-8 w-8 text-cyan-600"/></div>;
+    return <div className="flex justify-center h-[60vh] items-center"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 rounded-2xl p-8 text-white shadow-md">
@@ -283,7 +289,7 @@ export default function VisaPreDeparturePage() {
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 min-w-[280px] w-full md:w-auto">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 min-w-[280px] w-full md:w-auto border border-white/20">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-5 h-5" />
               <span className="font-medium">Embassy Details</span>
@@ -331,9 +337,9 @@ export default function VisaPreDeparturePage() {
                     </Button>
                   )}
                   {task.hasUpload && task.status === "pending" && (
-                     <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => { setSelectedTask(task); setUploadDialogOpen(true); }}>
-                       <Upload className="w-3 h-3 mr-1" /> Upload
-                     </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => { setSelectedTask(task); setUploadDialogOpen(true); }}>
+                        <Upload className="w-3 h-3 mr-1" /> Upload
+                      </Button>
                   )}
                 </div>
               </div>
@@ -357,34 +363,34 @@ export default function VisaPreDeparturePage() {
 
         {expandedSections.appointments && (
           <div className="border-t border-border p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="p-4 rounded-lg border border-border bg-muted/30">
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
                 <label className="text-sm font-medium mb-2 block">Medical Appointment</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal border-border">
+                    <Button variant="outline" className="w-full justify-start text-left font-normal border-border bg-background">
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {medicalDate ? format(medicalDate, "PPP") : "Select date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={medicalDate} onSelect={setMedicalDate} />
+                    <Calendar mode="single" selected={medicalDate} onSelect={setMedicalDate} initialFocus />
                   </PopoverContent>
                 </Popover>
-             </div>
-             <div className="p-4 rounded-lg border border-border bg-muted/30">
+              </div>
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
                 <label className="text-sm font-medium mb-2 block">Embassy Interview</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal border-border">
+                    <Button variant="outline" className="w-full justify-start text-left font-normal border-border bg-background">
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {embassyDate ? format(embassyDate, "PPP") : "Select date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={embassyDate} onSelect={setEmbassyDate} />
+                    <Calendar mode="single" selected={embassyDate} onSelect={setEmbassyDate} initialFocus />
                   </PopoverContent>
                 </Popover>
-             </div>
+              </div>
           </div>
         )}
       </div>
@@ -407,24 +413,24 @@ export default function VisaPreDeparturePage() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">Departure Date</label>
-                    <Input type="date" value={travelData.departureDate} onChange={(e) => handleTravelChange('departureDate', e.target.value)} />
+                    <Input type="date" value={travelData.departureDate} onChange={(e) => handleTravelChange('departureDate', e.target.value)} className="bg-background"/>
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-2 block">Flight Number</label>
-                    <Input placeholder="e.g. BA123" value={travelData.flightNumber} onChange={(e) => handleTravelChange('flightNumber', e.target.value)} />
+                    <Input placeholder="e.g. BA123" value={travelData.flightNumber} onChange={(e) => handleTravelChange('flightNumber', e.target.value)} className="bg-background"/>
                   </div>
                </div>
                <div className="p-4 rounded-lg bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-200 flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                     <Plane className="w-5 h-5 text-cyan-600" />
-                     <div>
+                      <Plane className="w-5 h-5 text-cyan-600" />
+                      <div>
                         <p className="font-medium text-foreground">Airport Pickup Service</p>
                         <p className="text-sm text-muted-foreground">Request pickup assistance</p>
-                     </div>
+                      </div>
                   </div>
                   <Switch checked={needsPickup} onCheckedChange={setNeedsPickup} />
                </div>
-               <Button onClick={saveTravelDetails} className="w-full bg-cyan-600 text-white">Save Travel Details</Button>
+               <Button onClick={saveTravelDetails} className="w-full bg-cyan-600 text-white hover:bg-cyan-700">Save Travel Details</Button>
             </div>
          )}
       </div>
@@ -444,9 +450,9 @@ export default function VisaPreDeparturePage() {
                <h3 className="font-semibold mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-cyan-600"/> Packing Checklist</h3>
                <div className="space-y-3">
                   {packingItems.map((item, index) => (
-                     <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                     <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border transition-colors hover:bg-muted/50">
                         <Checkbox id={`pack-${index}`} checked={item.checked} onCheckedChange={() => handlePackingToggle(index)} />
-                        <label htmlFor={`pack-${index}`} className="text-sm cursor-pointer">{item.name}</label>
+                        <label htmlFor={`pack-${index}`} className="text-sm cursor-pointer w-full select-none">{item.name}</label>
                      </div>
                   ))}
                </div>
@@ -461,7 +467,7 @@ export default function VisaPreDeparturePage() {
         <DialogContent>
            <DialogHeader><DialogTitle>Upload {selectedTask?.name}</DialogTitle></DialogHeader>
            <div className="py-4">
-              <Input type="file" onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])} />
+              <Input type="file" onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])} accept=".pdf,.jpg,.jpeg,.png"/>
            </div>
            <DialogFooter>
               <Button onClick={handleUpload}>Upload</Button>
