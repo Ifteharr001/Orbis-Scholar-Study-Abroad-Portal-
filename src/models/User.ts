@@ -5,12 +5,14 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   role: "student" | "partner" | "admin" | "counselor";
+  
+  // Profile info
   phone?: string;
   gender?: string;
   country?: string;
   image?: string;
   
-  // Profile info (Student)
+  // Profile info (Student Specific)
   programPreference?: string; 
 
   // 👇 Student-এর জন্য (Link to Counselor)
@@ -47,7 +49,7 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: false, // Google Auth এর জন্য false রাখা ভালো, সাধারণ হলে true
       minlength: [6, "Password must be at least 6 characters"],
       select: false, // 🔒 নিরাপত্তা: সাধারণ কুয়েরিতে পাসওয়ার্ড ফিল্ড হাইড থাকবে
     },
@@ -58,7 +60,7 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     phone: {
       type: String,
-      default: null,
+      default: "", // null এর বদলে empty string রাখা সেইফ
       trim: true,
     },
     image: {
@@ -67,11 +69,11 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     gender: {
       type: String,
-      default: null,
+      default: "",
     },
     country: {
       type: String,
-      default: null,
+      default: "",
     },
 
     // Student Specific
@@ -111,9 +113,7 @@ UserSchema.index({ counselor: 1 });
 // ২. রোল ফিল্টার করার জন্য (যেমন: সব কাউন্সিলর বা সব পার্টনার খোঁজা)
 UserSchema.index({ role: 1 });
 
-// ৩. ❌ Email index রিমুভ করা হয়েছে কারণ উপরে unique: true আছে
-
-// Next.js এ Hot Reload এর কারণে মডেল ওভাররাইট এরর আটকাতে এই লজিক
+// ৩. Next.js এ Hot Reload এর কারণে মডেল ওভাররাইট এরর আটকাতে এই লজিক
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;
