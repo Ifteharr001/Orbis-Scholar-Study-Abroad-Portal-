@@ -4,8 +4,12 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  role: "student" | "partner" | "admin" | "counselor";
+  // 👇 ১. রোল আপডেট করা হয়েছে (staff ও owner যোগ করা হয়েছে)
+  role: "student" | "partner" | "admin" | "counselor" | "staff" | "owner";
   
+  // 👇 ২. স্ট্যাটাস ফিল্ড যোগ করা হয়েছে (এটি মিসিং ছিল)
+  status: "active" | "inactive" | "blocked";
+
   // Profile info
   phone?: string;
   gender?: string;
@@ -15,11 +19,10 @@ export interface IUser extends Document {
   // Profile info (Student Specific)
   programPreference?: string; 
 
-  // 👇 Student-এর জন্য (Link to Counselor)
-  // নোট: API-তে populate("counselor") ব্যবহার করায় এখানে নাম 'counselor' রাখা হয়েছে
+  // Link to Counselor
   counselor?: mongoose.Types.ObjectId;
 
-  // 👇 Counselor-এর জন্য
+  // Counselor Specific
   bio?: string;
   specializations?: string[];
   languages?: string[];
@@ -43,24 +46,31 @@ const UserSchema: Schema<IUser> = new Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true, // Unique হওয়ার কারণে MongoDB অটোমেটিক ইনডেক্স তৈরি করে নেয়
+      unique: true, 
       trim: true,
       lowercase: true,
     },
     password: {
       type: String,
-      required: false, // Google Auth এর জন্য false রাখা ভালো, সাধারণ হলে true
+      required: false,
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // 🔒 নিরাপত্তা: সাধারণ কুয়েরিতে পাসওয়ার্ড ফিল্ড হাইড থাকবে
+      select: false,
     },
     role: {
       type: String,
-      enum: ["student", "partner", "admin", "counselor"],
+      // 👇 Enum আপডেট: staff ও owner যোগ করা হলো
+      enum: ["student", "partner", "admin", "counselor", "staff", "owner"],
       default: "student",
+    },
+    // 👇 নতুন স্ট্যাটাস স্কিমা যোগ করা হলো
+    status: {
+      type: String,
+      enum: ["active", "inactive", "blocked"],
+      default: "active",
     },
     phone: {
       type: String,
-      default: "", // null এর বদলে empty string রাখা সেইফ
+      default: "", 
       trim: true,
     },
     image: {
@@ -82,8 +92,7 @@ const UserSchema: Schema<IUser> = new Schema(
       default: "Masters" 
     },
 
-    // 🔗 Relationship: স্টুডেন্ট -> কাউন্সিলর
-    // নাম 'counselor' রাখা হয়েছে যাতে Dashboard API এর populate("counselor") কাজ করে
+    // Relationship
     counselor: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -105,15 +114,11 @@ const UserSchema: Schema<IUser> = new Schema(
   }
 );
 
-// 🚀 Performance Indexing (খুবই গুরুত্বপূর্ণ)
-
-// ১. কাউন্সিলর ড্যাশবোর্ডের জন্য (কাউন্সিলর তার স্টুডেন্টদের এক ক্লিকে পাবে)
+// Indexes
 UserSchema.index({ counselor: 1 });
-
-// ২. রোল ফিল্টার করার জন্য (যেমন: সব কাউন্সিলর বা সব পার্টনার খোঁজা)
 UserSchema.index({ role: 1 });
 
-// ৩. Next.js এ Hot Reload এর কারণে মডেল ওভাররাইট এরর আটকাতে এই লজিক
+// Model Creation
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;

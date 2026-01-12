@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// আপনার authOptions ঠিক কোথা থেকে এক্সপোর্ট হচ্ছে সেই পাথটি নিশ্চিত করবেন
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; 
 import { connect } from "@/lib/db";
+// 👇 ফিক্স ১: ব্র্যাকেট ছাড়া ইমপোর্ট (Default Import)
 import User from "@/models/User";
 
 // ১. লগইন করা স্টুডেন্টের প্রোফাইল তথ্য আনা
@@ -16,7 +18,6 @@ export async function GET() {
     await connect();
 
     // ইউজারের সব তথ্য আনা (শুধু পাসওয়ার্ড বাদে)
-    // .lean() ব্যবহার করা হয়েছে ফাস্ট রেসপন্সের জন্য
     const user = await User.findOne({ email: session.user.email })
       .select("-password") 
       .lean();
@@ -33,7 +34,7 @@ export async function GET() {
   }
 }
 
-// ২. প্রোফাইল আপডেট করা (যেমন: ফোন নম্বর, দেশ, বা ছবি)
+// ২. প্রোফাইল আপডেট করা
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -44,8 +45,8 @@ export async function PUT(req: Request) {
 
     const body = await req.json();
     
-    // আমরা ইউজারকে রোল (Role) বা ইমেইল পরিবর্তন করতে দিব না, তাই সেগুলো বাদ দিয়ে আপডেট করব
-    const { phone, gender, country, address, image, programPreference, bio } = body;
+    // 👇 ফিক্স ২: 'address' বাদ দেওয়া হয়েছে কারণ User মডেলে এটি নেই
+    const { phone, gender, country, image, programPreference, bio } = body;
 
     await connect();
 
@@ -56,11 +57,9 @@ export async function PUT(req: Request) {
           phone,
           gender,
           country,
-          image, // প্রোফাইল পিকচার আপডেট
+          image,
           programPreference,
           bio,
-          // address যদি মডেলে না থাকে তবে এটি কাজ করবে না, 
-          // আমাদের User মডেলে 'address' ফিল্ড নেই, তাই এটি আপাতত বাদ দিতে পারেন বা মডেলে এড করতে পারেন।
         },
       },
       { new: true } // আপডেটেড ডাটা রিটার্ন করবে
