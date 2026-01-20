@@ -10,6 +10,8 @@ import User from "@/models/User";
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+// GET Method
 export async function GET(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -72,6 +74,7 @@ export async function GET(req: Request, props: Props) {
   }
 }
 
+// PATCH Method
 export async function PATCH(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -102,6 +105,7 @@ export async function PATCH(req: Request, props: Props) {
   }
 }
 
+// POST Method (এখানেই আপনার ভুল ছিল)
 export async function POST(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -134,6 +138,7 @@ export async function POST(req: Request, props: Props) {
     if (action === "create_task") {
       const { title, priority, dueDate, studentEmail } = body;
 
+      
       const newTask = await Task.create({
         title,
         status: "Pending",
@@ -142,7 +147,7 @@ export async function POST(req: Request, props: Props) {
         assignedTo: studentEmail,
         assignedBy: "admin",
         description: `Assigned via Application #${params.id}`
-      });
+      } as any); 
 
       return NextResponse.json({ success: true, data: newTask });
     }
@@ -155,6 +160,7 @@ export async function POST(req: Request, props: Props) {
   }
 }
 
+// PUT Method
 export async function PUT(req: Request, props: Props) {
     try {
       const params = await props.params;
@@ -168,7 +174,6 @@ export async function PUT(req: Request, props: Props) {
         return NextResponse.json({ success: true, data: updatedDoc });
       }
       
-
       if (action === "update_notes") {
         const { notes } = body;
         
