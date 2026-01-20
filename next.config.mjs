@@ -1,11 +1,8 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {
-    // @ts-expect-error - React Compiler type definition might be missing in this version
     reactCompiler: true,
   },
-
   images: {
     qualities: [75, 100],
     remotePatterns: [
@@ -15,7 +12,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
   typescript: {
     ignoreBuildErrors: true,
   },
