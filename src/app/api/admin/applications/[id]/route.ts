@@ -1,6 +1,8 @@
+
 import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import Application from "@/models/Application";
+import Student from "@/models/Student";
 import Document from "@/models/Document";
 import University from "@/models/University";
 import Task from "@/models/Task";
@@ -10,7 +12,7 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-// GET Method
+// GET Method (No Change)
 export async function GET(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -72,7 +74,7 @@ export async function GET(req: Request, props: Props) {
   }
 }
 
-// PATCH Method
+// PATCH Method (No Change)
 export async function PATCH(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -103,7 +105,7 @@ export async function PATCH(req: Request, props: Props) {
   }
 }
 
-// POST Method (Duplicate Code Removed & Fixed)
+// POST Method (🔥 FORCE FIXED HERE)
 export async function POST(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -136,7 +138,8 @@ export async function POST(req: Request, props: Props) {
     if (action === "create_task") {
       const { title, priority, dueDate, studentEmail } = body;
 
-      const newTask = await Task.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newTask = await (Task as any).create({
         title,
         status: "Pending",
         priority: priority || "Medium",
@@ -144,8 +147,7 @@ export async function POST(req: Request, props: Props) {
         assignedTo: studentEmail,
         assignedBy: "admin",
         description: `Assigned via Application #${params.id}`
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any); 
+      }); 
 
       return NextResponse.json({ success: true, data: newTask });
     }
@@ -157,6 +159,8 @@ export async function POST(req: Request, props: Props) {
     return NextResponse.json({ error: "Operation Failed" }, { status: 500 });
   }
 }
+
+
 
 // PUT Method
 export async function PUT(req: Request, props: Props) {
