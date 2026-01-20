@@ -1,48 +1,48 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export interface ITicket extends Document {
-  userId?: mongoose.Types.ObjectId; 
-  userEmail: string;
-  userName?: string;
-  role: "student" | "counselor"; 
-  subject: string;
-  type: string;
-  message: string;
-  status: "Open" | "In Progress" | "Closed";
-  reply?: string; 
+export interface ITask extends Document {
+  title: string;
+  description?: string;
+  status: "Pending" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High";
+  dueDate?: Date;
+  assignedTo: string; 
+  assignedBy: string; 
+  assignedToName?: string;
+  assignedToRole?: string; 
   createdAt: Date;
   updatedAt: Date;
 }
 
-const TicketSchema = new Schema<ITicket>(
+const TaskSchema = new Schema<ITask>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    
-    userEmail: { type: String, required: true },
-    userName: { type: String },
-    
-    role: { 
-      type: String, 
-      enum: ["student", "counselor"], 
-      default: "student",
-      required: true
-    },
-
-    subject: { type: String, required: true },
-    type: { type: String, default: "General Issue" },
-    message: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String },
     
     status: { 
       type: String, 
-      enum: ["Open", "In Progress", "Closed"], 
-      default: "Open" 
+      enum: ["Pending", "In Progress", "Completed"], 
+      default: "Pending" 
     },
     
-    reply: { type: String }, 
+    priority: { 
+      type: String, 
+      enum: ["Low", "Medium", "High"], 
+      default: "Medium" 
+    },
+    
+    dueDate: { type: Date },
+    
+    assignedTo: { type: String, required: true }, 
+    
+    assignedBy: { type: String, required: true },
+    
+    assignedToName: { type: String },
+    assignedToRole: { type: String }, 
   },
   { timestamps: true }
 );
 
-const Ticket: Model<ITicket> = mongoose.models.Ticket || mongoose.model<ITicket>("Ticket", TicketSchema);
+const Task: Model<ITask> = mongoose.models.Task || mongoose.model<ITask>("Task", TaskSchema);
 
-export default Ticket;
+export default Task;
