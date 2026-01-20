@@ -4,11 +4,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import VisaProcess from "@/models/VisaProcess";
 
-// ✅ 1. টাইপ ফিক্স: আমরা টাইপস্ক্রিপ্টকে বলে দিচ্ছি status টি সাধারণ string না, এটি ফিক্সড ভ্যালু।
 interface ITask {
   id: number;
   name: string;
-  status: "done" | "pending" | "locked" | "verified"; // Exact literals
+  status: "done" | "pending" | "locked" | "verified";
   auto: boolean;
   hasLink: boolean;
   hasUpload: boolean;
@@ -16,10 +15,11 @@ interface ITask {
   fileName?: string;
 }
 
+// ✅ Fix: Generic Names for Visa Steps (Compatible with UK/USA)
 const DEFAULT_TASKS: ITask[] = [
   { id: 1, name: "CAS/Offer Letter Received", status: "done", auto: true, hasLink: false, hasUpload: false },
-  { id: 2, name: "Visa Application Form (DS-160)", status: "pending", auto: false, hasLink: true, hasUpload: false },
-  { id: 3, name: "Visa Fee Payment", status: "pending", auto: false, hasLink: false, hasUpload: true },
+  { id: 2, name: "Visa Application Form", status: "pending", auto: false, hasLink: true, hasUpload: false }, // Renamed from DS-160
+  { id: 3, name: "Visa Fee Payment", status: "locked", auto: false, hasLink: false, hasUpload: true }, // Start locked
   { id: 4, name: "Appointment Booking", status: "locked", auto: false, hasLink: false, hasUpload: false },
   { id: 5, name: "Biometric Submission", status: "locked", auto: false, hasLink: false, hasUpload: false },
   { id: 6, name: "Medical Test Report", status: "locked", auto: false, hasLink: false, hasUpload: true },
@@ -50,13 +50,13 @@ export async function GET() {
       process = await VisaProcess.create({
         studentEmail: session.user.email,
         progress: 15, 
-        tasks: DEFAULT_TASKS, // ✅ এখন আর এরর দিবে না কারণ টাইপ মিলছে
+        tasks: DEFAULT_TASKS,
         packingList: DEFAULT_PACKING
       });
     }
 
     return NextResponse.json(process);
-  } catch (error: unknown) { // ✅ catch ব্লকে unknown টাইপ হ্যান্ডেল করা
+  } catch (error: unknown) {
     console.error("Visa Process GET Error:", error);
     return NextResponse.json({ error: "Failed to load visa process" }, { status: 500 });
   }
@@ -99,7 +99,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(updatedProcess);
 
-  } catch (error: unknown) { // ✅ এখানেও ফিক্স করা হলো
+  } catch (error: unknown) {
     console.error("Visa Process Update Error:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }

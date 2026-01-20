@@ -1,25 +1,36 @@
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-import mongoose, { Schema, model, models } from "mongoose";
+export interface IPayment extends Document {
+  transactionId: string; // Stripe/Bank Transaction ID
+  invoiceId?: string;    // Link to invoice
+  studentName: string;
+  studentEmail: string;
+  amount: number;
+  currency: string;
+  method: "Credit Card" | "Bank Transfer" | "PayPal" | "Cash";
+  status: "Completed" | "Refunded" | "Failed";
+  date: Date;
+}
 
-const PaymentSchema = new Schema(
+const PaymentSchema = new Schema<IPayment>(
   {
+    transactionId: { type: String, required: true, unique: true },
+    invoiceId: { type: String }, 
+    studentName: { type: String, required: true },
     studentEmail: { type: String, required: true },
-    invoiceId: { type: String, required: true, unique: true }, // যেমন: INV-1001
-    serviceName: { type: String, required: true }, // যেমন: University Application Fee
-    amount: { type: Number, required: true }, // যেমন: 150
+    amount: { type: Number, required: true },
     currency: { type: String, default: "USD" },
+    method: { type: String, required: true },
     status: { 
       type: String, 
-      enum: ["Paid", "Pending", "Failed"], 
-      default: "Pending" 
+      enum: ["Completed", "Refunded", "Failed"], 
+      default: "Completed" 
     },
-    paymentMethod: { type: String, default: "Stripe" },
-    transactionId: { type: String }, // Stripe থেকে পাওয়া ট্রানজেকশন আইডি
-    paidAt: { type: Date }, // কবে পেমেন্ট কমপ্লিট হলো
+    date: { type: Date, default: Date.now },
   },
-  { timestamps: true } // এটি অটোমেটিক createdAt এবং updatedAt ফিল্ড তৈরি করবে
+  { timestamps: true }
 );
 
-const Payment = models.Payment || model("Payment", PaymentSchema);
+const Payment: Model<IPayment> = mongoose.models.Payment || mongoose.model<IPayment>("Payment", PaymentSchema);
 
 export default Payment;

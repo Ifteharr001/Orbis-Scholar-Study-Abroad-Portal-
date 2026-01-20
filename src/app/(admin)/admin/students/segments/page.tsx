@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,82 +28,135 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Users, Edit, Trash2, Copy, Filter, Tag } from "lucide-react";
-import { toast } from "sonner"; // Updated import for Sonner
+import { Plus, MoreHorizontal, Users, Trash2, Tag, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 
-const segments = [
-  {
-    id: "SEG001",
-    name: "High Intent - MBA",
-    description: "Students who showed interest in MBA programs with high engagement",
-    studentCount: 245,
-    conditions: ["Program = MBA", "Engagement > 70%", "Country = Bangladesh"],
-    color: "bg-blue-500",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: "SEG002",
-    name: "UK Applicants",
-    description: "Students applying to UK universities",
-    studentCount: 189,
-    conditions: ["Destination = UK", "Status = Active"],
-    color: "bg-red-500",
-    createdAt: "2024-01-12",
-  },
-  {
-    id: "SEG003",
-    name: "Scholarship Eligible",
-    description: "Students eligible for scholarship programs",
-    studentCount: 156,
-    conditions: ["GPA > 3.5", "IELTS > 7.0", "Financial Need = Yes"],
-    color: "bg-green-500",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "SEG004",
-    name: "Fall 2024 Intake",
-    description: "Students targeting Fall 2024 intake",
-    studentCount: 312,
-    conditions: ["Intake = Fall 2024", "Status = Active"],
-    color: "bg-purple-500",
-    createdAt: "2024-01-18",
-  },
-  {
-    id: "SEG005",
-    name: "Dormant Leads",
-    description: "Students with no activity in last 30 days",
-    studentCount: 78,
-    conditions: ["Last Activity > 30 days", "Status != Enrolled"],
-    color: "bg-yellow-500",
-    createdAt: "2024-01-20",
-  },
-  {
-    id: "SEG006",
-    name: "Partner Referrals",
-    description: "Students referred by partner agencies",
-    studentCount: 134,
-    conditions: ["Source = Partner", "Has Referral Code"],
-    color: "bg-orange-500",
-    createdAt: "2024-01-22",
-  },
-];
+// Interface define
+interface Segment {
+  _id: string;
+  name: string;
+  description: string;
+  studentCount: number;
+  conditions: string[];
+  color: string;
+  createdAt: string;
+}
 
 const StudentSegmentsPage = () => {
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  
+  // Segment creation state
   const [newSegment, setNewSegment] = useState({
     name: "",
     description: "",
     color: "bg-blue-500",
+    conditions: [] as string[]
   });
 
-  const handleCreateSegment = () => {
-    // Updated toast syntax for Sonner
-    toast.success("Segment Created", {
-      description: `"${newSegment.name}" segment has been created successfully.`,
-    });
-    setCreateDialogOpen(false);
-    setNewSegment({ name: "", description: "", color: "bg-blue-500" });
+  // Condition builder state
+  const [condField, setCondField] = useState("Country");
+  const [condValue, setCondValue] = useState("");
+
+  // 1. Data Fetching
+  const fetchSegments = async () => {
+    try {
+      const res = await fetch("/api/admin/students/segments"); 
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setSegments(data.segments || []);
+    } catch (error) {
+      console.error("Failed to fetch segments", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchSegments();
+  }, []);
+
+  // 2. Add Condition
+  const addCondition = () => {
+    if (!condValue) return;
+    const conditionString = `${condField} = ${condValue}`;
+    if (!newSegment.conditions.includes(conditionString)) {
+        setNewSegment({
+            ...newSegment,
+            conditions: [...newSegment.conditions, conditionString]
+        });
+    }
+    setCondValue(""); 
+  };
+
+  // 3. Remove Condition
+  const removeCondition = (index: number) => {
+    const updated = [...newSegment.conditions];
+    updated.splice(index, 1);
+    setNewSegment({ ...newSegment, conditions: updated });
+  };
+
+  // 4. Create Segment
+  const handleCreateSegment = async () => {
+    if (newSegment.conditions.length === 0) {
+        toast.error("Please add at least one condition");
+        return;
+    }
+
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/students/segments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSegment),
+      });
+
+      if (res.ok) {
+        toast.success("Segment Created Successfully");
+        setCreateDialogOpen(false);
+        setNewSegment({ name: "", description: "", color: "bg-blue-500", conditions: [] });
+        fetchSegments(); 
+      } else {
+        toast.error("Failed to create segment");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // ✅ 5. Delete Segment Logic (NEW)
+  const handleDeleteSegment = async (id: string) => {
+    // কনফার্মেশন চাইবে
+    if (!confirm("Are you sure you want to delete this segment?")) return;
+
+    try {
+        const res = await fetch(`/api/admin/students/segments?id=${id}`, {
+            method: "DELETE",
+        });
+
+        if (res.ok) {
+            toast.success("Segment Deleted");
+            // UI থেকে সরিয়ে ফেলা
+            setSegments(segments.filter((seg) => seg._id !== id));
+        } else {
+            toast.error("Failed to delete segment");
+        }
+    } catch (error) {
+        toast.error("Error deleting segment");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
@@ -121,9 +175,7 @@ const StudentSegmentsPage = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Create New Segment</DialogTitle>
-              <DialogDescription>
-                Define a segment to group students based on specific criteria
-              </DialogDescription>
+              <DialogDescription>Define criteria to filter students</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -132,7 +184,7 @@ const StudentSegmentsPage = () => {
                   id="segmentName"
                   value={newSegment.name}
                   onChange={(e) => setNewSegment({ ...newSegment, name: e.target.value })}
-                  placeholder="e.g., High Priority Leads"
+                  placeholder="e.g., Indian Students"
                 />
               </div>
               <div className="space-y-2">
@@ -141,11 +193,11 @@ const StudentSegmentsPage = () => {
                   id="segmentDescription"
                   value={newSegment.description}
                   onChange={(e) => setNewSegment({ ...newSegment, description: e.target.value })}
-                  placeholder="Brief description of this segment"
+                  placeholder="e.g., Students from India"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Segment Color</Label>
+                <Label>Color Code</Label>
                 <Select
                   value={newSegment.color}
                   onValueChange={(value) => setNewSegment({ ...newSegment, color: value })}
@@ -154,53 +206,65 @@ const StudentSegmentsPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bg-blue-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-blue-500" /> Blue
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="bg-red-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-red-500" /> Red
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="bg-green-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-green-500" /> Green
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="bg-purple-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-purple-500" /> Purple
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="bg-yellow-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-yellow-500" /> Yellow
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="bg-orange-500">
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded bg-orange-500" /> Orange
-                      </div>
-                    </SelectItem>
+                    <SelectItem value="bg-blue-500">Blue</SelectItem>
+                    <SelectItem value="bg-green-500">Green</SelectItem>
+                    <SelectItem value="bg-purple-500">Purple</SelectItem>
+                    <SelectItem value="bg-orange-500">Orange</SelectItem>
+                    <SelectItem value="bg-red-500">Red</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Card className="bg-muted/50">
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Filter className="h-4 w-4" />
-                    <span>Conditions will be defined after creation</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <div className="flex justify-end gap-2">
+
+              <div className="space-y-2 border p-3 rounded-md bg-muted/20">
+                <Label>Add Conditions</Label>
+                <div className="flex gap-2">
+                    <Select value={condField} onValueChange={setCondField}>
+                        <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Country">Country</SelectItem>
+                            <SelectItem value="Program">Program</SelectItem>
+                            <SelectItem value="Intake">Intake</SelectItem>
+                            <SelectItem value="Status">Status</SelectItem>
+                            <SelectItem value="Counselor">Counselor</SelectItem>
+                            <SelectItem value="Gender">Gender</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <div className="flex items-center px-2 font-bold text-muted-foreground">=</div>
+                    <Input 
+                        value={condValue}
+                        onChange={(e) => setCondValue(e.target.value)}
+                        placeholder="Value (e.g. India)"
+                        className="flex-1"
+                    />
+                    <Button type="button" onClick={addCondition} size="sm">Add</Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {newSegment.conditions.length === 0 && (
+                        <span className="text-xs text-muted-foreground italic">No conditions added yet.</span>
+                    )}
+                    {newSegment.conditions.map((cond, idx) => (
+                        <Badge key={idx} variant="secondary" className="gap-1 pr-1">
+                            {cond}
+                            <div 
+                                onClick={() => removeCondition(idx)}
+                                className="cursor-pointer hover:bg-muted rounded-full p-0.5"
+                            >
+                                <X className="h-3 w-3" />
+                            </div>
+                        </Badge>
+                    ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-4">
                 <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateSegment} disabled={!newSegment.name}>
-                  Create Segment
+                <Button onClick={handleCreateSegment} disabled={!newSegment.name || creating}>
+                  {creating ? "Creating..." : "Create Segment"}
                 </Button>
               </div>
             </div>
@@ -210,7 +274,7 @@ const StudentSegmentsPage = () => {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {segments.map((segment) => (
-          <Card key={segment.id} className="relative overflow-hidden hover:shadow-md transition-shadow">
+          <Card key={segment._id} className="relative overflow-hidden hover:shadow-md transition-shadow">
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${segment.color}`} />
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
@@ -225,13 +289,11 @@ const StudentSegmentsPage = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
-                      <Edit className="h-4 w-4" /> Edit Segment
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
-                      <Copy className="h-4 w-4" /> Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 text-destructive cursor-pointer">
+                    {/* ✅ Delete Button Connected */}
+                    <DropdownMenuItem 
+                        className="gap-2 text-destructive cursor-pointer"
+                        onClick={() => handleDeleteSegment(segment._id)}
+                    >
                       <Trash2 className="h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -243,11 +305,11 @@ const StudentSegmentsPage = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  <span className="text-2xl font-bold">{segment.studentCount}</span>
+                  <span className="text-2xl font-bold">{segment.studentCount || 0}</span>
                   <span className="text-sm text-muted-foreground">students</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {segment.conditions.map((condition, index) => (
+                  {segment.conditions && segment.conditions.map((condition, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {condition}
                     </Badge>
@@ -255,11 +317,13 @@ const StudentSegmentsPage = () => {
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t">
                   <span className="text-xs text-muted-foreground">
-                    Created: {segment.createdAt}
+                    Created: {segment.createdAt ? new Date(segment.createdAt).toLocaleDateString() : "N/A"}
                   </span>
-                  <Button variant="outline" size="sm">
-                    View Students
-                  </Button>
+                  <Link href={`/admin/students?segment=${segment._id}`}>
+                    <Button variant="outline" size="sm">
+                        View Students
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>

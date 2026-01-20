@@ -16,6 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Next.js 15 এ params একটি Promise, তাই await করতে হয়
     const { id } = await params;
 
     // ২. আইডি ভ্যালিডেশন (Server Crash রোধ করতে)
@@ -26,6 +27,7 @@ export async function GET(
     await connect();
 
     // ৩. ডাটা ফেচিং (Performance: .lean() ব্যবহার করা হলো)
+    // এটি অফার লেটার ইউআরএল সহ সব ডাটা রিটার্ন করবে
     const application = await Application.findById(id).lean();
 
     if (!application) {
@@ -34,7 +36,8 @@ export async function GET(
 
     // ৪. সিকিউরিটি চেক: ওনারশিপ ভেরিফিকেশন (Ownership Check) 🔒
     // ডাটাবেসের studentEmail আর সেশনের ইমেইল না মিললে ডাটা দেখানো যাবে না
-    if (application.studentEmail !== session.user.email) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((application as any).studentEmail !== session.user.email) {
       return NextResponse.json({ error: "Access Denied: You do not own this application" }, { status: 403 });
     }
 

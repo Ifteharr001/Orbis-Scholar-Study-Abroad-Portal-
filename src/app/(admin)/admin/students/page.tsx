@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation"; // 👈 ১. Import
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +29,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Download, MoreHorizontal, Eye, Trash2, UserPlus, Loader2 } from "lucide-react";
+import { Search, Filter, Download, MoreHorizontal, Eye, Trash2, UserPlus, Loader2, X } from "lucide-react";
 
-// ১. Interface Update: applications অ্যারে যোগ করা হয়েছে
+// Interface
 interface Student {
   _id: string;
   name: string;
@@ -41,12 +42,13 @@ interface Student {
   createdAt: string;
   image?: string;
   programPreference?: { degree: string; country: string }; 
-  
-  // নতুন যোগ করা হয়েছে
   applications?: { _id: string; programName: string; universityName: string }[];
 }
 
 const AllStudentsPage = () => {
+  const searchParams = useSearchParams(); // 👈 ২. Hook Use
+  const segmentId = searchParams.get("segment"); // URL থেকে 'segment' প্যারামিটার নেওয়া
+
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,8 +56,14 @@ const AllStudentsPage = () => {
 
   useEffect(() => {
     const fetchStudents = async () => {
+      setLoading(true);
       try {
-        const res = await fetch("/api/admin/students");
+        // ৩. Query Params তৈরি
+        const params = new URLSearchParams();
+        if (segmentId) params.append("segment", segmentId); // সেগমেন্ট আইডি থাকলে পাঠানো হবে
+        if (statusFilter !== "all") params.append("status", statusFilter); // স্ট্যাটাস ফিল্টার থাকলে পাঠানো হবে (API তে হ্যান্ডেল করতে হবে)
+
+        const res = await fetch(`/api/admin/students?${params.toString()}`);
         const data = await res.json();
         if (res.ok) {
           setStudents(data.students);
@@ -68,13 +76,15 @@ const AllStudentsPage = () => {
     };
 
     fetchStudents();
-  }, []);
+  }, [segmentId, statusFilter]); // segmentId চেঞ্জ হলে রি-ফেচ হবে
 
+  // Client-side search filtering (API তেও করা যায়, এখানে সিম্পল রাখা হলো)
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase());
       
+    // Status filter API তে হ্যান্ডেল করলে এখানে আর দরকার নেই, তবে ডাবল চেকের জন্য রাখা যায়
     const matchesStatus = statusFilter === "all" || (student.status && student.status.toLowerCase() === statusFilter);
     
     return matchesSearch && matchesStatus;
@@ -104,6 +114,18 @@ const AllStudentsPage = () => {
           </Button>
         </Link>
       </div>
+
+      {/* ৪. সেগমেন্ট ফিল্টার একটিভ থাকলে ব্যানার দেখানো */}
+      {segmentId && (
+        <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700">
+          <span className="text-sm font-medium">Filtering by Segment ID: {segmentId}</span>
+          <Link href="/admin/students">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-blue-100">
+              <X className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -145,7 +167,7 @@ const AllStudentsPage = () => {
                   <TableHead>Student</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Country</TableHead>
-                  <TableHead>Program / Applications</TableHead> {/* হেডার আপডেট */}
+                  <TableHead>Program / Applications</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -192,14 +214,12 @@ const AllStudentsPage = () => {
                       </TableCell>
                       <TableCell>{student.country || "N/A"}</TableCell>
                       
-                      {/* ✅ Program Logic আপডেট করা হয়েছে */}
                       <TableCell className="max-w-[200px]">
                         {student.applications && student.applications.length > 0 ? (
                           <div className="flex items-center gap-2">
                             <span className="truncate font-medium text-sm">
                               {student.applications[0].programName}
                             </span>
-                            {/* যদি একের বেশি অ্যাপ্লিকেশন থাকে, সংখ্যা দেখাবে */}
                             {student.applications.length > 1 && (
                               <Badge variant="outline" className="text-xs px-1 py-0 h-5">
                                 +{student.applications.length - 1}

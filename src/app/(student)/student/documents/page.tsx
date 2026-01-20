@@ -35,7 +35,7 @@ interface Document {
   uploadedAt?: string;
 }
 
-// Default Required Documents
+// Default Required Documents (যদি ডাটাবেসে না থাকে তবে এগুলো দেখাবে)
 const REQUIRED_DEFAULTS: Partial<Document>[] = [
   { name: "Academic Transcript", category: "required" },
   { name: "Passport Copy", category: "required" },
@@ -145,11 +145,6 @@ export default function DocumentsPage() {
     setIsUploading(true);
 
     try {
-      // In a real app, you would upload to cloud storage (S3/Cloudinary) here
-      // and get a URL. We are simulating this by sending metadata to our API.
-      // The API (previous step) expects: name, fileName, fileUrl, category
-      
-      // Simulating a file URL
       const fakeUrl = URL.createObjectURL(selectedFile);
 
       const res = await fetch("/api/student/documents", {
@@ -158,7 +153,7 @@ export default function DocumentsPage() {
         body: JSON.stringify({
           name: docName,
           fileName: selectedFile.name,
-          fileUrl: fakeUrl, // Sending the fake URL
+          fileUrl: fakeUrl, 
           category: category,
         }),
       });
@@ -229,8 +224,20 @@ export default function DocumentsPage() {
     setFixDialogOpen(true);
   };
 
-  // --- Helper to Render Action Buttons ---
+  // ✅ --- Helper to Render Action Buttons (FIXED LOGIC) ---
   const getActionButton = (doc: Document) => {
+    
+    // ১. যদি স্ট্যাটাস "Not Uploaded" হয় অথবা অ্যাডমিন রিকোয়েস্ট করে থাকে ("Pending Upload" নাম দিয়ে)
+    // তাহলে "Upload" বাটন দেখাবে, "Replace" নয়।
+    if (doc.status === "Not Uploaded" || (doc.status === "Pending" && doc.fileName === "Pending Upload")) {
+        return (
+          <Button variant="outline" size="sm" onClick={() => handleUploadNew(doc)}>
+            <Upload className="w-4 h-4 mr-1" /> Upload
+          </Button>
+        );
+    }
+
+    // বাকি লজিক আগের মতো
     switch (doc.status) {
       case "Verified":
         return (
@@ -239,6 +246,7 @@ export default function DocumentsPage() {
           </Button>
         );
       case "Pending":
+        // এখানে শুধু তখনই আসবে যদি সত্যিকারের ফাইল আপলোড করা থাকে
         return (
           <div className="flex gap-2">
              <Button variant="ghost" size="sm" onClick={() => openViewDialog(doc)}>
@@ -253,12 +261,6 @@ export default function DocumentsPage() {
         return (
           <Button size="sm" variant="destructive" onClick={() => openFixDialog(doc)}>
             Fix & Re-upload
-          </Button>
-        );
-      case "Not Uploaded":
-        return (
-          <Button variant="outline" size="sm" onClick={() => handleUploadNew(doc)}>
-            <Upload className="w-4 h-4 mr-1" /> Upload
           </Button>
         );
       default:
@@ -338,17 +340,25 @@ export default function DocumentsPage() {
                 </div>
                 <div>
                   <p className="font-medium text-foreground">{doc.name}</p>
-                  {doc.fileName ? (
+                  
+                  {/* লজিক: যদি ফাইল নাম "Pending Upload" হয় (অ্যাডমিন রিকোয়েস্ট), তবে মেসেজ দেখাবে */}
+                  {doc.fileName && doc.fileName !== "Pending Upload" ? (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Check className="w-3 h-3 text-green-500" /> {doc.fileName}
                     </p>
+                  ) : doc.fileName === "Pending Upload" ? (
+                    <p className="text-xs text-amber-600 font-medium">Request from Admin: {doc.feedback || "Please upload"}</p>
                   ) : (
                     <p className="text-xs text-muted-foreground">Mandatory</p>
                   )}
+
                 </div>
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                <span className={cn("text-xs", getStatusStyles(doc.status))}>{doc.status}</span>
+                <span className={cn("text-xs", getStatusStyles(doc.status))}>
+                    {/* Pending Upload হলে স্ট্যাটাস দেখাবে "Requested" */}
+                    {doc.fileName === "Pending Upload" ? "Requested" : doc.status}
+                </span>
                 {getActionButton(doc)}
               </div>
             </div>
@@ -475,7 +485,7 @@ export default function DocumentsPage() {
       <Button 
         variant="outline" 
         onClick={() => window.open(selectedDocument.fileUrl, '_blank')} 
-        disabled={!selectedDocument.fileUrl}
+        disabled={!selectedDocument.fileUrl || selectedDocument.fileName === "Pending Upload"}
       >
         Open in New Tab
       </Button>

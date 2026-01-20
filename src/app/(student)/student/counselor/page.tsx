@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Phone, Mail, Video, MessageCircle, Calendar, Star, MapPin, Clock, Users, Send, Loader2, AlertCircle } from "lucide-react";
+import { Phone, Mail, MessageCircle, Star, MapPin, Clock, Users, Send, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,8 @@ export default function MyCounselorPage() {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const fetchCounselor = async () => {
@@ -59,14 +61,35 @@ export default function MyCounselorPage() {
     fetchCounselor();
   }, [isAuthenticated]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!message.trim()) {
       toast.error("Please enter a message");
       return;
     }
-    // Future API integration for sending messages
-    toast.success("Message sent to your counselor!");
-    setMessage("");
+
+    setSending(true);
+
+    try {
+      const res = await fetch("/api/student/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: message }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Message sent successfully!");
+        setMessage(""); // ইনপুট ক্লিয়ার
+      } else {
+        toast.error(data.error || "Failed to send message");
+      }
+    } catch (error) {
+      console.error("Message Error:", error);
+      toast.error("Network error, please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const recentActivities = [
@@ -193,9 +216,13 @@ export default function MyCounselorPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 className="min-h-[120px] bg-background border-border"
               />
-              <Button onClick={handleSendMessage} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                <Send className="w-4 h-4" />
-                Send Message
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={sending || !message.trim()}
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {sending ? "Sending..." : "Send Message"}
               </Button>
             </CardContent>
           </Card>
@@ -261,52 +288,6 @@ export default function MyCounselorPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="border-border">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
-                <Video className="w-4 h-4" />
-                Start Video Call
-              </Button>
-              <Button 
-                className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" 
-                variant="outline"
-                onClick={() => window.open(`tel:${counselor.phone}`)}
-              >
-                <Phone className="w-4 h-4" />
-                Call Now
-              </Button>
-              {counselor.whatsapp && (
-                  <Button 
-                    className="w-full gap-2 justify-start bg-green-600 hover:bg-green-700 text-white border-none"
-                    onClick={() => window.open(`https://wa.me/${counselor.whatsapp?.replace(/[^0-9]/g, '')}`, '_blank')}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    WhatsApp
-                  </Button>
-              )}
-              {/* Updated: Links to the appointments page */}
-              <Button asChild className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" variant="outline">
-                <Link href="/student/appointments">
-                    <Calendar className="w-4 h-4" />
-                    Book Appointment
-                </Link>
-              </Button>
-              <Button 
-                className="w-full gap-2 justify-start border-border text-foreground hover:bg-muted" 
-                variant="outline"
-                onClick={() => window.open(`mailto:${counselor.email}`)}
-              >
-                <Mail className="w-4 h-4" />
-                Send Email
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Languages */}
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

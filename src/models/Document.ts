@@ -1,20 +1,23 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// ১. TypeScript Interface (টাইপ সেফটির জন্য)
+// ১. TypeScript Interface
 export interface IDocument extends Document {
+  applicationId: string; // ✅ এটি যোগ করা হয়েছে যাতে অ্যাপ্লিকেশনের সাথে লিংক করা যায়
   studentEmail: string;
-  name: string;      // ডকুমেন্টের নাম (যেমন: Passport)
-  fileName: string;  // আসল ফাইলের নাম (যেমন: passport_scan.pdf)
-  fileUrl: string;   // S3 বা Cloudinary লিংক
+  name: string;          // ডকুমেন্টের টাইপ (যেমন: Passport)
+  fileName: string;      // ফাইলের নাম
+  fileUrl: string;       // S3 বা Cloudinary লিংক
   status: "Pending" | "Verified" | "Rejected";
   category: "required" | "optional" | "rejected";
-  feedback?: string; // রিজেক্ট হলে কারণ
+  feedback?: string;     // রিজেক্ট হলে কারণ
   uploadedAt: Date;
 }
 
 const DocumentSchema = new Schema<IDocument>(
   {
+    applicationId: { type: String, required: true }, // ✅ এটি খুবই জরুরি (Admin Panel এর জন্য)
     studentEmail: { type: String, required: true },
+    
     name: { type: String, required: true },
     fileName: { type: String, required: true },
     fileUrl: { type: String, required: true },
@@ -31,17 +34,21 @@ const DocumentSchema = new Schema<IDocument>(
       default: "required",
     },
     
-    feedback: { type: String }, // এটি optional, তাই required দেওয়া হয়নি
+    feedback: { type: String }, // Optional
     uploadedAt: { type: Date, default: Date.now },
-  }
+  },
+  { timestamps: true }
 );
 
-// 🚀 ২. ইনডেক্সিং (Indexing) - ড্যাশবোর্ড ফাস্ট করার জন্য
+// 🚀 ২. ইনডেক্সিং (Indexing) - পারফরম্যান্সের জন্য
 
-// স্টুডেন্ট ড্যাশবোর্ডের জন্য (স্টুডেন্ট তার সব ডকুমেন্ট দ্রুত দেখতে পাবে)
+// নির্দিষ্ট অ্যাপ্লিকেশনের ডকুমেন্ট দ্রুত খোঁজার জন্য
+DocumentSchema.index({ applicationId: 1 });
+
+// স্টুডেন্ট তার সব ডকুমেন্ট যাতে দ্রুত পায়
 DocumentSchema.index({ studentEmail: 1 });
 
-// অ্যাডমিন বা Docs টিমের জন্য (তারা দ্রুত 'Pending' বা 'Rejected' ফাইল খুঁজে পাবে)
+// অ্যাডমিন প্যানেলে স্ট্যাটাস ফিল্টার করার জন্য
 DocumentSchema.index({ status: 1 });
 
 // ৩. মডেল এক্সপোর্ট

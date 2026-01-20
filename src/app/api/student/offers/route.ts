@@ -3,11 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import Application from "@/models/Application";
+import University from "@/models/University"; 
 
-// GET Method: অফার লোড করার জন্য
-export async function GET(req: Request) {
+// ✅ GET Method: অফার লোড করার জন্য
+export async function GET() {
   try {
-    // ১. সিকিউরিটি চেক: ইউজার লগইন করা আছে কিনা?
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
@@ -18,30 +18,52 @@ export async function GET(req: Request) {
     }
 
     await connect();
-
-    // ২. URL থেকে ইমেইল না নিয়ে, সেশন থেকে ইমেইল নেওয়া হলো (Secure) 🔒
     const email = session.user.email;
 
-    // ৩. ডাটা ফেচিং
-    // অফার পেজে সাধারণত আমরা শুধু সেই অ্যাপ্লিকেশানগুলোই দেখাতে চাই যেগুলোর অফার এসেছে।
-    // অথবা আপনি চাইলে সব দেখিয়ে ফ্রন্টএন্ডে ফিল্টার করতে পারেন।
-    // এখানে সব আনা হচ্ছে, কিন্তু .lean() ব্যবহার করে ফাস্ট করা হয়েছে।
     const applications = await Application.find({ 
         studentEmail: email,
-        // অপশনাল: যদি শুধু অফার লেটার দেখাতে চান, তবে নিচের লাইনটি আনকমেন্ট করুন
-        // status: { $in: ["Offer Received", "Conditional Offer"] } 
+        status: { 
+            $in: ["Offer Received", "Visa Processing", "Enrolled", "Conditional Offer"] 
+        } 
     })
-    .sort({ updatedAt: -1 }) // লেটেস্ট আপডেট সবার আগে
+    .populate({
+        path: "universityId",
+        model: University, 
+        select: "name location programs image logo", 
+    })
+    .sort({ updatedAt: -1 })
     .lean();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const enrichedApplications = applications.map((app: any) => {
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const programDetails = app.universityId?.programs?.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (p: any) => p.name === app.programName
+        );
+
+        return {
+            ...app,
+            location: app.location || app.universityId?.location || "N/A",
+            tuitionFee: app.tuitionFee || programDetails?.tuitionFee || "N/A",
+            duration: app.duration || programDetails?.duration || "N/A",
+            accommodation: app.accommodation || programDetails?.accommodationFee || "Available",
+            
+            scholarship: app.scholarshipName || (programDetails?.hasScholarship ? "Available" : "None"),
+            
+            universityImage: app.universityId?.image,
+            universityLogo: app.universityId?.logo
+        };
+    });
 
     return NextResponse.json({ 
       success: true, 
-      data: applications 
+      data: enrichedApplications 
     }, { status: 200 });
-
-  } catch (error) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.error("Fetch Offers Error:", error);
-    
     const errorMessage = error instanceof Error ? error.message : "Unknown server error";
 
     return NextResponse.json(
@@ -49,4 +71,50 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
+}
+
+// ✅ POST Method: অফার এক্সেপ্ট করার জন্য (Accept Logic)
+export async function POST(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { applicationId } = await req.json();
+        
+        if (!applicationId) {
+            return NextResponse.json({ error: "Application ID is required" }, { status: 400 });
+        }
+
+        await connect();
+
+        // 🔥 সিকিউরিটি আপডেট: শুধু আইডি না, ইমেইলও মিলতে হবে (Ownership Check)
+        const updatedApp = await Application.findOneAndUpdate(
+            { 
+                _id: applicationId, 
+                studentEmail: session.user.email 
+            },
+            {
+                status: "Visa Processing", 
+                isOfferAccepted: true,     
+                offerAcceptedDate: new Date()
+            },
+            { new: true }
+        );
+
+        if (!updatedApp) {
+            return NextResponse.json({ error: "Application not found or unauthorized" }, { status: 404 });
+        }
+
+        return NextResponse.json({ 
+            success: true, 
+            message: "Offer accepted successfully! Visa processing started.",
+            data: updatedApp
+        });
+
+    } catch (error) {
+        console.error("Accept Offer Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }

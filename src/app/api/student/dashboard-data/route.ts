@@ -6,6 +6,7 @@ import { connect } from "@/lib/db";
 import Application from "@/models/Application";
 import Document from "@/models/Document";
 import User from "@/models/User";
+import Message from "@/models/Message"; 
 
 const REQUIRED_DEFAULTS = ["Academic Transcript", "Passport Copy"];
 
@@ -19,24 +20,20 @@ export async function GET() {
     await connect();
     const email = session.user.email;
 
-    // 🔥 অপটিমাইজেশন: Promise.all ব্যবহার করে ৩টি কুয়েরি একসাথে রান করা হচ্ছে
     const [studentResult, applications, uploadedDocs] = await Promise.all([
-      // ১. স্টুডেন্ট ডাটা (কাউন্সিলর সহ)
       User.findOne({ email }).populate("counselor").lean(),
       
-      // ২. অ্যাপ্লিকেশন ডাটা
       Application.find({ studentEmail: email })
         .select("universityName programName status appliedDate applicationId")
         .sort({ appliedDate: -1 })
         .lean(),
 
-      // ৩. ডকুমেন্ট ডাটা
       Document.find({ studentEmail: email })
-        .select("name status category")
+        .select("name status category fileName feedback uploadedAt")
         .lean()
     ]);
 
-    // কাউন্সিলর ডাটা প্রসেস করা
+    // Counselor Data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const student: any = studentResult;
     const counselor = student?.counselor ? {
@@ -46,62 +43,111 @@ export async function GET() {
         image: student.counselor.image || "",
     } : null;
 
-    // ডকুমেন্ট প্রসেস করা
+    let unreadMessagesCount = 0;
+    if (student) {
+        unreadMessagesCount = await Message.countDocuments({
+            receiver: student._id,
+            isRead: false
+        });
+    }
+
+    // --- Document Stats Calculation ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uploadedDocNames = uploadedDocs.map((d: any) => d.name);
     const missingDocsCount = REQUIRED_DEFAULTS.filter(name => !uploadedDocNames.includes(name)).length;
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actionRequiredDocsCount = uploadedDocs.filter((d: any) => 
-      d.status === "Rejected" || d.status === "Pending"
+      d.status === "Rejected" || (d.status === "Pending" && d.fileName === "Pending Upload")
     ).length;
 
     const totalPendingDocs = missingDocsCount + actionRequiredDocsCount;
 
-    // অফার প্রসেস করা
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const verifiedDocsCount = uploadedDocs.filter((d: any) => d.status === "Verified").length;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rejectedDocsCount = uploadedDocs.filter((d: any) => d.status === "Rejected").length;
+
+    // Offer Stats
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const offersCount = applications.filter((app: any) => 
       app.status === "Offer Received" || app.status === "Conditional Offer" || app.status === "Approved"
     ).length;
 
-    // স্ট্যাটস তৈরি
+    // Final Stats Object
     const stats = {
       applications: applications.length,
       pendingDocs: totalPendingDocs,
       offers: offersCount,
-      unreadMessages: 0, 
+      unreadMessages: unreadMessagesCount, 
+      verifiedDocs: verifiedDocsCount,
+      rejectedDocs: rejectedDocsCount
     };
 
-    // ডায়নামিক অ্যাকশনস
+    // --- Actions / Notifications ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actions: any[] = [];
-    
-    if (totalPendingDocs > 0) {
-      actions.push({
-        _id: "act-1",
-        message: `You have ${totalPendingDocs} pending documents to upload/fix.`,
-        type: "urgent",
-        createdAt: new Date().toISOString()
-      });
+
+    // Rejected Notification
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rejectedDocs = uploadedDocs.filter((d: any) => d.status === "Rejected");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rejectedDocs.forEach((doc: any) => {
+        actions.push({
+            _id: doc._id,
+            message: `Document Rejected: ${doc.name}. Please re-upload.`,
+            type: "urgent",
+            createdAt: doc.uploadedAt || new Date().toISOString(),
+            link: "/student/documents"
+        });
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const requestedDocs = uploadedDocs.filter((d: any) => d.status === "Pending" && d.fileName === "Pending Upload");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    requestedDocs.forEach((doc: any) => {
+        actions.push({
+            _id: doc._id,
+            message: `Action Required: Please upload your ${doc.name}.`,
+            type: "alert",
+            createdAt: doc.uploadedAt || new Date().toISOString(),
+            link: "/student/documents"
+        });
+    });
+
+    // Missing Docs Alert
+    if (missingDocsCount > 0) {
+        actions.push({
+            _id: "missing-docs-alert",
+            message: `You are missing ${missingDocsCount} required documents. Please upload them.`,
+            type: "info",
+            createdAt: new Date().toISOString(),
+            link: "/student/documents"
+        });
     }
-    
+
+    // Offer Alert
     if (offersCount > 0) {
       actions.push({
-        _id: "act-2",
-        message: "Congratulations! You have received an offer.",
+        _id: "offer-alert",
+        message: "Congratulations! You have received an offer letter.",
         type: "success",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        link: "/student/applications"
       });
     }
 
+    // Counselor Alert
     if (!counselor) {
         actions.push({
-            _id: "act-3",
-            message: "Your profile is under review for counselor assignment.",
+            _id: "counselor-pending",
+            message: "Your profile is being reviewed for counselor assignment.",
             type: "info",
             createdAt: new Date().toISOString()
         });
     }
+
+    actions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json({
       stats,

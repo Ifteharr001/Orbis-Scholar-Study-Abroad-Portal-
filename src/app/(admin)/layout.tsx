@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic"; // ১. dynamic ইমপোর্ট আনুন
+import dynamic from "next/dynamic"; 
 import AdminHeader from "./admin/AdminHeader";
 import { Toaster } from "sonner";
 
-// ২. AdminSidebar কে ডায়নামিকালি ইমপোর্ট করুন এবং SSR বন্ধ করে দিন
 const AdminSidebar = dynamic(() => import("./admin/AdminSidebar"), { 
-  ssr: false, // এটি সার্ভারে রেন্ডার হবে না, ফলে ID মিসম্যাচ হবে না
-  loading: () => <div className="w-16 md:w-64 h-screen bg-muted/20" /> // লোড হওয়ার আগে একটি খালি জায়গা দেখাবে
+  loading: () => <div className="w-16 md:w-64 h-screen bg-muted/20" /> 
 });
 
 export default function AdminLayout({
@@ -38,17 +36,14 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-muted/20">
-      {/* Sidebar (Dynamic Import) */}
       <AdminSidebar
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         isMobile={isMobile}
       />
 
-      {/* Header */}
       <AdminHeader sidebarCollapsed={sidebarCollapsed} />
 
-      {/* Main Content Area */}
       <main
         className={`pt-20 px-6 pb-8 transition-all duration-300 ${
           sidebarCollapsed ? (isMobile ? "ml-0" : "ml-16") : (isMobile ? "ml-0" : "ml-64")

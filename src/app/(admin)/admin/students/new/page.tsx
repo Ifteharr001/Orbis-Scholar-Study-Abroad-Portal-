@@ -1,8 +1,8 @@
-"use client"; // 1. Client Side Interactivity-r jonno mandatory
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // 2. useNavigate -> useRouter
-import Link from "next/link"; // 3. Link from next/link
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, UserPlus } from "lucide-react";
-import { toast } from "sonner"; // 4. Updated toast import (assuming sonner is used as per previous context)
+import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const NewStudentPage = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(false); // লোডিং স্টেট
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -40,17 +41,40 @@ const NewStudentPage = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
-    
-    // Show success toast
-    toast.success("Student Created", {
-      description: "New student has been successfully added to the system.",
-    });
-    
-    // Redirect to students list
-    router.push("/admin/students");
+    setLoading(true);
+
+    try {
+      // ✅ API কল করা হচ্ছে
+      const res = await fetch("/api/admin/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+      
+      // সফল হলে টোস্ট দেখাবে
+      toast.success("Success", {
+        description: "Student account created successfully.",
+      });
+      
+      // লিস্ট পেজে রিডাইরেক্ট করবে
+      router.push("/admin/students");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Error:", error);
+      toast.error("Error", {
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,6 +105,7 @@ const NewStudentPage = () => {
                 value={formData.firstName}
                 onChange={(e) => handleInputChange("firstName", e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -90,6 +115,7 @@ const NewStudentPage = () => {
                 value={formData.lastName}
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -100,6 +126,7 @@ const NewStudentPage = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -109,6 +136,7 @@ const NewStudentPage = () => {
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -118,33 +146,34 @@ const NewStudentPage = () => {
                 type="date"
                 value={formData.dateOfBirth}
                 onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="gender">Gender</Label>
-              <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+              <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Country *</Label>
-              <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
+              <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bangladesh">Bangladesh</SelectItem>
-                  <SelectItem value="india">India</SelectItem>
-                  <SelectItem value="nepal">Nepal</SelectItem>
-                  <SelectItem value="pakistan">Pakistan</SelectItem>
-                  <SelectItem value="srilanka">Sri Lanka</SelectItem>
+                  <SelectItem value="Bangladesh">Bangladesh</SelectItem>
+                  <SelectItem value="India">India</SelectItem>
+                  <SelectItem value="Nepal">Nepal</SelectItem>
+                  <SelectItem value="Pakistan">Pakistan</SelectItem>
+                  <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -155,6 +184,7 @@ const NewStudentPage = () => {
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 rows={2}
+                disabled={loading}
               />
             </div>
           </CardContent>
@@ -171,16 +201,17 @@ const NewStudentPage = () => {
               <Select
                 value={formData.programPreference}
                 onValueChange={(value) => handleInputChange("programPreference", value)}
+                disabled={loading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select program" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bsc">BSc (Bachelor)</SelectItem>
-                  <SelectItem value="msc">MSc (Master)</SelectItem>
-                  <SelectItem value="mba">MBA</SelectItem>
-                  <SelectItem value="phd">PhD</SelectItem>
-                  <SelectItem value="diploma">Diploma</SelectItem>
+                  <SelectItem value="BSc">BSc (Bachelor)</SelectItem>
+                  <SelectItem value="MSc">MSc (Master)</SelectItem>
+                  <SelectItem value="MBA">MBA</SelectItem>
+                  <SelectItem value="PhD">PhD</SelectItem>
+                  <SelectItem value="Diploma">Diploma</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -189,15 +220,15 @@ const NewStudentPage = () => {
               <Select
                 value={formData.intakePreference}
                 onValueChange={(value) => handleInputChange("intakePreference", value)}
+                disabled={loading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select intake" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fall2024">Fall 2024</SelectItem>
-                  <SelectItem value="spring2025">Spring 2025</SelectItem>
-                  <SelectItem value="fall2025">Fall 2025</SelectItem>
-                  <SelectItem value="spring2026">Spring 2026</SelectItem>
+                  <SelectItem value="Fall 2025">Fall 2025</SelectItem>
+                  <SelectItem value="Spring 2026">Spring 2026</SelectItem>
+                  <SelectItem value="Fall 2026">Fall 2026</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -212,15 +243,14 @@ const NewStudentPage = () => {
           <CardContent className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="counselor">Assigned Counselor</Label>
-              <Select value={formData.counselor} onValueChange={(value) => handleInputChange("counselor", value)}>
+              <Select value={formData.counselor} onValueChange={(value) => handleInputChange("counselor", value)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select counselor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sarah">Sarah Khan</SelectItem>
-                  <SelectItem value="john">John Doe</SelectItem>
-                  <SelectItem value="emily">Emily Chen</SelectItem>
-                  <SelectItem value="michael">Michael Brown</SelectItem>
+                  {/* এখানে আপনি চাইলে ডায়নামিক কাউন্সিলর লিস্ট আনতে পারেন */}
+                  <SelectItem value="Sarah Khan">Sarah Khan</SelectItem>
+                  <SelectItem value="John Doe">John Doe</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -232,6 +262,7 @@ const NewStudentPage = () => {
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 placeholder="Any additional notes about the student..."
                 rows={3}
+                disabled={loading}
               />
             </div>
           </CardContent>
@@ -239,13 +270,20 @@ const NewStudentPage = () => {
 
         <div className="flex justify-end gap-4">
           <Link href="/admin/students">
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" disabled={loading}>
               Cancel
             </Button>
           </Link>
-          <Button type="submit" className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            Create Student
+          <Button type="submit" className="gap-2" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Creating...
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4" /> Create Student
+              </>
+            )}
           </Button>
         </div>
       </form>

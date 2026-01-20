@@ -34,12 +34,11 @@ export const connect = async () => {
   // ২. কানেকশন না থাকলে নতুন কানেকশন তৈরি করবে
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false, // বাফারিং বন্ধ রাখা (ফাস্ট এরর হ্যান্ডলিং)
-      maxPoolSize: 10,       // কানেকশন লিমিট (সার্ভার ওভারলোড আটকাতে)
-      serverSelectionTimeoutMS: 5000, // ৫ সেকেন্ডে কানেক্ট না হলে এরর দিবে
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 30000, // ৫০০০ এর বদলে ৩০,০০০ (৩০ সেকেন্ড) দিন
       socketTimeoutMS: 45000,
     };
-
     cached.promise = mongoose.connect(MONGODB_URL!, opts).then((mongoose) => {
       console.log("✅ New MongoDB connection established");
       return mongoose;

@@ -82,7 +82,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { label: "Pipeline (Kanban)", path: "/admin/applications/pipeline" },
       { label: "All Applications", path: "/admin/applications" },
-      { label: "Stage Rules", path: "/admin/applications/rules" },
     ]
   },
   { 
@@ -91,7 +90,7 @@ const menuItems: MenuItem[] = [
     path: "/admin/documents",
     subItems: [
       { label: "Verification Queue", path: "/admin/documents/queue" },
-      { label: "All Documents", path: "/admin/documents" },
+      { label: "All Documents", path: "/admin/documents/all-documents" },
       { label: "Fraud Flags", path: "/admin/documents/fraud" },
     ]
   },
@@ -103,7 +102,6 @@ const menuItems: MenuItem[] = [
       { label: "Universities", path: "/admin/catalog/universities" },
       { label: "Programs", path: "/admin/catalog/programs" },
       { label: "Intakes", path: "/admin/catalog/intakes" },
-      { label: "Requirements", path: "/admin/catalog/requirements" },
     ]
   },
   { 
@@ -112,7 +110,6 @@ const menuItems: MenuItem[] = [
     path: "/admin/scholarships",
     subItems: [
       { label: "All Scholarships", path: "/admin/scholarships" },
-      { label: "Eligibility Rules", path: "/admin/scholarships/rules" },
       { label: "Mappings", path: "/admin/scholarships/mappings" },
     ]
   },
@@ -124,7 +121,6 @@ const menuItems: MenuItem[] = [
       { label: "Invoices", path: "/admin/finance/invoices" },
       { label: "Payments", path: "/admin/finance/payments" },
       { label: "Fee Schedules", path: "/admin/finance/fees" },
-      { label: "Commissions", path: "/admin/finance/commissions" },
     ]
   },
   { 
@@ -134,7 +130,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { label: "My Tasks", path: "/admin/tasks" },
       { label: "Team Tasks", path: "/admin/tasks/team" },
-      { label: "Templates", path: "/admin/tasks/templates" },
     ]
   },
   { 
@@ -144,8 +139,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { label: "Inbox", path: "/admin/comms/inbox" },
       { label: "Campaigns", path: "/admin/comms/campaigns" },
-      { label: "Templates", path: "/admin/comms/templates" },
-      { label: "Logs", path: "/admin/comms/logs" },
       { label: "Appointments", path: "/admin/comms/appointments" },
     ]
   },
@@ -196,8 +189,6 @@ const menuItems: MenuItem[] = [
     label: "Help & Docs", 
     path: "/admin/help",
     subItems: [
-      { label: "SOP Library", path: "/admin/help/sop" },
-      { label: "Training", path: "/admin/help/training" },
       { label: "Support", path: "/admin/help/support" },
     ]
   },

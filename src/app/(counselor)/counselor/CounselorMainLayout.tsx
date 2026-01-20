@@ -1,18 +1,21 @@
-"use client";
+"use client"; // ⚠️ এটি অবশ্যই থাকতে হবে
 
 import { useState, useEffect } from "react";
-import AdminSidebar from "./AdminSidebar"; 
-import AdminHeader from "./AdminHeader";   
+import CounselorSidebar from "./CounselorSidebar";
+import CounselorHeader from "./CounselorHeader";
 
-export default function AdminLayout({
+export default function CounselorMainLayout({
   children,
+  user,
 }: {
   children: React.ReactNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  user: any;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // মোবাইল রেসপন্সিভনেস হ্যান্ডেল করার জন্য
+ 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -24,9 +27,7 @@ export default function AdminLayout({
       }
     };
 
-    // ইনিশিয়াল চেক
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -34,25 +35,24 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Sidebar */}
-      <AdminSidebar
+      <CounselorSidebar
         collapsed={sidebarCollapsed}
-        setCollapsed={setSidebarCollapsed}
+        setCollapsed={setSidebarCollapsed} 
         isMobile={isMobile}
+        user={user}
       />
 
-      {/* Header */}
-      <AdminHeader sidebarCollapsed={sidebarCollapsed} />
-
-      {/* Main Content Area */}
-      <main
-        className={`pt-20 px-6 pb-8 transition-all duration-300 ${
-          sidebarCollapsed ? "ml-16" : "ml-64"
+      <div
+        className={`transition-all duration-300 min-h-screen flex flex-col ${
+          sidebarCollapsed ? (isMobile ? "ml-0" : "ml-16") : (isMobile ? "ml-0" : "ml-64")
         }`}
       >
-        <div className="max-w-7xl mx-auto">
+        <CounselorHeader />
+        
+        <main className="flex-1 p-6">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

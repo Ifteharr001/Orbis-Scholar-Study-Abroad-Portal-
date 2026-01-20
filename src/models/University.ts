@@ -11,6 +11,9 @@ export interface IProgram {
   tuitionFee: string;
   accommodationFee: string;
   hasScholarship: boolean;
+  
+  intakes?: string[]; 
+    deadline?: string;  
 }
 
 export interface IScholarship {
@@ -21,6 +24,7 @@ export interface IScholarship {
   insuranceFee: string;
   monthlyStipend: string;
   yearlyStipend: string;
+  applicablePrograms?: string[];
 }
 
 export interface IFAQ {
@@ -42,7 +46,7 @@ interface IFeeStructure {
   medical: string;
 }
 
-// Fees এর জন্য নির্দিষ্ট স্ট্রাকচার (any বাদ দেওয়া হয়েছে)
+// Fees এর জন্য নির্দিষ্ট স্ট্রাকচার
 interface IFees {
   bachelor?: IFeeStructure;
   master?: IFeeStructure;
@@ -53,14 +57,18 @@ interface IFees {
 
 export interface IUniversity extends Document {
   name: string;
-  slug: string; // 🚀 SEO URL এর জন্য (যেমন: nanjing-university)
+  slug: string; 
   location: string;
   country?: string;
   heroImage?: string;
   image?: string;
   logo?: string;
-  ranking?: number; // String থেকে Number করা হলো (Sort করার সুবিধার জন্য)
-  deadline?: string;
+  ranking?: number;
+  
+  // University General Info
+  deadline?: string; // General Deadline
+  intakes?: string[]; // ✅ General Intakes (যেমন: ["March", "September"])
+  
   daysLeft?: number;
   rating?: number;
   about?: string;
@@ -90,30 +98,30 @@ const UniversitySchema = new Schema<IUniversity>(
   {
     name: { type: String, required: true },
     
-    // 🚀 SEO Friendly URL Slug (Must be unique)
+    // SEO Friendly URL Slug
     slug: { type: String, required: true, unique: true },
 
     location: { type: String, required: true },
-    country: { type: String, required: true }, // Country ছাড়া ফিল্টার করা কঠিন, তাই required
+    country: { type: String, required: true },
     
     heroImage: { type: String },
     image: { type: String },
     logo: { type: String },
     
-    // Ranking কে Number হিসেবে রাখলে sorting সহজ হয় (যেমন: Rank 1 to 10)
-    // ইনপুট নেওয়ার সময় স্ট্রিং আসলেও কনভার্ট করে নিবেন
     ranking: { type: Number }, 
 
-    deadline: { type: String },
+    deadline: { type: String }, // General Deadline
+    intakes: [String], // ✅ General Intakes for the University
+
     rating: { type: Number, default: 0 },
     about: { type: String },
     founded: { type: Number },
     studentPopulation: { type: Number },
     acceptanceRate: { type: String },
-    tuitionFee: { type: String }, // Average cost दिखानेর জন্য
+    tuitionFee: { type: String }, 
     applicationFee: { type: String },
     
-    // Programs Array
+    // Programs Array (Updated)
     programs: [
       {
         id: { type: Number },
@@ -124,6 +132,10 @@ const UniversitySchema = new Schema<IUniversity>(
         tuitionFee: { type: String },
         accommodationFee: { type: String },
         hasScholarship: { type: Boolean },
+        
+        // ✅ Program Specific Data
+        intakes: [String], // e.g. ["March 2024", "Sept 2024"]
+        deadline: { type: String } // e.g. "2024-06-30"
       },
     ],
     
@@ -140,13 +152,13 @@ const UniversitySchema = new Schema<IUniversity>(
         insuranceFee: { type: String },
         monthlyStipend: { type: String },
         yearlyStipend: { type: String },
+        applicablePrograms: [{ type: String }]
       }
     ],
 
-    // Fees Object (Schema Validation)
-    // আগে 'Object' ছিল, এখন ডিটেইলস দেওয়া হলো যাতে ভুল ডাটা না ঢুকে
+    // Fees Object
     fees: {
-       bachelor: { type: Object }, // বা এখানেও নেস্টেড স্কিমা দিতে পারেন
+       bachelor: { type: Object },
        master: { type: Object },
        phd: { type: Object }
     },
@@ -172,16 +184,10 @@ const UniversitySchema = new Schema<IUniversity>(
   { timestamps: true }
 );
 
-// 🚀 Performance Indexing (খুবই গুরুত্বপূর্ণ)
+// 🚀 Performance Indexing
 
-// ১. নাম দিয়ে সার্চ করার জন্য (Text Index)
-// এটি "Nanjing" লিখলেই "Nanjing University" খুঁজে দিবে
 UniversitySchema.index({ name: "text" }); 
-
-// ২. স্লাগ দিয়ে পেজ লোড করার জন্য
 UniversitySchema.index({ slug: 1 });
-
-// ৩. ফিল্টার করার জন্য (কান্ট্রি এবং র‍্যাঙ্কিং)
 UniversitySchema.index({ country: 1 });
 UniversitySchema.index({ ranking: 1 });
 

@@ -1,91 +1,140 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation"; // Updated imports
-import Link from "next/link"; // Updated import
-import { toast } from "sonner"; // Updated import
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
-// Mock student data
-const studentData = {
-  "STU001": {
-    id: "STU001",
-    name: "Rahul Ahmed",
-    email: "rahul.ahmed@email.com",
-    phone: "+880 1712-345678",
-    country: "Bangladesh",
-    city: "Dhaka",
-    program: "MSc Computer Science",
-    status: "Active",
-    counselor: "Sarah Khan",
-    dateOfBirth: "1998-05-20",
-    passportNo: "BD12345678",
-    address: "123 Main Street, Dhaka",
-    notes: "Interested in AI and Machine Learning programs",
-  },
-};
-
+// Mock counselors (এটিও চাইলে API থেকে আনা যায়)
 const counselors = [
-  { id: "C001", name: "Sarah Khan" },
-  { id: "C002", name: "John Doe" },
-  { id: "C003", name: "Emily Chen" },
-  { id: "C004", name: "Ahmed Ali" },
+  "Sarah Khan",
+  "John Doe",
+  "Emily Chen",
+  "Ahmed Ali",
 ];
 
 const countries = [
-  "Bangladesh",
-  "India",
-  "Pakistan",
-  "Nepal",
-  "Sri Lanka",
-  "Nigeria",
-  "Ghana",
-  "Kenya",
+  "Bangladesh", "India", "Pakistan", "Nepal", "Sri Lanka", 
+  "Nigeria", "Ghana", "Kenya", "UK", "USA", "Canada"
 ];
 
 const StudentEditPage = () => {
   const params = useParams();
-  const studentId = params.studentId as string;
-  const router = useRouter(); // Use useRouter for navigation
+  // ফোল্ডার নেম [id] তাই params.id ব্যবহার করতে হবে
+  const studentId = params.id as string; 
+  const router = useRouter();
   
-  const initialData = studentData[studentId as keyof typeof studentData] || studentData["STU001"];
-  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [formData, setFormData] = useState({
-    name: initialData.name,
-    email: initialData.email,
-    phone: initialData.phone,
-    country: initialData.country,
-    city: initialData.city,
-    program: initialData.program,
-    status: initialData.status,
-    counselor: initialData.counselor,
-    dateOfBirth: initialData.dateOfBirth,
-    passportNo: initialData.passportNo,
-    address: initialData.address,
-    notes: initialData.notes,
+    name: "",
+    email: "",
+    phone: "",
+    country: "",
+    city: "",
+    program: "",
+    status: "",
+    counselor: "",
+    dateOfBirth: "",
+    passportNo: "", // যদি মডেলে না থাকে তবে এটি কাজ করবে না, তবে আমি রেখেছি
+    address: "",
+    notes: "",
   });
+
+  // ১. ডাটাবেস থেকে স্টুডেন্ট ইনফো নিয়ে আসা
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const res = await fetch(`/api/admin/students/${studentId}`);
+        if (!res.ok) throw new Error("Failed to fetch student");
+        
+        const data = await res.json();
+        const student = data.student;
+
+        // ডাটা সেট করা (API থেকে যা আসবে)
+        setFormData({
+            name: student.name || "",
+            email: student.email || "",
+            phone: student.phone || "",
+            country: student.country || "",
+            city: student.city || "", // যদি মডেলে না থাকে তবে খালি থাকবে
+            // programPreference যদি অবজেক্ট হয় তবে degree নিবে, আর স্ট্রিং হলে সরাসরি
+            program: typeof student.programPreference === 'object' ? student.programPreference?.degree : student.programPreference || "",
+            status: student.status || "active",
+            counselor: student.counselor || "",
+            // Date format YYYY-MM-DD তে কনভার্ট করা
+            dateOfBirth: student.dob ? new Date(student.dob).toISOString().split('T')[0] : "",
+            passportNo: student.passportNo || "",
+            address: student.address || "",
+            notes: student.notes || "",
+        });
+      } catch (error) {
+        console.error("Error:", error);
+        toast.error("Could not load student data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (studentId) {
+        fetchStudent();
+    }
+  }, [studentId]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ২. ডাটা আপডেট করা (PUT Request)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving student:", formData);
-    
-    toast.success("Student Updated", {
-      description: "Student information has been updated successfully.",
-    });
-    
-    // Redirect to student details page
-    router.push(`/admin/students/${studentId}`);
+    setSaving(true);
+
+    try {
+        const res = await fetch(`/api/admin/students/${studentId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ...formData,
+                // Backend এ field mapping ঠিক রাখার জন্য
+                dob: formData.dateOfBirth, 
+                programPreference: formData.program 
+            }),
+        });
+
+        if (!res.ok) throw new Error("Update failed");
+
+        toast.success("Student Updated", {
+            description: "Student information has been updated successfully.",
+        });
+        
+        // Redirect to details page
+        router.push(`/admin/students/${studentId}`);
+        router.refresh(); // ডাটা রিফ্রেশ করার জন্য
+
+    } catch (error) {
+        console.error("Update Error:", error);
+        toast.error("Failed to update student information");
+    } finally {
+        setSaving(false);
+    }
   };
+
+  if (loading) {
+      return (
+          <div className="flex h-[50vh] items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
@@ -125,7 +174,8 @@ const StudentEditPage = () => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
+                    disabled // ইমেইল সাধারণত এডিট করতে দেওয়া হয় না
+                    className="bg-muted"
                   />
                 </div>
                 <div className="space-y-2">
@@ -145,24 +195,18 @@ const StudentEditPage = () => {
                     onChange={(e) => handleChange("dateOfBirth", e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="passportNo">Passport Number</Label>
-                  <Input
-                    id="passportNo"
-                    value={formData.passportNo}
-                    onChange={(e) => handleChange("passportNo", e.target.value)}
-                  />
-                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="blocked">Blocked</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -181,7 +225,7 @@ const StudentEditPage = () => {
                   <Label htmlFor="country">Country</Label>
                   <Select value={formData.country} onValueChange={(value) => handleChange("country", value)}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
                     <SelectContent>
                       {countries.map((country) => (
@@ -223,6 +267,7 @@ const StudentEditPage = () => {
                   id="program"
                   value={formData.program}
                   onChange={(e) => handleChange("program", e.target.value)}
+                  placeholder="e.g. MSc Computer Science"
                 />
               </div>
             </CardContent>
@@ -238,11 +283,11 @@ const StudentEditPage = () => {
                 <Label htmlFor="counselor">Assigned Counselor</Label>
                 <Select value={formData.counselor} onValueChange={(value) => handleChange("counselor", value)}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select Counselor" />
                   </SelectTrigger>
                   <SelectContent>
                     {counselors.map((counselor) => (
-                      <SelectItem key={counselor.id} value={counselor.name}>{counselor.name}</SelectItem>
+                      <SelectItem key={counselor} value={counselor}>{counselor}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -271,9 +316,9 @@ const StudentEditPage = () => {
           <Link href={`/admin/students/${studentId}`}>
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
-          <Button type="submit" className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Changes
+          <Button type="submit" className="gap-2" disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

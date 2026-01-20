@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-// 1. Data Fetching Simulation (Replace this with actual DB/API calls later)
+
 async function getDashboardData() {
   // Simulate delay or API call
   // const res = await fetch('https://api.example.com/dashboard');

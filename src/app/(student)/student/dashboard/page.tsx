@@ -4,15 +4,13 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Settings, Loader2, Bell } from "lucide-react";
-import DashboardStats from "../components/DashboardStats";
-import ActionCenter from "../components/ActionCenter";
-import CounselorCard from "../components/CounselorCard";
-import OffersCard from "../components/OffersCard";
-import ActiveApplications from "../components/ActiveApplications";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
-// ✅ ১. ইন্টারফেসগুলো কম্পোনেন্টের Props এর সাথে মিলিয়ে ঠিক করা হলো
+import DashboardStats from "../components/DashboardStats";
+import ActionCenter from "../components/ActionCenter";
+import ActiveApplications from "../components/ActiveApplications";
+import CounselorCard from "../components/CounselorCard";
+import OffersCard from "../components/OffersCard";
 
 interface Application {
   _id: string;
@@ -23,12 +21,12 @@ interface Application {
   applicationId?: string;
 }
 
-// ⚠️ FIX: ActionCenter কম্পোনেন্ট যা আশা করে, সেই অনুযায়ী আপডেট করা হয়েছে
 interface Action {
-  _id: string;          // আগে id ছিল
-  message: string;      // আগে title/description ছিল
-  type: "urgent" | "info" | "success" | "alert"; // alert টাইপ যুক্ত করা হয়েছে
-  createdAt: string;    // এটি মিসিং ছিল
+  _id: string;
+  message: string;
+  type: "urgent" | "info" | "success" | "alert";
+  createdAt: string;
+  link?: string;
 }
 
 interface Counselor {
@@ -38,13 +36,17 @@ interface Counselor {
   image?: string;
 }
 
-interface DashboardData {
-  stats: {
+interface DashboardStatsData {
     applications: number;
     pendingDocs: number;
     offers: number;
     unreadMessages: number;
-  };
+    verifiedDocs: number;
+    rejectedDocs: number;
+}
+
+interface DashboardData {
+  stats: DashboardStatsData;
   applications: Application[];
   actions: Action[]; 
   counselor: Counselor | null;
@@ -56,37 +58,36 @@ export default function StudentDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  // ২. API থেকে ডাটা ফেচ করা
-useEffect(() => {
-  if (authLoading) return;
+  // ডাটা ফেচিং লজিক
+  useEffect(() => {
+    if (authLoading) return;
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch("/api/student/dashboard-data", {
-        credentials: "include",
-        cache: "no-store",
-      });
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/student/dashboard-data", {
+          cache: "no-store",
+        });
 
-      if (!res.ok) {
-        throw new Error("Failed to fetch dashboard data");
+        if (!res.ok) {
+          throw new Error("Failed to fetch dashboard data");
+        }
+
+        const result = await res.json();
+        setData(result);
+      } catch (error) {
+        console.error("Dashboard fetch error:", error);
+        toast.error("Failed to load dashboard data");
+      } finally {
+        setLoadingData(false);
       }
+    };
 
-      const result = await res.json();
-      setData(result);
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      toast.error("Failed to load dashboard data");
-    } finally {
+    if (isAuthenticated) {
+      fetchData();
+    } else {
       setLoadingData(false);
     }
-  };
-
-  if (isAuthenticated) {
-    fetchData();
-  } else {
-    setLoadingData(false);
-  }
-}, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated]);
 
 
   if (authLoading || loadingData) {
@@ -122,8 +123,11 @@ useEffect(() => {
             />
           </div>
           
-          <Button variant="outline" size="icon" className="rounded-full">
+          <Button variant="outline" size="icon" className="rounded-full relative">
             <Bell className="h-5 w-5 text-muted-foreground" />
+            {data?.actions && data.actions.length > 0 && (
+                <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background" />
+            )}
           </Button>
           <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
             <Settings className="h-5 w-5" />
@@ -132,23 +136,34 @@ useEffect(() => {
       </div>
 
       {/* Stats Section */}
-      {data?.stats && <DashboardStats stats={data.stats} />}
+      <DashboardStats stats={data?.stats || { 
+          applications: 0, 
+          pendingDocs: 0, 
+          offers: 0, 
+          unreadMessages: 0, 
+          verifiedDocs: 0, 
+          rejectedDocs: 0 
+      }} />
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
-        {/* Left Column */}
+        {/* Left Column (Main Content) */}
         <div className="xl:col-span-2 space-y-8">
-          <ActionCenter actions={data?.actions || []} />
+          <ActionCenter initialActions={data?.actions || []} />
           <ActiveApplications applications={data?.applications || []} />
         </div>
 
-        {/* Right Column */}
+        {/* Right Column (Sidebar) */}
         <div className="space-y-8">
-          <CounselorCard 
-            counselor={data?.counselor} 
-            unreadCount={data?.stats?.unreadMessages || 0}
+          
+          {/* 🔥 FIX: এখানে কন্ডিশন তুলে দিয়ে সরাসরি কম্পোনেন্ট বসানো হলো */}
+          {/* যদি data.counselor null থাকে, কম্পোনেন্ট নিজেই হ্যান্ডেল করবে */}
+          <CounselorCard
+             counselor={data?.counselor} 
+             unreadCount={data?.stats?.unreadMessages || 0}
           />
+          
           <OffersCard applications={data?.applications || []} />
         </div>
         

@@ -14,9 +14,10 @@ import { Check, X, Download, HelpCircle, Loader2, ArrowRightLeft, Gift, AlertCir
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import Link from "next/link"; 
 
 interface Offer {
-  _id: string;
+  _id: string; 
   universityName: string;
   programName: string;
   status: string;
@@ -27,30 +28,57 @@ interface Offer {
   duration?: string;
   startDate?: string;
   accommodation?: string;
-  workPermit?: string; // "Yes" | "No" or boolean
+  workPermit?: string;
+  offerLetterUrl?: string; 
+  isOfferAccepted?: boolean; 
 }
 
 export default function OffersPage() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
-  
+   
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchOffers = async () => {
+  const fetchOffers = async () => {
       if (isAuthenticated && user?.email) { 
         try {
-          const res = await fetch(`/api/student/offers?email=${user.email}`);
+          const res = await fetch(`/api/student/offers`);
           const result = await res.json();
 
           if (result.success && Array.isArray(result.data)) {
-            setOffers(result.data);
+            // ✅ Fix: সরাসরি Application মডেলের প্রপার্টিগুলো ব্যবহার করা হচ্ছে
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mappedOffers = result.data.map((item: any) => {
+                return {
+                    _id: item._id,
+                    universityName: item.universityName,
+                    programName: item.programName,
+                    status: item.status,
+                    
+                    // সরাসরি আইটেম থেকে ভ্যালু নেওয়া হচ্ছে, না থাকলে ফলব্যাক স্ট্রিং
+                    scholarship: item.scholarship || "None", 
+                    expiryDate: item.expiryDate || "N/A",
+                    
+                    // এখানেও সরাসরি ভ্যালু নেওয়া হচ্ছে
+                    tuitionFee: item.tuitionFee || "Contact University",
+                    duration: item.duration || "N/A",
+                    location: item.location || "N/A",
+                    
+                    // অন্যান্য তথ্য
+                    startDate: item.startDate || "Next Intake", 
+                    accommodation: item.accommodation || "On Campus",
+                    workPermit: item.workPermit || "N/A",
+                    
+                    offerLetterUrl: item.offerLetterUrl,
+                    isOfferAccepted: item.isOfferAccepted
+                };
+            });
+            setOffers(mappedOffers);
           } else {
-             // Handle case where API returns success: false or invalid format
              console.error("Invalid data format:", result);
-             toast.error("Failed to load offers.");
           }
 
         } catch (error) {
@@ -62,14 +90,65 @@ export default function OffersPage() {
       }
     };
 
+  useEffect(() => {
     fetchOffers();
   }, [isAuthenticated, user?.email]);
+
+  // Handle Accept Offer
+  const handleAcceptOffer = async (offerId: string) => {
+    const confirmed = window.confirm("Are you sure you want to accept this offer? This will start your visa processing.");
+    if (!confirmed) return;
+
+    setProcessingId(offerId);
+    try {
+      const res = await fetch("/api/student/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: offerId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        toast.success("Offer Accepted Successfully! 🎉");
+        setOffers((prev) => 
+          prev.map((offer) => 
+            offer._id === offerId 
+              ? { ...offer, status: "Visa Processing", isOfferAccepted: true } 
+              : offer
+          )
+        );
+      } else {
+        toast.error(data.error || "Failed to accept offer");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Handle Download
+  const handleDownload = (url: string, fileNamePrefix: string) => {
+    if (!url) return;
+
+    if (url.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${fileNamePrefix.replace(/\s+/g, "_")}_Offer_Letter.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const getStatusColor = (status: string) => {
     if (status.includes("Conditional") || status.includes("Offer") || status.includes("Approved")) {
       return "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded";
     }
-    if (status.includes("Waiting") || status.includes("Pending")) {
+    if (status.includes("Waiting") || status.includes("Pending") || status.includes("Visa")) { 
       return "text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded";
     }
     return "text-muted-foreground bg-muted px-2 py-0.5 rounded";
@@ -152,100 +231,131 @@ export default function OffersPage() {
          </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {offers.map((offer) => (
-            <div key={offer._id} className={cn("bg-card rounded-xl border border-border p-6 shadow-sm transition-all hover:shadow-md", selectedOffers.includes(offer._id) && "ring-2 ring-primary border-primary")}>
-              
-              {/* Card Header & Selection */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-4">
-                  <Checkbox
-                    id={`offer-${offer._id}`}
-                    checked={selectedOffers.includes(offer._id)}
-                    onCheckedChange={() => toggleOfferSelection(offer._id)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <h2 className="text-lg font-bold text-foreground">{offer.universityName}</h2>
-                    <p className="text-sm font-medium text-muted-foreground">{offer.programName}</p>
-                  </div>
+          {offers.map((offer) => {
+            
+            // Status Logic
+            const hasOffer = offer.status === "Offer Received" || offer.status === "Conditional Offer";
+            const isAccepted = offer.isOfferAccepted;
+            const isVisaProcessing = offer.status === "Visa Processing";
+            const isCardActive = hasOffer || isAccepted || isVisaProcessing;
+
+            return (
+                <div key={offer._id} className={cn("bg-card rounded-xl border border-border p-6 shadow-sm transition-all hover:shadow-md", selectedOffers.includes(offer._id) && "ring-2 ring-primary border-primary")}>
+                
+                {/* Card Header & Selection */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-4">
+                    <Checkbox
+                        id={`offer-${offer._id}`}
+                        checked={selectedOffers.includes(offer._id)}
+                        onCheckedChange={() => toggleOfferSelection(offer._id)}
+                        className="mt-1"
+                    />
+                    <div>
+                        <h2 className="text-lg font-bold text-foreground">{offer.universityName}</h2>
+                        <p className="text-sm font-medium text-muted-foreground">{offer.programName}</p>
+                    </div>
+                    </div>
+                    <span className={cn("text-xs font-semibold whitespace-nowrap", getStatusColor(offer.status))}>
+                    {offer.status}
+                    </span>
                 </div>
-                <span className={cn("text-xs font-semibold whitespace-nowrap", getStatusColor(offer.status))}>
-                  {offer.status}
-                </span>
-              </div>
 
-              <div className="ml-8 space-y-4">
-                  {/* Key Details Grid */}
-                  <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg border border-border/50">
-                      <div>
-                          <p className="text-xs text-muted-foreground font-medium mb-1">Scholarship</p>
-                          <p className={cn("font-medium", offer.scholarship && offer.scholarship !== "N/A" ? "text-green-600 dark:text-green-400" : "text-foreground")}>
-                              {offer.scholarship || "None"}
-                          </p>
-                      </div>
-                       <div>
-                          <p className="text-xs text-muted-foreground font-medium mb-1">Tuition Fee</p>
-                          <p className="font-medium text-foreground">
-                              {offer.tuitionFee || "TBD"}
-                          </p>
-                      </div>
-                      <div>
-                          <p className="text-xs text-muted-foreground font-medium mb-1">Duration</p>
-                          <p className="font-medium text-foreground">
-                              {offer.duration || "N/A"}
-                          </p>
-                      </div>
-                      <div>
-                          <p className="text-xs text-muted-foreground font-medium mb-1">Expiry Date</p>
-                          <p className={cn("font-medium", !offer.expiryDate ? "text-muted-foreground" : "text-red-500")}>
-                              {formatDate(offer.expiryDate)}
-                          </p>
-                      </div>
-                  </div>
+                {/* Card Body */}
+                <div className={cn("ml-8 space-y-4 transition-opacity", !isCardActive && "opacity-60 grayscale")}>
+                    
+                    {/* Key Details Grid */}
+                    <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg border border-border/50">
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium mb-1">Scholarship</p>
+                            <p className={cn("font-medium", offer.scholarship && offer.scholarship !== "None" ? "text-green-600 dark:text-green-400" : "text-foreground")}>
+                                {offer.scholarship}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium mb-1">Tuition Fee</p>
+                            <p className="font-medium text-foreground">
+                                {offer.tuitionFee}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium mb-1">Duration</p>
+                            <p className="font-medium text-foreground">
+                                {offer.duration}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground font-medium mb-1">Expiry Date</p>
+                            <p className={cn("font-medium", !offer.expiryDate ? "text-muted-foreground" : "text-red-500")}>
+                                {formatDate(offer.expiryDate)}
+                            </p>
+                        </div>
+                    </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2">
-                    <Button 
-                        size="sm" 
-                        disabled={!offer.status.toLowerCase().includes("offer") && !offer.status.toLowerCase().includes("approved")}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                        Accept Offer
-                    </Button>
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                        
+                        {/* Accept Button Logic */}
+                        {!offer.isOfferAccepted && hasOffer ? (
+                            <Button 
+                                size="sm" 
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                                onClick={() => handleAcceptOffer(offer._id)}
+                                disabled={!!processingId}
+                            >
+                                {processingId === offer._id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                                Accept Offer
+                            </Button>
+                        ) : (
+                            <Button size="sm" variant="secondary" disabled>
+                                {offer.isOfferAccepted ? "Accepted" : "Accept Offer"}
+                            </Button>
+                        )}
 
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={!offer.status.toLowerCase().includes("offer") && !offer.status.toLowerCase().includes("approved")}
-                        className="text-foreground"
-                    >
-                        <Download className="w-3.5 h-3.5 mr-2" />
-                        Download Letter
-                    </Button>
+                        {/* Download Button Logic */}
+                        {offer.offerLetterUrl ? (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-foreground"
+                                onClick={() => handleDownload(offer.offerLetterUrl!, offer.universityName)}
+                            >
+                                <Download className="w-3.5 h-3.5 mr-2" />
+                                Download Letter
+                            </Button>
+                        ) : (
+                            <Button variant="outline" size="sm" disabled>
+                                <Download className="w-3.5 h-3.5 mr-2" />
+                                No Letter
+                            </Button>
+                        )}
 
-                    <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-muted-foreground hover:text-foreground ml-auto"
-                    >
-                        <HelpCircle className="w-4 h-4 mr-2" />
-                        Need Help?
-                    </Button>
-                  </div>
-              </div>
-            </div>
-          ))}
+                        <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-muted-foreground hover:text-foreground ml-auto"
+                            asChild
+                        >
+                            <Link href="/contact">
+                                <HelpCircle className="w-4 h-4 mr-2" />
+                                Need Help?
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+                </div>
+            )})}
         </div>
       )}
 
-      {/* Compare Dialog */}
+      {/* Compare Dialog (UI Unchanged) */}
       <Dialog open={compareDialogOpen} onOpenChange={setCompareDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="px-1">
             <DialogTitle>Compare Offers</DialogTitle>
             <DialogDescription>Side-by-side comparison of your selected university offers.</DialogDescription>
           </DialogHeader>
-          
+            
           <div className="mt-4 flex-1 overflow-auto border rounded-lg">
             <table className="w-full border-collapse text-sm">
               <thead className="bg-muted/50 sticky top-0 z-10">

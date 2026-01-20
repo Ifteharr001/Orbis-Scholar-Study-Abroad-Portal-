@@ -1,15 +1,15 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// ১. ইন্টারফেস আপডেট (TypeScript এর জন্য)
 export interface IApplication extends Document {
   studentEmail: string;
   universityName: string;
   programName: string;
   
-  // ✅ নতুন ফিল্ড যোগ করা হলো (Error ফিক্স করার জন্য)
+  // IDs
   universityId?: string;
   programId?: string;
 
+  // Student Details
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -17,6 +17,11 @@ export interface IApplication extends Document {
   intakePreference?: string;
   
   status: string;
+  priority: "high" | "medium" | "low"; 
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  counselor?: mongoose.Types.ObjectId | any;                 
+
   appliedDate: Date;
   applicationId?: string;
   
@@ -30,21 +35,28 @@ export interface IApplication extends Document {
   accommodation: string;
   workPermit: string;
   
+  offerLetterUrl?: string;
+  isOfferAccepted: boolean;
+  offerAcceptedDate?: Date;
+
+  // ✅ Internal Notes Array (FIXED HERE)
+  // আগে এটি String ছিল, এখন এটি Object এর Array
+  internalNotes: {
+    content: string;
+    createdAt: Date;
+    author?: string;
+  }[];
+
   createdAt: Date;
   updatedAt: Date;
 }
 
-// ২. স্কিমা আপডেট (MongoDB এর জন্য)
 const ApplicationSchema = new Schema<IApplication>(
   {
-    // Student Info
     studentEmail: { type: String, required: true },
-
-    // Program Info
     universityName: { type: String, required: true },
     programName: { type: String, required: true },
 
-    // ✅ ডাটাবেস ফিল্ড যোগ করা হলো
     universityId: { type: String },
     programId: { type: String },
 
@@ -57,22 +69,28 @@ const ApplicationSchema = new Schema<IApplication>(
     status: {
       type: String,
       enum: [
-        "Applied", // অথবা "Pending" যদি আগের কোডে Pending ব্যবহার করে থাকেন
-        "Pending", // দুটোর যে কোনো একটি বা দুটোই রাখতে পারেন সেইফটির জন্য
-        "In Review",
-        "Offer Received",
-        "Conditional Offer",
-        "Visa Processing",
-        "Enrolled",
-        "Rejected",
-        "Waiting List",
+        "Inquiry", "Docs Pending", "Docs Verified", "Submitted", 
+        "Offer Received", "Visa Processing", "Enrolled", "Rejected", 
+        "Applied", "Pending", "In Review", "Conditional Offer", "Waiting List"
       ],
       default: "Applied",
     },
+
+    priority: {
+      type: String,
+      enum: ["high", "medium", "low"],
+      default: "medium",
+    },
+
+    counselor: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     appliedDate: { type: Date, default: Date.now },
     applicationId: { type: String },
 
-    // Offer Details
     scholarship: { type: String, default: "N/A" },
     tuitionFee: { type: String, default: "N/A" },
     expiryDate: { type: String, default: "N/A" },
@@ -81,14 +99,22 @@ const ApplicationSchema = new Schema<IApplication>(
     startDate: { type: String, default: "N/A" },
     accommodation: { type: String, default: "Not specified" },
     workPermit: { type: String, default: "No" },
+
+    offerLetterUrl: { type: String, default: "" }, 
+    isOfferAccepted: { type: Boolean, default: false },
+    offerAcceptedDate: { type: Date },
+
+    internalNotes: [
+      {
+        content: { type: String },
+        createdAt: { type: Date, default: Date.now },
+        author: { type: String, default: "Admin" }
+      }
+    ],
   },
   { timestamps: true }
 );
 
-// ইনডেক্সিং (দ্রুত সার্চের জন্য)
-ApplicationSchema.index({ studentEmail: 1 });
-
-// ৩. মডেল এক্সপোর্ট (Next.js এর জন্য সেফ প্যাটার্ন)
 const Application: Model<IApplication> =
   mongoose.models.Application || mongoose.model<IApplication>("Application", ApplicationSchema);
 

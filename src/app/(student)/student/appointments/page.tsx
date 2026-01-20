@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { format, isPast, isFuture, isToday } from "date-fns";
 import { toast } from "sonner";
 
-// ✅ ইন্টারফেস আপডেট (Optional Fields সহ)
 interface Appointment {
   _id: string;
   topic: string;
@@ -28,10 +27,10 @@ interface Appointment {
   };
   date: string;
   time: string;
-  duration?: string; // এটি ব্যাকএন্ডে নাও থাকতে পারে
+  duration?: string;
   type: "video" | "in-person";
   status: "confirmed" | "pending" | "completed" | "cancelled";
-  meetingLink?: string; // ভিডিও কলের লিংক
+  meetingLink?: string;
 }
 
 const timeSlots = [
@@ -39,7 +38,6 @@ const timeSlots = [
   "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM"
 ];
 
-// স্ট্যাটাস ব্যাজ ফাংশন
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "confirmed": return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">Confirmed</Badge>;
@@ -55,7 +53,6 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
 
-  // Booking Form States
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
@@ -63,7 +60,6 @@ export default function AppointmentsPage() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [notes, setNotes] = useState("");
 
-  // ১. ডাটা ফেচিং (API Path Fixed)
   const fetchAppointments = useCallback(async () => {
     try {
       const res = await fetch("/api/student/appointments");
@@ -86,7 +82,6 @@ export default function AppointmentsPage() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // ২. বুকিং হ্যান্ডলার
   const handleBookAppointment = async () => {
     if (!selectedDate || !selectedTime || !selectedType || !selectedTopic) {
       toast.error("Please fill in all required fields");
@@ -96,13 +91,13 @@ export default function AppointmentsPage() {
     setIsBooking(true);
 
     try {
-      const res = await fetch("/api/student/appointment", {
+      const res = await fetch("/api/student/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic: selectedTopic, // এখন আমরা ড্রপডাউন ভ্যালুটাই পাঠাব
+          topic: selectedTopic,
           type: selectedType,
-          date: selectedDate, // Date Object -> ISO String অটো কনভার্ট হবে
+          date: selectedDate,
           time: selectedTime,
           notes
         }),
@@ -114,7 +109,6 @@ export default function AppointmentsPage() {
 
       toast.success("Appointment booked successfully!");
       
-      // রিসেট ফর্ম
       setIsBookingOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
@@ -122,7 +116,6 @@ export default function AppointmentsPage() {
       setSelectedTopic("");
       setNotes("");
       
-      // লিস্ট রিফ্রেশ
       fetchAppointments();
 
     } catch (error) {
@@ -133,7 +126,6 @@ export default function AppointmentsPage() {
     }
   };
 
-  // ৩. ফিল্টারিং লজিক
   const upcomingAppointments = appointments.filter(app => {
     const appDate = new Date(app.date);
     return (isFuture(appDate) || isToday(appDate)) && app.status !== "completed" && app.status !== "cancelled";
@@ -172,7 +164,6 @@ export default function AppointmentsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               
-              {/* Topic Select */}
               <div className="space-y-2">
                 <Label>Topic *</Label>
                 <Select value={selectedTopic} onValueChange={setSelectedTopic}>
@@ -189,7 +180,6 @@ export default function AppointmentsPage() {
                 </Select>
               </div>
 
-              {/* Type Select */}
               <div className="space-y-2">
                 <Label>Appointment Type *</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
@@ -203,7 +193,6 @@ export default function AppointmentsPage() {
                 </Select>
               </div>
 
-              {/* Date Picker */}
               <div className="space-y-2">
                 <Label>Select Date *</Label>
                 <Popover>
@@ -224,7 +213,7 @@ export default function AppointmentsPage() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6} // শনি-রবি বন্ধ
+                      disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
@@ -232,7 +221,6 @@ export default function AppointmentsPage() {
                 </Popover>
               </div>
 
-              {/* Time Select */}
               <div className="space-y-2">
                 <Label>Select Time *</Label>
                 <Select value={selectedTime} onValueChange={setSelectedTime}>
@@ -342,7 +330,6 @@ export default function AppointmentsPage() {
   );
 }
 
-// Sub Component: Appointment Card
 function AppointmentCard({ appointment, showActions = true }: { appointment: Appointment; showActions?: boolean }) {
   
   const handleJoinMeeting = () => {
@@ -362,7 +349,6 @@ function AppointmentCard({ appointment, showActions = true }: { appointment: App
       <CardContent className="p-5">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex gap-4">
-            {/* Date Box */}
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-primary shrink-0">
               <span className="text-lg font-bold">{format(new Date(appointment.date), "dd")}</span>
               <span className="text-xs uppercase">{format(new Date(appointment.date), "MMM")}</span>
@@ -400,7 +386,6 @@ function AppointmentCard({ appointment, showActions = true }: { appointment: App
                     Join
                   </Button>
                 )}
-                {/* Cancel Button */}
                 {appointment.status === "pending" && (
                     <Button size="sm" variant="ghost" className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancel}>
                         Cancel

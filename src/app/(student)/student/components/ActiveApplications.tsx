@@ -3,44 +3,70 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Plus, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, ArrowRight, Building2, GraduationCap, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ১. ইন্টারফেস আপডেট
+// ১. ইন্টারফেস আপডেট (API থেকে এই ডাটাগুলো আসছে)
 interface Application {
+  _id?: string;
+  universityName?: string; // Optional marked safe for TS
+  programName?: string;
   status: string;
 }
 
-const ActiveApplications = ({ applications = [] }: { applications: Application[] }) => {
-  
-  // ২. লজিক আপডেট: বিভিন্ন স্ট্যাটাস গ্রুপ করা
-  const counts = {
-    applied: applications.filter(a => a.status === "Applied" || a.status === "Submitted").length,
-    inReview: applications.filter(a => a.status === "In Review" || a.status === "University Review").length,
-    offer: applications.filter(a => a.status === "Offer Received" || a.status === "Conditional Offer").length,
-    visa: applications.filter(a => a.status === "Visa Processing" || a.status === "Visa Lodged").length,
-    enrolled: applications.filter(a => a.status === "Enrolled").length,
+// ২. অ্যাডমিন পাইপলাইন অনুযায়ী স্টেজ লিস্ট (ক্রম অনুসারে)
+const PIPELINE_STAGES = [
+  "Applied",        // or New Applied
+  "Inquiry",
+  "In Review",
+  "Docs Pending",
+  "Docs Verified",
+  "Submitted",
+  "Offer Received",
+  "Visa Processing",
+  "Enrolled"
+];
+
+export default function ActiveApplications({ applications = [] }: { applications: Application[] }) {
+
+  // প্রোগ্রেস ক্যালকুলেশন হেল্পার
+  const getProgress = (status: string) => {
+    if (status === "Rejected") return 100;
+    
+    // "New Applied" কে "Applied" হিসেবে ধরা হবে
+    const normalizedStatus = status === "New Applied" ? "Applied" : status;
+    const index = PIPELINE_STAGES.indexOf(normalizedStatus);
+    
+    if (index === -1) return 10; // অজানা স্ট্যাটাস হলে ১০%
+    
+    // (Current Index + 1) / Total Stages * 100
+    return Math.round(((index + 1) / PIPELINE_STAGES.length) * 100);
   };
 
-  const stages = [
-    { label: "Applied", count: counts.applied, step: 1 },
-    { label: "In Review", count: counts.inReview, step: 2 },
-    { label: "Offer", count: counts.offer, step: 3 },
-    { label: "Visa", count: counts.visa, step: 4 },
-    { label: "Enrolled", count: counts.enrolled, step: 5 },
-  ];
+  // কালার হেল্পার
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Rejected": return "bg-red-100 text-red-700 border-red-200";
+      case "Enrolled": return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "Offer Received": return "bg-green-100 text-green-700 border-green-200";
+      case "Visa Processing": return "bg-orange-100 text-orange-700 border-orange-200";
+      case "Docs Pending": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      default: return "bg-blue-50 text-blue-700 border-blue-200";
+    }
+  };
 
   // যদি কোনো অ্যাপ্লিকেশন না থাকে (Empty State)
   if (applications.length === 0) {
     return (
-        <Card className="border-border shadow-sm h-full flex flex-col justify-center">
+        <Card className="border-border shadow-sm  flex flex-col justify-center">
             <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Plus className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Start Your Journey</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                    You haven t applied to any universities yet.
+                    You have not applied to any universities yet.
                 </p>
                 <Button asChild className="w-full">
                     <Link href="/student/university-program">Apply Now</Link>
@@ -51,12 +77,12 @@ const ActiveApplications = ({ applications = [] }: { applications: Application[]
   }
 
   return (
-    <Card className="border-border shadow-sm flex flex-col">
-      <CardHeader className="pb-2 border-b border-border/50">
+    <Card className="border-border shadow-sm flex flex-col ">
+      <CardHeader className="pb-3 border-b border-border/50">
         <div className="flex items-center justify-between">
             <div>
-                <CardTitle className="text-xl font-bold">Application Pipeline</CardTitle>
-                <CardDescription>Real-time status of your applications.</CardDescription>
+                <CardTitle className="text-xl font-bold">Active Applications</CardTitle>
+                <CardDescription>Track the status of your applications individually.</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80 p-0 hover:bg-transparent">
                 <Link href="/student/applications" className="flex items-center gap-1">
@@ -66,53 +92,66 @@ const ActiveApplications = ({ applications = [] }: { applications: Application[]
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col justify-center py-6">
-        <div className="relative">
-            {/* Connecting Line (Background) */}
-            <div className="absolute top-[28px] left-0 w-full h-[2px] bg-border z-0 hidden md:block" />
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px] custom-scrollbar">
+        {applications.map((app, index) => {
+            const progress = getProgress(app.status);
+            const isRejected = app.status === "Rejected";
+            const isEnrolled = app.status === "Enrolled";
 
-            <div className="flex items-start justify-between relative z-10 overflow-x-auto pb-2 no-scrollbar px-1">
-            {stages.map((stage, index) => {
-                const isActive = stage.count > 0;
-                
-                return (
-                    <div key={index} className="flex flex-col items-center min-w-[70px] group cursor-default">
-                    {/* Circle Counter */}
-                    <div
-                        className={cn(
-                        "w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-300 border-4 border-background shadow-sm",
-                        isActive
-                            ? "bg-primary text-primary-foreground scale-110 shadow-md ring-2 ring-primary/20"
-                            : "bg-muted text-muted-foreground border-muted"
-                        )}
-                    >
-                        {stage.label === "Enrolled" && isActive ? (
-                             <Check className="h-6 w-6" />
-                        ) : (
-                             <span className="text-xl font-bold">{stage.count}</span>
-                        )}
+            return (
+                <div key={app._id || index} className="border border-border rounded-lg p-4 bg-card hover:shadow-sm transition-all">
+                    {/* Header: University & Status */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
+                        <div className="space-y-1">
+                            <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                {app.universityName || "University Name"}
+                            </h3>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                <GraduationCap className="h-4 w-4" />
+                                {app.programName || "Program Name"}
+                            </p>
+                        </div>
+                        <Badge variant="outline" className={cn("w-fit whitespace-nowrap", getStatusColor(app.status))}>
+                            {app.status}
+                        </Badge>
                     </div>
-                    
-                    {/* Labels */}
-                    <span className={cn(
-                        "text-sm font-semibold text-center whitespace-nowrap transition-colors",
-                        isActive ? "text-primary" : "text-muted-foreground"
-                    )}>
-                        {stage.label}
-                    </span>
+
+                    {/* Progress Bar Section */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>Process Completion</span>
+                            <span className={cn("font-medium", isRejected ? "text-red-600" : "text-primary")}>
+                                {isRejected ? "Terminated" : `${progress}%`}
+                            </span>
+                        </div>
+                        
+                        {/* Custom Progress Bar */}
+                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div 
+                                className={cn(
+                                    "h-full transition-all duration-500 ease-out rounded-full",
+                                    isRejected ? "bg-red-500" : isEnrolled ? "bg-emerald-500" : "bg-primary"
+                                )}
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+
+                        {/* Status Message based on Stage */}
+                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                            {isRejected ? (
+                                <><AlertCircle className="h-3.5 w-3.5 text-red-500" /> Application has been rejected.</>
+                            ) : isEnrolled ? (
+                                <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Successfully Enrolled!</>
+                            ) : (
+                                "Your application is moving through the review stages."
+                            )}
+                        </p>
                     </div>
-                );
-            })}
-            </div>
-        </div>
-        
-        {/* Footer Info */}
-        <div className="mt-6 bg-muted/30 rounded-lg p-3 flex items-center justify-center text-xs text-muted-foreground">
-             Total <span className="font-bold text-foreground mx-1">{applications.length}</span> active applications being tracked.
-        </div>
+                </div>
+            );
+        })}
       </CardContent>
     </Card>
   );
-};
-
-export default ActiveApplications;
+}

@@ -15,19 +15,33 @@ import {
   Calendar, 
   GraduationCap, 
   User, 
-  HelpCircle 
+  HelpCircle,
+  ChevronDown, 
+  ChevronRight 
 } from "lucide-react";
 import { cn } from "@/lib/utils"; 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/student/dashboard" }, 
   { icon: FileText, label: "My Applications", path: "/student/applications" },
   { icon: FolderOpen, label: "Documents", path: "/student/documents" },
   { icon: Gift, label: "Offers & Scholarships", path: "/student/offers" },
+  
+  
+  { 
+    icon: MessageCircle, 
+    label: "Communication", 
+    
+    subItems: [
+      { label: "My Counselor", path: "/student/counselor" },
+      { label: "Messages", path: "/student/counselor/message" }
+    ]
+  },
+
   { icon: Plane, label: "Visa & Pre-Departure", path: "/student/visa" },
   { icon: CreditCard, label: "Payments", path: "/student/payments" },
-  { icon: MessageCircle, label: "My Counselor", path: "/student/counselor" },
   { icon: Calendar, label: "Appointments", path: "/student/appointments" },
   { icon: GraduationCap, label: "Universities & Programs", path: "/student/university-program" },
   { icon: User, label: "Profile & Settings", path: "/student/profile" },
@@ -38,18 +52,21 @@ const StudentSidebar = () => {
   const pathname = usePathname();
   const { data: session } = useSession(); 
   
-  // Initialize state
   const [userImage, setUserImage] = useState(session?.user?.image || "");
   const [userName, setUserName] = useState(session?.user?.name || "");
 
-  // ✅ FIX: "Cascading Update" আটকানোর জন্য কন্ডিশনাল চেক যোগ করা হয়েছে
+ 
+  const [openDropdown, setOpenDropdown] = useState<string | null>("Communication"); // ডিফল্টভাবে খোলা রাখতে চাইলে নাম দিন, নাহলে null
+
+  const toggleDropdown = (label: string) => {
+    setOpenDropdown(openDropdown === label ? null : label);
+  };
+
   useEffect(() => {
     if (session?.user) {
-        // যদি সেশনের নাম স্টেটের নামের সাথে না মিলে, তবেই আপডেট হবে
         if (session.user.name && session.user.name !== userName) {
             setUserName(session.user.name);
         }
-        // যদি সেশনের ছবি স্টেটের ছবির সাথে না মিলে, তবেই আপডেট হবে
         if (session.user.image && session.user.image !== userImage) {
             setUserImage(session.user.image);
         }
@@ -57,7 +74,6 @@ const StudentSidebar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]); 
 
-  // Optional: Fetch latest from DB to ensure sync
   useEffect(() => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
@@ -65,7 +81,6 @@ const StudentSidebar = () => {
           const res = await fetch("/api/student/profile"); 
           if (res.ok) {
              const data = await res.json();
-             // এখানেও ডুপ্লিকেট রেন্ডার এড়াতে চেক করা ভালো
              if (data.image && data.image !== userImage) setUserImage(data.image);
              if (data.fullName && data.fullName !== userName) setUserName(data.fullName);
           }
@@ -82,7 +97,6 @@ const StudentSidebar = () => {
   return (
     <div className="h-full w-full bg-background border-r border-border flex flex-col">
       
-      {/* Logo */}
       <div className="p-6 border-b border-border">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -95,16 +109,64 @@ const StudentSidebar = () => {
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-4 overflow-y-auto custom-scrollbar">
         <ul className="space-y-1">
           {menuItems.map((item) => {
+            
+            if (item.subItems) {
+                const isExpanded = openDropdown === item.label;
+                const isChildActive = item.subItems.some(sub => pathname === sub.path);
+
+                return (
+                    <li key={item.label}>
+                        <button
+                            onClick={() => toggleDropdown(item.label)}
+                            className={cn(
+                                "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 font-medium cursor-pointer",
+                                isChildActive || isExpanded
+                                    ? "text-foreground bg-muted/50" 
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <item.icon className={cn("h-5 w-5", (isChildActive || isExpanded) ? "text-primary" : "text-muted-foreground/70")} />
+                                {item.label}
+                            </div>
+                            {isExpanded ? <ChevronDown className="h-4 w-4 opacity-50" /> : <ChevronRight className="h-4 w-4 opacity-50" />}
+                        </button>
+
+                        {isExpanded && (
+                            <ul className="mt-1 ml-4 border-l border-border pl-2 space-y-1">
+                                {item.subItems.map((sub) => {
+                                    const isSubActive = pathname === sub.path;
+                                    return (
+                                        <li key={sub.path}>
+                                            <Link
+                                                href={sub.path}
+                                                className={cn(
+                                                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-all",
+                                                    isSubActive
+                                                        ? "text-primary font-medium bg-primary/5"
+                                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                                )}
+                                            >
+                                                {sub.label}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </li>
+                );
+            }
+
             const isActive = pathname === item.path;
             
             return (
               <li key={item.path}>
                 <Link
-                  href={item.path}
+                  href={item.path || "#"}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 font-medium",
                     isActive

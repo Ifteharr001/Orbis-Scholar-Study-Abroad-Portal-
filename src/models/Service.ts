@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IService extends Document {
   title: string;
-  slug: string; // URL-এর জন্য (যেমন: visa-support)
+  slug: string; 
   description: string;
   icon: string;
   gallery: string[]; 
@@ -18,12 +18,10 @@ const ServiceSchema = new Schema<IService>(
   {
     title: { type: String, required: true },
     
-    // 🚀 SEO Friendly URL-এর জন্য slug ফিল্ড
-    // এটি ইউনিক হতে হবে, যাতে দুইটা সার্ভিসের লিংক এক না হয়ে যায়
     slug: { type: String, required: true, unique: true }, 
 
     description: { type: String, required: true },
-    icon: { type: String, required: true }, // Lucide Icon Name or Image URL
+    icon: { type: String, required: true }, 
     
     gallery: [{ type: String }], 
     
@@ -37,7 +35,6 @@ const ServiceSchema = new Schema<IService>(
   { timestamps: true }
 );
 
-// 🚀 Indexing: আমরা স্লাগ দিয়ে পেজ লোড করব, তাই এটি ইনডেক্স করা জরুরি
 ServiceSchema.index({ slug: 1 });
 
 const Service: Model<IService> = mongoose.models.Service || mongoose.model<IService>("Service", ServiceSchema);

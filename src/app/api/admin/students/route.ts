@@ -1,41 +1,116 @@
 import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import User from "@/models/User";
-import Application from "@/models/Application"; // Application মডেল ইমপোর্ট
+import Application from "@/models/Application";
+import Segment from "@/models/Segment"; 
+import bcrypt from "bcryptjs";
 
+// ✅ 1. GET Method: Fixed Filtering Logic with $and
 export async function GET(req: Request) {
-    
   try {
     await connect();
 
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || "";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filter: any = { role: "student" };
+    const segmentId = searchParams.get("segment");
+    
+    // ✅ Fix: Initialize an array for $and conditions
+    // This ensures that ALL conditions (Role + Search + Segment Filters) must be met.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const andConditions: any[] = [
+      { role: "student" } // Default condition: User must be a student
+    ];
 
+    // 1. Text Search (Name or Email)
     if (query) {
-      filter.$or = [
-        { name: { $regex: query, $options: "i" } },
-        { email: { $regex: query, $options: "i" } },
-      ];
+      andConditions.push({
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ]
+      });
     }
 
-    // ১. সব স্টুডেন্ট খুঁজে আনা (lean() ব্যবহার করছি যাতে পেইন JS অবজেক্ট পাই)
-    const students = await User.find(filter)
+    // 2. ✅ Segment Filtering (Logic using $and)
+    if (segmentId) {
+      const segment = await Segment.findById(segmentId);
+      
+      if (segment && segment.conditions && segment.conditions.length > 0) {
+        
+        console.log("Applying Conditions:", segment.conditions);
+
+        segment.conditions.forEach((condition: string) => {
+          const lowerCond = condition.toLowerCase(); 
+          const parts = condition.split("="); // Split by equals sign
+          
+          if (parts.length > 1) {
+            const val = parts[1].trim(); // Get value (e.g., MSc, India)
+
+            // 🔹 Status Filter
+            if (lowerCond.includes("status")) {
+              andConditions.push({ status: val.toLowerCase() });
+            }
+
+            // 🔹 Country Filter
+            if (lowerCond.includes("country")) {
+              andConditions.push({ country: { $regex: val, $options: "i" } });
+            }
+
+            // 🔹 Program Filter (Fix: Validates actual value)
+            if (lowerCond.includes("program")) {
+              andConditions.push({
+                $or: [
+                  { programPreference: { $regex: val, $options: "i" } }, // Check string field
+                  { "programPreference.degree": { $regex: val, $options: "i" } } // Check object field
+                ]
+              });
+            }
+
+            // 🔹 Intake Filter
+            if (lowerCond.includes("intake")) {
+               andConditions.push({
+                 $or: [
+                   { intakePreference: { $regex: val, $options: "i" } },
+                   { notes: { $regex: val, $options: "i" } }
+                 ]
+               });
+            }
+
+            // 🔹 Counselor Filter
+            if (lowerCond.includes("counselor")) {
+               andConditions.push({
+                 $or: [
+                   { counselor: { $regex: val, $options: "i" } },
+                   { notes: { $regex: val, $options: "i" } }
+                 ]
+               });
+            }
+            
+            // 🔹 Gender Filter
+            if (lowerCond.includes("gender")) {
+               andConditions.push({ gender: { $regex: `^${val}$`, $options: "i" } });
+            }
+          }
+        });
+      }
+    }
+
+    // 3. Execute Query with $and
+    // If andConditions only has { role: "student" }, it returns all students.
+    // If filters are added, it returns only students matching ALL criteria.
+    const students = await User.find({ $and: andConditions })
       .select("-password")
       .sort({ createdAt: -1 })
       .lean();
 
-    // ২. এই স্টুডেন্টদের সব ইমেইল বের করা
+    // 4. Merge Application Data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const studentEmails = students.map((s: any) => s.email);
 
-    // ৩. এই ইমেইলগুলোর সব অ্যাপ্লিকেশন খুঁজে আনা
     const applications = await Application.find({ 
       studentEmail: { $in: studentEmails } 
     }).select("studentEmail programName universityName");
 
-    // ৪. স্টুডেন্টদের সাথে তাদের অ্যাপ্লিকেশন মার্জ (Merge) করা
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const studentsWithApps = students.map((student: any) => {
       const studentApps = applications.filter(
@@ -43,7 +118,7 @@ export async function GET(req: Request) {
       );
       return { 
         ...student, 
-        applications: studentApps // অ্যাপ্লিকেশনের লিস্ট ঢুকিয়ে দিলাম
+        applications: studentApps 
       };
     });
 
@@ -52,5 +127,54 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("Fetch Students Error:", error);
     return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
+  }
+}
+
+// ✅ 2. POST Method (Unchanged)
+export async function POST(req: Request) {
+  try {
+    await connect();
+    const body = await req.json();
+
+    const { 
+      firstName, lastName, email, phone, country, gender, 
+      dateOfBirth, programPreference, intakePreference, 
+      counselor, address, notes 
+    } = body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json({ message: "Email already exists" }, { status: 400 });
+    }
+
+    const hashedPassword = await bcrypt.hash("123456", 10);
+    const combinedNotes = `Intake: ${intakePreference || "N/A"}, Counselor: ${counselor || "N/A"}. ${notes || ""}`;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const studentData: any = {
+      name: `${firstName} ${lastName}`,
+      email,
+      password: hashedPassword,
+      role: "student",
+      phone,
+      country,
+      gender,
+      dob: dateOfBirth,
+      address,
+      status: "active",
+      programPreference: programPreference, 
+      notes: combinedNotes 
+    };
+
+    const newStudent = await User.create(studentData);
+
+    return NextResponse.json({ 
+      message: "Student created successfully", 
+      student: newStudent 
+    }, { status: 201 });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("Create Student Error:", error);
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

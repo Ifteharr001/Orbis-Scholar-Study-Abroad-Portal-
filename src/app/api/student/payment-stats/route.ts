@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
-import Payment from "@/models/Payment";
+import Invoice from "@/models/Invoice"; // 🔥 Payment এর বদলে Invoice ব্যবহার করা হলো
 
 export async function GET() {
   try {
@@ -13,32 +13,32 @@ export async function GET() {
 
     await connect();
 
-    // ১. সব পেমেন্ট ডাটা আনা (লেটেস্ট আগে + ফাস্ট লোডিং)
-    const payments = await Payment.find({ studentEmail: session.user.email })
-      .sort({ createdAt: -1 }) // ✅ নতুন ইনভয়েস সবার উপরে থাকবে
-      .lean(); // ✅ API রেসপন্স ফাস্ট করবে
+    // ১. সব ইনভয়েস ডাটা আনা (যেহেতু ইনভয়েসেই Paid/Pending স্ট্যাটাস থাকে)
+    const invoices = await Invoice.find({ studentEmail: session.user.email })
+      .sort({ createdAt: -1 }) 
+      .lean();
 
-    // ২. কাউন্ট করা
+    // ২. স্ট্যাটস ক্যালকুলেশন
     let totalPaid = 0;
     let totalPending = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payments.forEach((payment: any) => {
-      if (payment.status === "Paid") {
-        totalPaid += payment.amount;
-      } else if (payment.status === "Pending") {
-        totalPending += payment.amount;
+    invoices.forEach((inv: any) => {
+      if (inv.status === "Paid") {
+        totalPaid += inv.amount;
+      } else if (inv.status === "Pending") {
+        totalPending += inv.amount;
       }
     });
 
-    // ৩. ফ্রন্টএন্ডে যেভাবে ডাটা দরকার সেভাবে পাঠানো
+    // ৩. ফ্রন্টএন্ডে ডাটা পাঠানো
     return NextResponse.json({
       stats: {
         totalPaid,
         totalPending,
-        totalInvoices: payments.length
+        totalInvoices: invoices.length
       },
-      history: payments // টেবিলের জন্য লিস্ট
+      history: invoices // ইনভয়েস লিস্ট পাঠানো হলো যাতে টেবিলে দেখানো যায়
     });
 
   } catch (error) {

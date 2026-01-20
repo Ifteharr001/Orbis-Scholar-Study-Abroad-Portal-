@@ -1,19 +1,28 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-const invitationSchema = new mongoose.Schema(
+export interface IInvitation extends Document {
+  email: string;
+  role: "admin" | "counselor" | "staff" | "owner";
+  token: string;
+  status: "pending" | "accepted" | "expired";
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const invitationSchema = new Schema<IInvitation>(
   {
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
-      lowercase: true, // ✅ ইমেইল সবসময় ছোট হাতের হবে
-      trim: true,      // ✅ স্পেস রিমুভ করবে
+      lowercase: true,
+      trim: true,     
     },
     role: {
       type: String,
-      // 👇 User মডেলের সাথে মিল রেখে এগুলো lowercase করা হলো
       enum: ["admin", "counselor", "staff", "owner"], 
-      required: true,
+      required: [true, "Role is required"],
     },
     token: {
       type: String,
@@ -33,5 +42,7 @@ const invitationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Invitation =
-  mongoose.models.Invitation || mongoose.model("Invitation", invitationSchema);
+export const Invitation: Model<IInvitation> =
+  mongoose.models.Invitation || mongoose.model<IInvitation>("Invitation", invitationSchema);
+
+export default Invitation;
