@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle, FileText, ListTodo, UploadCloud, AlertCircle } from "lucide-react";
 
-// ১. ডাটা টাইপ ডিফাইন করা
 export interface DocumentItem {
   id?: string;
   name: string;
   status: "Verified" | "Pending" | "Rejected" | "Not Uploaded";
-  feedback?: string; // রিজেকশন রিজন দেখানোর জন্য
+  feedback?: string;
 }
 
 export interface TaskItem {
@@ -24,7 +23,6 @@ interface ChecklistProps {
   tasks?: TaskItem[];
 }
 
-// সফট কালার স্টাইল (Card & Timeline এর সাথে মিল রেখে)
 const getDocumentStatusStyles = (status: string) => {
   switch (status) {
     case "Verified":
@@ -54,7 +52,6 @@ const ChecklistDocuments = ({ documents = [], tasks = [] }: ChecklistProps) => {
   return (
     <div className="h-full flex flex-col">
       
-      {/* --- Documents Section --- */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <div className="p-1.5 bg-primary/10 rounded-md">
@@ -80,7 +77,6 @@ const ChecklistDocuments = ({ documents = [], tasks = [] }: ChecklistProps) => {
                     <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                     {doc.name}
                     </span>
-                    {/* রিজেক্ট হলে ওয়ার্নিং মেসেজ */}
                     {doc.status === "Rejected" && (
                         <span className="text-[10px] text-red-500 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" /> Please re-upload
@@ -93,7 +89,6 @@ const ChecklistDocuments = ({ documents = [], tasks = [] }: ChecklistProps) => {
                         {doc.status}
                     </Badge>
                     
-                    {/* আপলোড বাটন (শুধুমাত্র যদি আপলোড না থাকে বা রিজেক্ট হয়) */}
                     {(doc.status === "Not Uploaded" || doc.status === "Rejected") && (
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
                             <UploadCloud className="h-4 w-4" />
@@ -106,7 +101,6 @@ const ChecklistDocuments = ({ documents = [], tasks = [] }: ChecklistProps) => {
         </div>
       </div>
 
-      {/* --- Tasks Section --- */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <div className="p-1.5 bg-blue-100 rounded-md">

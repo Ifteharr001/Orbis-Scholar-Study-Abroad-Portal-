@@ -1,28 +1,67 @@
 import { 
   Users, 
   FileText, 
-  CheckCircle, 
-  AlertTriangle,
-  TrendingUp,
   Clock,
+  TrendingUp,
   DollarSign,
-  GraduationCap
+  GraduationCap,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-
+import { connect } from "@/lib/db";
+import User from "@/models/User";
+import Application from "@/models/Application";
+import Document from "@/models/Document";
+import Task from "@/models/Task";
+import University from "@/models/University";
 
 async function getDashboardData() {
-  // Simulate delay or API call
-  // const res = await fetch('https://api.example.com/dashboard');
-  // return res.json();
+  await connect();
+
+  const [
+    totalStudents,
+    totalApplications,
+    pendingDocsCount,
+    universitiesCount,
+    agentsCount,
+    recentTasks,
+    applicationStats
+  ] = await Promise.all([
+    User.countDocuments({ role: "student" }),
+    Application.countDocuments({}),
+    Document.countDocuments({ status: "Pending" }),
+    University.countDocuments({}),
+    User.countDocuments({ role: "agent" }),
+    Task.find({ status: "Pending" }).sort({ priority: 1, createdAt: -1 }).limit(5), 
+    Application.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ])
+  ]);
+
+  const statusMap: Record<string, number> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  applicationStats.forEach((s: any) => { statusMap[s._id] = s.count; });
+
+  const activeApps = totalApplications - (statusMap["Draft"] || 0) - (statusMap["Rejected"] || 0);
+  
+  const estimatedRevenue = activeApps * 50; 
+
+  const funnelData = [
+    { stage: "Total Applied", count: totalApplications, percentage: 100 },
+    { stage: "Under Review", count: statusMap["Under Review"] || 0, percentage: totalApplications ? Math.round(((statusMap["Under Review"] || 0) / totalApplications) * 100) : 0 },
+    { stage: "Offer Issued", count: statusMap["Offer Issued"] || 0, percentage: totalApplications ? Math.round(((statusMap["Offer Issued"] || 0) / totalApplications) * 100) : 0 },
+    { stage: "Visa Pending", count: statusMap["Visa Pending"] || 0, percentage: totalApplications ? Math.round(((statusMap["Visa Pending"] || 0) / totalApplications) * 100) : 0 },
+    { stage: "Enrolled", count: statusMap["Enrolled"] || 0, percentage: totalApplications ? Math.round(((statusMap["Enrolled"] || 0) / totalApplications) * 100) : 0 },
+  ];
 
   return {
     kpiCards: [
       { 
         title: "Total Students", 
-        value: "2,847", 
+        value: totalStudents.toLocaleString(), 
         change: "+12%", 
         trend: "up",
         icon: Users,
@@ -30,7 +69,7 @@ async function getDashboardData() {
       },
       { 
         title: "Active Applications", 
-        value: "1,234", 
+        value: activeApps.toLocaleString(), 
         change: "+8%", 
         trend: "up",
         icon: FileText,
@@ -38,64 +77,52 @@ async function getDashboardData() {
       },
       { 
         title: "Pending Documents", 
-        value: "89", 
-        change: "-5%", 
-        trend: "down",
+        value: pendingDocsCount.toString(), 
+        change: pendingDocsCount > 10 ? "+High" : "-Low", 
+        trend: pendingDocsCount > 10 ? "up" : "down",
         icon: Clock,
         color: "text-orange-600 bg-orange-100"
       },
       { 
-        title: "Revenue (MTD)", 
-        value: "$125,430", 
+        title: "Est. Revenue", 
+        value: `$${estimatedRevenue.toLocaleString()}`, 
         change: "+23%", 
         trend: "up",
         icon: DollarSign,
         color: "text-purple-600 bg-purple-100"
       },
     ],
-    workQueue: [
-      { task: "Document verification", count: 23, priority: "high" },
-      { task: "Application review", count: 15, priority: "medium" },
-      { task: "Student inquiries", count: 8, priority: "low" },
-      { task: "Visa follow-ups", count: 12, priority: "high" },
-      { task: "Payment reconciliation", count: 5, priority: "medium" },
-    ],
-    funnelData: [
-      { stage: "Leads", count: 450, percentage: 100 },
-      { stage: "Applications Started", count: 320, percentage: 71 },
-      { stage: "Documents Submitted", count: 280, percentage: 62 },
-      { stage: "Offer Received", count: 180, percentage: 40 },
-      { stage: "Visa Applied", count: 120, percentage: 27 },
-      { stage: "Enrolled", count: 95, percentage: 21 },
-    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    workQueue: recentTasks.map((task: any) => ({
+      task: task.title,
+      count: 1, 
+      priority: task.priority ? task.priority.toLowerCase() : "medium"
+    })),
+    funnelData: funnelData,
     alerts: [
-      { type: "warning", message: "5 visa applications expiring in 3 days", time: "2h ago" },
-      { type: "error", message: "Payment failed for invoice #4521", time: "4h ago" },
-      { type: "info", message: "New intake opening for Fall 2025", time: "1d ago" },
-      { type: "warning", message: "12 documents pending for 7+ days", time: "1d ago" },
-    ],
+      pendingDocsCount > 5 ? { type: "warning", message: `${pendingDocsCount} documents waiting for review`, time: "Real-time" } : null,
+      { type: "info", message: "System operational", time: "Now" },
+      activeApps > 0 ? { type: "info", message: `${activeApps} applications currently active`, time: "Real-time" } : null,
+    ].filter(Boolean),
     quickStats: [
-        { label: "Universities", value: "156", icon: GraduationCap, color: "bg-primary/10 text-primary" },
-        { label: "Offers Received", value: "892", icon: CheckCircle, color: "bg-green-100 text-green-600" },
-        { label: "Active Agents", value: "45", icon: Users, color: "bg-blue-100 text-blue-600" },
-        { label: "Visa Success Rate", value: "78%", icon: TrendingUp, color: "bg-purple-100 text-purple-600" },
+        { label: "Universities", value: universitiesCount.toString(), icon: GraduationCap, color: "bg-primary/10 text-primary" },
+        { label: "Offers Issued", value: (statusMap["Offer Issued"] || 0).toString(), icon: CheckCircle, color: "bg-green-100 text-green-600" },
+        { label: "Active Agents", value: agentsCount.toString(), icon: Users, color: "bg-blue-100 text-blue-600" },
+        { label: "Visa Success", value: `${statusMap["Enrolled"] || 0}`, icon: TrendingUp, color: "bg-purple-100 text-purple-600" },
     ]
   };
 }
 
 export default async function AdminDashboardPage() {
-  // 2. Fetch data inside the Server Component
   const data = await getDashboardData();
 
   return (
-    <div className="space-y-6 animate-in fade-in-50 duration-500">
-      {/* Page Header */}
+    <div className="space-y-6 animate-in fade-in-50 duration-500 p-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here what happening today.</p>
+        <p className="text-muted-foreground">Welcome back! Here is what happening today.</p>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {data.kpiCards.map((card, index) => (
           <Card key={index}>
@@ -122,35 +149,38 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Work Queue */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Work Queue</CardTitle>
+            <CardTitle className="text-lg font-semibold">Recent Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {data.workQueue.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      item.priority === 'high' ? 'bg-red-500' :
-                      item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                    }`} />
-                    <span className="text-sm text-foreground">{item.task}</span>
-                  </div>
-                  <Badge variant="secondary" className="font-medium">
-                    {item.count}
-                  </Badge>
+            {data.workQueue.length > 0 ? (
+                <div className="space-y-4">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {data.workQueue.map((item: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                        item.priority === 'high' ? 'bg-red-500' :
+                        item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`} />
+                        <span className="text-sm text-foreground truncate max-w-[180px]">{item.task}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs capitalize">
+                        {item.priority}
+                    </Badge>
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
+            ) : (
+                <div className="text-center text-muted-foreground py-4">No pending tasks</div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Funnel */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Conversion Funnel</CardTitle>
+            <CardTitle className="text-lg font-semibold">Application Funnel</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -167,14 +197,14 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Alerts */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Alerts</CardTitle>
+            <CardTitle className="text-lg font-semibold">System Alerts</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {data.alerts.map((alert, index) => (
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {data.alerts.map((alert: any, index: number) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className={`mt-0.5 ${
                     alert.type === 'error' ? 'text-red-500' :
@@ -199,7 +229,6 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {data.quickStats.map((stat, index) => (
             <Card key={index}>

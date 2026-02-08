@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation"; // ID ধরার জন্য
+import { useParams } from "next/navigation"; 
 import { Loader2, Calendar, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface NewsDetail {
   _id: string;
   title: string;
-  content: string; // ফুল কন্টেন্ট
+  content: string;
   image: string;
   category: string;
   createdAt: string;

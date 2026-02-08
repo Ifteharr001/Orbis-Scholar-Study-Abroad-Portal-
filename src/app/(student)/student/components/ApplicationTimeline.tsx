@@ -1,17 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Check, Circle, Clock, XCircle } from "lucide-react"; // আইকন ইম্পোর্ট
+import { Check, Circle, Clock, XCircle } from "lucide-react"; 
 
-// ১. টাইমলাইনের সব ধাপ (Display Labels)
 const STEPS_ORDER = [
   "Shortlisted",
   "Draft",
-  "Submitted",           // DB: "Applied"
-  "University Review",   // DB: "In Review"
-  "Offer Received",      // DB: "Offer Received", "Conditional Offer"
+  "Submitted",         
+  "University Review",   
+  "Offer Received",   
   "Offer Accepted",
-  "Visa Lodged",         // DB: "Visa Processing"
+  "Visa Lodged",         
   "Biometrics",
   "Visa Decision",
   "Enrolled",
@@ -23,10 +22,8 @@ interface TimelineProps {
 
 const ApplicationTimeline = ({ currentStatus = "Applied" }: TimelineProps) => {
   
-  // ২. রিজেক্টেড কিনা চেক করা
   const isRejected = currentStatus === "Rejected";
 
-  // ৩. ডাটাবেসের স্ট্যাটাস -> টাইমলাইন স্টেপ ম্যাপিং
   const getStepIndex = (status: string) => {
     const map: Record<string, string> = {
       "Applied": "Submitted",
@@ -35,7 +32,7 @@ const ApplicationTimeline = ({ currentStatus = "Applied" }: TimelineProps) => {
       "Offer Received": "Offer Received",
       "Visa Processing": "Visa Lodged",
       "Enrolled": "Enrolled",
-      "Rejected": "Submitted", // রিজেক্ট হলে অন্তত সাবমিটেড পর্যন্ত দেখাবে (লাল হয়ে)
+      "Rejected": "Submitted", 
     };
 
     const targetLabel = map[status] || status;
@@ -48,17 +45,15 @@ const ApplicationTimeline = ({ currentStatus = "Applied" }: TimelineProps) => {
     <div className="h-full">
       <div className="relative space-y-0 ml-2">
         
-        {/* Connecting Line (উলম্ব দাগ) */}
         <div className="absolute left-[15px] top-4 bottom-4 w-[2px] bg-border/40" />
 
         {STEPS_ORDER.map((label, index) => {
-          // লজিক: ধাপটি কি শেষ? নাকি চলছে? নাকি বাকি?
           let status: "completed" | "current" | "pending" | "error" = "pending";
           
           if (index < activeIndex) {
             status = "completed";
           } else if (index === activeIndex) {
-            status = isRejected ? "error" : "current"; // রিজেক্ট হলে এরর দেখাবে
+            status = isRejected ? "error" : "current";
           } else {
             status = "pending";
           }
@@ -66,7 +61,6 @@ const ApplicationTimeline = ({ currentStatus = "Applied" }: TimelineProps) => {
           return (
             <div key={index} className="relative flex items-start gap-4 pb-8 last:pb-0 group">
               
-              {/* Status Icon Wrapper */}
               <div
                 className={cn(
                   "relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 transition-all duration-300 bg-background",
@@ -76,14 +70,12 @@ const ApplicationTimeline = ({ currentStatus = "Applied" }: TimelineProps) => {
                   "border-muted-foreground/30 text-muted-foreground/30"
                 )}
               >
-                {/* Icons inside the bubble */}
                 {status === "completed" && <Check className="w-4 h-4" />}
                 {status === "current" && <Clock className="w-4 h-4 animate-pulse" />}
                 {status === "error" && <XCircle className="w-4 h-4" />}
                 {status === "pending" && <Circle className="w-3 h-3" />}
               </div>
 
-              {/* Text Content */}
               <div className="pt-1">
                 <p className={cn(
                   "text-sm font-medium transition-colors",

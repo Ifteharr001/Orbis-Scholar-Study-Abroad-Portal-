@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IPayment extends Document {
-  transactionId: string; // Stripe/Bank Transaction ID
-  invoiceId?: string;    // Link to invoice
+  transactionId: string; 
+  invoiceId?: string;    
   studentName: string;
   studentEmail: string;
   amount: number;

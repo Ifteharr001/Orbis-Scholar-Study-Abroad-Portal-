@@ -26,7 +26,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
   const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ১. ইউজার ডেটা ফেচ করা (API থেকে)
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -44,7 +43,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
     fetchUser();
   }, []);
 
-  // ২. লগআউট ফাংশন
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/auth/logout", {
@@ -54,7 +52,7 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
       if (res.ok) {
         toast.success("Logged out successfully");
         router.push("/admin/login");
-        router.refresh(); // রাউটার রিফ্রেশ করলে মিডলওয়্যার নতুন করে চেক করবে
+        router.refresh(); 
       }
     } catch (error) {
       toast.error("Logout failed");
@@ -68,7 +66,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
         sidebarCollapsed ? "left-16" : "left-64"
       )}
     >
-      {/* Global Search */}
       <div className="flex-1 max-w-xl">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -80,9 +77,7 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
         </div>
       </div>
 
-      {/* Right Section */}
       <div className="flex items-center gap-4 ml-4">
-        {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
@@ -101,7 +96,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
                 <span className="text-xs text-muted-foreground">John Doe applied to Oxford University</span>
                 <span className="text-xs text-muted-foreground">2 minutes ago</span>
               </DropdownMenuItem>
-              {/* আরও নোটিফিকেশন... */}
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-center text-primary cursor-pointer justify-center">
@@ -110,12 +104,11 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Profile Dropdown (Updated with Dynamic Data) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-muted">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm">
-                {/* লোডিং অবস্থায় স্পিনার দেখাবে, ডাটা আসলে নামের আদ্যক্ষর */}
+             
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -124,7 +117,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
               </div>
               <div className="hidden md:block text-left">
                 {loading ? (
-                  // লোডিং স্কেলিটন
                   <div className="space-y-1">
                     <div className="h-3 w-20 bg-muted animate-pulse rounded" />
                     <div className="h-2 w-12 bg-muted animate-pulse rounded" />
@@ -155,7 +147,6 @@ const AdminHeader = ({ sidebarCollapsed }: AdminHeaderProps) => {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {/* লগআউট বাটন আপডেট করা হয়েছে */}
             <DropdownMenuItem 
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={handleLogout}

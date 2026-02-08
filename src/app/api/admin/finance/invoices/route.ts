@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import Invoice from "@/models/Invoice";
 
-// ✅ GET: সব ইনভয়েস লোড করা (ফিল্টারিং সহ)
 export async function GET() {
   try {
     await connect();
@@ -13,7 +12,6 @@ export async function GET() {
   }
 }
 
-// ✅ PUT: ইনভয়েস স্ট্যাটাস আপডেট করা (যেমন: Pending -> Paid)
 export async function PUT(req: Request) {
   try {
     const { id, status } = await req.json();

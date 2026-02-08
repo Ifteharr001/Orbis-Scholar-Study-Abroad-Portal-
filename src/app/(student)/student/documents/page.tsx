@@ -23,7 +23,6 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// Data Type Interface
 interface Document {
   _id?: string;
   name: string;
@@ -35,7 +34,6 @@ interface Document {
   uploadedAt?: string;
 }
 
-// Default Required Documents (যদি ডাটাবেসে না থাকে তবে এগুলো দেখাবে)
 const REQUIRED_DEFAULTS: Partial<Document>[] = [
   { name: "Academic Transcript", category: "required" },
   { name: "Passport Copy", category: "required" },
@@ -73,18 +71,15 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Dialog States
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [replaceDialogOpen, setReplaceDialogOpen] = useState(false);
   const [fixDialogOpen, setFixDialogOpen] = useState(false);
 
-  // Selection States
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<string>("");
 
-  // 1. Fetch Documents
   const fetchDocuments = useCallback(async () => {
     try {
       const res = await fetch("/api/student/documents");
@@ -93,7 +88,6 @@ export default function DocumentsPage() {
       const data = await res.json();
 
       if (Array.isArray(data)) {
-        // Merge Logic: API Data + Default Required Docs
         const mergedDocs: Document[] = [...data];
 
         REQUIRED_DEFAULTS.forEach((defDoc) => {
@@ -108,7 +102,6 @@ export default function DocumentsPage() {
           }
         });
 
-        // Sort: Required first, then others
         mergedDocs.sort((a, b) => {
             if (a.category === 'required' && b.category !== 'required') return -1;
             if (a.category !== 'required' && b.category === 'required') return 1;
@@ -135,7 +128,6 @@ export default function DocumentsPage() {
     }
   };
 
-  // 2. Common Upload Function
   const processUpload = async (docName: string, category: string = "optional") => {
     if (!selectedFile) {
         toast.error("No file selected");
@@ -166,7 +158,6 @@ export default function DocumentsPage() {
 
       await fetchDocuments();
 
-      // Reset all states
       setUploadDialogOpen(false);
       setReplaceDialogOpen(false);
       setFixDialogOpen(false);
@@ -182,7 +173,6 @@ export default function DocumentsPage() {
     }
   };
 
-  // --- Handlers ---
 
   const handleUpload = () => {
     if (!selectedFile || !selectedDocType) {
@@ -223,12 +213,8 @@ export default function DocumentsPage() {
     setSelectedDocument(doc);
     setFixDialogOpen(true);
   };
-
-  // ✅ --- Helper to Render Action Buttons (FIXED LOGIC) ---
   const getActionButton = (doc: Document) => {
     
-    // ১. যদি স্ট্যাটাস "Not Uploaded" হয় অথবা অ্যাডমিন রিকোয়েস্ট করে থাকে ("Pending Upload" নাম দিয়ে)
-    // তাহলে "Upload" বাটন দেখাবে, "Replace" নয়।
     if (doc.status === "Not Uploaded" || (doc.status === "Pending" && doc.fileName === "Pending Upload")) {
         return (
           <Button variant="outline" size="sm" onClick={() => handleUploadNew(doc)}>
@@ -237,7 +223,6 @@ export default function DocumentsPage() {
         );
     }
 
-    // বাকি লজিক আগের মতো
     switch (doc.status) {
       case "Verified":
         return (
@@ -246,7 +231,6 @@ export default function DocumentsPage() {
           </Button>
         );
       case "Pending":
-        // এখানে শুধু তখনই আসবে যদি সত্যিকারের ফাইল আপলোড করা থাকে
         return (
           <div className="flex gap-2">
              <Button variant="ghost" size="sm" onClick={() => openViewDialog(doc)}>
@@ -283,7 +267,6 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-8 pb-10">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Documents</h1>
@@ -302,7 +285,6 @@ export default function DocumentsPage() {
         </Button>
       </div>
 
-      {/* Rejected Documents Alert Section */}
       {rejectedDocuments.length > 0 && (
         <div className="space-y-4">
             <h2 className="text-lg font-semibold text-red-600 flex items-center gap-2">
@@ -328,7 +310,6 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Required Documents */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground border-b pb-2">Required Documents</h2>
         <div className="bg-card border border-border rounded-lg shadow-sm divide-y divide-border">
@@ -341,7 +322,6 @@ export default function DocumentsPage() {
                 <div>
                   <p className="font-medium text-foreground">{doc.name}</p>
                   
-                  {/* লজিক: যদি ফাইল নাম "Pending Upload" হয় (অ্যাডমিন রিকোয়েস্ট), তবে মেসেজ দেখাবে */}
                   {doc.fileName && doc.fileName !== "Pending Upload" ? (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Check className="w-3 h-3 text-green-500" /> {doc.fileName}
@@ -356,7 +336,6 @@ export default function DocumentsPage() {
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                 <span className={cn("text-xs", getStatusStyles(doc.status))}>
-                    {/* Pending Upload হলে স্ট্যাটাস দেখাবে "Requested" */}
                     {doc.fileName === "Pending Upload" ? "Requested" : doc.status}
                 </span>
                 {getActionButton(doc)}
@@ -366,7 +345,6 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Optional Documents */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground border-b pb-2">Optional Documents</h2>
         
@@ -397,9 +375,6 @@ export default function DocumentsPage() {
         )}
       </div>
 
-      {/* --- DIALOGS --- */}
-
-      {/* 1. Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -434,7 +409,6 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 2. Replace / Fix Dialog (Reused for simplicity) */}
       <Dialog open={replaceDialogOpen || fixDialogOpen} onOpenChange={(open) => {
           if(!open) { setReplaceDialogOpen(false); setFixDialogOpen(false); }
       }}>
@@ -463,7 +437,6 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 3. View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

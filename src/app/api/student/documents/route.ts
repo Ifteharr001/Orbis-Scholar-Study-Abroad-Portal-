@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import Documents from "@/models/Document";
 
-// ১. ডকুমেন্ট লিস্ট ফেচ করা
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -14,9 +13,6 @@ export async function GET() {
 
     await connect();
 
-    // 🚀 Performance:
-    // .sort({ uploadedAt: -1 }) -> লেটেস্ট আপলোড সবার উপরে দেখাবে
-    // .lean() -> ফাস্ট রেসপন্স
     const docs = await Documents.find({ studentEmail: session.user.email })
       .sort({ uploadedAt: -1 })
       .lean();
@@ -28,7 +24,6 @@ export async function GET() {
   }
 }
 
-// ২. ডকুমেন্ট আপলোড বা আপডেট করা
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -38,32 +33,28 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     
-    // 🚀 Update: আমরা এখন 'fileUrl' রিসিভ করছি (যা ফ্রন্টএন্ড থেকে আসবে)
     const { name, fileName, fileUrl, category } = body; 
 
-    // ভ্যালিডেশন
+    
     if (!name || !fileName || !fileUrl) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     await connect();
 
-    // 🔥 Smart Update (Upsert):
-    // যদি এই নামের ডকুমেন্ট আগে থাকে -> তবে সেটি আপডেট হবে (Re-upload)
-    // যদি না থাকে -> তবে নতুন তৈরি হবে
     const doc = await Documents.findOneAndUpdate(
-      { studentEmail: session.user.email, name: name }, // খোঁজার শর্ত
+      { studentEmail: session.user.email, name: name }, 
       {
         $set: {
           fileName,
-          fileUrl, // রিয়েল URL সেভ হবে
+          fileUrl, 
           category: category || "required",
-          status: "Pending", // রি-আপলোড করলে স্ট্যাটাস আবার পেন্ডিং হয়ে যাবে
-          feedback: "", // আগের রিজেকশন ফিডব্যাক মুছে যাবে
+          status: "Pending", 
+          feedback: "", 
           uploadedAt: new Date(),
         },
       },
-      { new: true, upsert: true, setDefaultsOnInsert: true } // অপশনস
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
     return NextResponse.json(doc, { status: 201 });

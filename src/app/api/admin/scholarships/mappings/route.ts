@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// ✅ GET: ম্যাপিং পেজের জন্য সব ইউনিভার্সিটি, প্রোগ্রাম এবং স্কলারশিপ আনা
 export async function GET() {
   try {
     await connect();
     const data = await University.find({})
-      .select("name _id programs scholarships") // শুধু প্রয়োজনীয় ডাটা
+      .select("name _id programs scholarships")
       .lean();
     
     return NextResponse.json({ success: true, data });
@@ -16,7 +15,6 @@ export async function GET() {
   }
 }
 
-// ✅ PUT: ম্যাপিং সেভ করার জন্য
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
@@ -28,7 +26,6 @@ export async function PUT(req: Request) {
 
     await connect();
 
-    // 🔥 Mongoose ArrayFilter ব্যবহার করে নেস্টেড অ্যারে আপডেট করা
     await University.updateOne(
       { _id: universityId, "scholarships._id": scholarshipId },
       {

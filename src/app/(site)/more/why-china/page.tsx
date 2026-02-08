@@ -54,9 +54,8 @@ export default function WhyChinaPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero Banner --- */}
       <section className="relative py-24 flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
+    
         <div className="absolute inset-0 z-0">
           <Image 
             src="https://images.unsplash.com/photo-1547981609-4b6bfe6770b0?w=1600&q=80" 
@@ -88,7 +87,6 @@ export default function WhyChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Key Benefits Grid --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -114,12 +112,10 @@ export default function WhyChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Cost Comparison (China vs West) --- */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
-            {/* Left: Text Content */}
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
                 Quality Education, <br/>
@@ -145,7 +141,6 @@ export default function WhyChinaPage() {
               </div>
             </div>
 
-            {/* Right: Comparison Table Card */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-yellow-500 rounded-2xl blur opacity-20"></div>
               <div className="relative bg-slate-900 text-white p-8 rounded-2xl shadow-2xl">
@@ -183,7 +178,6 @@ export default function WhyChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Popular Courses --- */}
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-10">Popular Programs for International Students</h2>
@@ -206,7 +200,6 @@ export default function WhyChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 5: CTA --- */}
       <section className="py-20 bg-red-600 text-white">
         <div className="container mx-auto px-4 text-center max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">

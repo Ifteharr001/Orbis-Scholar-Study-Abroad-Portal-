@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AboutChinaPage() {
 
-  // জীবনযাত্রা সম্পর্কিত ফিচার
   const lifestyle = [
     {
       icon: Smartphone,
@@ -45,7 +44,6 @@ export default function AboutChinaPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero Banner --- */}
       <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
         <Image 
           src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1600&q=80" 
@@ -68,7 +66,6 @@ export default function AboutChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Intro (Tradition vs Modernity) --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl group">
@@ -113,7 +110,6 @@ export default function AboutChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Major Student Cities (Interactive Tabs) --- */}
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -129,7 +125,6 @@ export default function AboutChinaPage() {
               <TabsTrigger value="chengdu" className="py-3 text-md font-medium">Chengdu</TabsTrigger>
             </TabsList>
 
-            {/* City Content Component */}
             {[
               { 
                 id: "beijing", name: "Beijing", title: "The Political & Cultural Heart", 
@@ -172,7 +167,6 @@ export default function AboutChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Life in China (Grid) --- */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
            <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -198,7 +192,6 @@ export default function AboutChinaPage() {
         </div>
       </section>
 
-      {/* --- Section 5: CTA --- */}
       <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
          <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
          

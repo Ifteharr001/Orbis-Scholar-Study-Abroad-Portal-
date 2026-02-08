@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-// --- Types Definition ---
 type Student = {
   id?: number | string;
   _id?: number | string;
@@ -41,7 +40,6 @@ export default function CounselorDocumentsPage() {
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
-  // ১. স্টুডেন্ট লোড করা (FIXED)
   useEffect(() => {
     async function fetchStudents() {
       try {
@@ -49,9 +47,8 @@ export default function CounselorDocumentsPage() {
         if (!res.ok) throw new Error("Failed to fetch students");
         
         const data = await res.json();
-        console.log("Students Data:", data); // ডিবাগিং এর জন্য
+        console.log("Students Data:", data);
 
-        // ✅ FIX: API রেসপন্স স্ট্রাকচার অনুযায়ী চেক করা
         if (data.success && Array.isArray(data.students)) {
             setStudents(data.students);
         } else if (Array.isArray(data)) {
@@ -69,7 +66,6 @@ export default function CounselorDocumentsPage() {
     fetchStudents();
   }, []);
 
-  // ২. ডকুমেন্ট লোড করা
   const handleStudentSelect = async (studentId: number | string) => {
     if(!studentId) return;
     setSelectedStudentId(studentId);
@@ -81,7 +77,6 @@ export default function CounselorDocumentsPage() {
       if (!res.ok) throw new Error("Failed to fetch documents");
       
       const data = await res.json();
-      // ডকুমেন্ট API সরাসরি অ্যারে রিটার্ন করে, তাই এটি ঠিক আছে
       setDocuments(Array.isArray(data) ? data : []); 
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -92,7 +87,6 @@ export default function CounselorDocumentsPage() {
 
   const selectedStudentInfo = students.find((s) => (s.id || s._id) === selectedStudentId);
 
-  // --- Helper: Status Badge Design ---
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Verified":
@@ -107,7 +101,7 @@ export default function CounselorDocumentsPage() {
             <AlertCircle size={12} /> Rejected
           </span>
         );
-      default: // Pending
+      default: 
         return (
           <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-semibold">
             <Clock size={12} /> Pending
@@ -119,7 +113,6 @@ export default function CounselorDocumentsPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       
-      {/* Sidebar: Student List */}
       <aside className="w-1/4 bg-white border-r border-gray-200 p-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-gray-800">My Students</h2>
         {loadingStudents ? (
@@ -172,7 +165,6 @@ export default function CounselorDocumentsPage() {
         )}
       </aside>
 
-      {/* Main Content: Document Table */}
       <main className="flex-1 p-8 overflow-y-auto">
         {selectedStudentId ? (
           <div>
@@ -200,7 +192,6 @@ export default function CounselorDocumentsPage() {
                   <tbody className="divide-y divide-gray-100">
                     {documents.map((doc, idx) => (
                       <tr key={idx} className="hover:bg-gray-50">
-                        {/* Name Column */}
                         <td className="p-4">
                             <div className="flex items-center gap-3">
                                 <FileText size={18} className="text-blue-500"/>
@@ -211,19 +202,16 @@ export default function CounselorDocumentsPage() {
                             </div>
                         </td>
 
-                        {/* Status Column */}
                         <td className="p-4">
                             {getStatusBadge(doc.status)}
                         </td>
 
-                        {/* Date Column (Fixed) */}
                         <td className="p-4 text-gray-500 text-sm">
                             {doc.uploadedAt 
                                 ? new Date(doc.uploadedAt).toLocaleDateString("en-GB") 
                                 : "N/A"}
                         </td>
 
-                        {/* Action Column */}
                         <td className="p-4 text-center">
                           <button
                             onClick={() => setPreviewDoc(doc)}
@@ -253,12 +241,10 @@ export default function CounselorDocumentsPage() {
         )}
       </main>
 
-     {/* Preview Modal */}
       {previewDoc && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col relative">
             
-            {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b shrink-0">
                 <div>
                     <h3 className="font-bold text-lg">{previewDoc.name}</h3>

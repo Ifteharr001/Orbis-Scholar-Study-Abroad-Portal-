@@ -14,7 +14,6 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function SuccessStoriesPage() {
 
-  // ১. স্ট্যাটিক স্টোরি ডাটা (পরবর্তীতে ডাটাবেস থেকে আনা যাবে)
   const stories = [
     {
       id: 1,
@@ -81,7 +80,6 @@ export default function SuccessStoriesPage() {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* --- Section 1: Hero --- */}
       <section className="py-20 bg-muted/30 text-center">
         <div className="container mx-auto px-4">
           <Badge className="mb-4 bg-primary/10 text-primary border-none">Success Stories</Badge>
@@ -95,7 +93,6 @@ export default function SuccessStoriesPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Achievement Stats --- */}
       <section className="bg-primary py-12 text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/20">
@@ -119,13 +116,11 @@ export default function SuccessStoriesPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Stories Grid --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {stories.map((story) => (
             <Card key={story.id} className="group border-border hover:shadow-xl transition-all duration-300 flex flex-col h-full">
               
-              {/* Image & Location Badge */}
               <div className="relative h-60 w-full overflow-hidden rounded-t-xl">
                 <Image
                   src={story.image}
@@ -141,14 +136,12 @@ export default function SuccessStoriesPage() {
               </div>
 
               <CardContent className="p-6 flex-1 flex flex-col">
-                {/* Scholarship Badge */}
                 <div className="mb-4">
                    <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
                       <Star className="h-3 w-3 mr-1 fill-primary" /> {story.scholarship}
                    </Badge>
                 </div>
 
-                {/* Content */}
                 <div className="mb-4">
                   <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">{story.name}</h3>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -160,7 +153,6 @@ export default function SuccessStoriesPage() {
                   </p>
                 </div>
 
-                {/* Quote Area */}
                 <div className="mt-auto relative bg-muted/30 p-4 rounded-xl">
                   <Quote className="h-6 w-6 text-primary/20 absolute -top-3 -left-2 fill-primary" />
                   <p className="text-sm text-muted-foreground italic leading-relaxed relative z-10">
@@ -173,7 +165,6 @@ export default function SuccessStoriesPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Video Testimonial Feature --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-8">Watch Success Stories</h2>
@@ -185,7 +176,6 @@ export default function SuccessStoriesPage() {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
-            {/* Overlay */}
             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors flex items-center justify-center">
               <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Play className="h-8 w-8 text-primary fill-primary ml-1" />
@@ -199,7 +189,6 @@ export default function SuccessStoriesPage() {
         </div>
       </section>
 
-      {/* --- Section 5: CTA --- */}
       <section className="py-20 container mx-auto px-4 text-center">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">

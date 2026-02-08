@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// --- Sub-Interfaces (Type Safety) ---
 
 interface ITask {
   id: number;
@@ -27,7 +26,6 @@ interface IPackingItem {
   checked: boolean;
 }
 
-// --- Main Interface ---
 
 export interface IVisaProcess extends Document {
   studentEmail: string;
@@ -41,13 +39,11 @@ export interface IVisaProcess extends Document {
   updatedAt: Date;
 }
 
-// --- Schema Definition ---
 
 const VisaProcessSchema = new Schema<IVisaProcess>(
   {
     studentEmail: { type: String, required: true, unique: true },
     
-    // Validation: 0 থেকে 100 এর বাইরে যেন না যায়
     progress: { 
       type: Number, 
       default: 0, 
@@ -55,7 +51,6 @@ const VisaProcessSchema = new Schema<IVisaProcess>(
       max: [100, "Progress cannot be more than 100"] 
     },
     
-    // Task List
     tasks: [
       {
         id: Number,
@@ -73,11 +68,9 @@ const VisaProcessSchema = new Schema<IVisaProcess>(
       }
     ],
 
-    // Appointments
     medicalDate: { type: Date },
     embassyDate: { type: Date },
 
-    // Travel Details
     travel: {
       departureDate: Date,
       flightNumber: String,
@@ -92,12 +85,8 @@ const VisaProcessSchema = new Schema<IVisaProcess>(
       { name: String, checked: { type: Boolean, default: false } }
     ]
   },
-  { timestamps: true } // কবে আপডেট হলো তা দেখার জন্য জরুরি
+  { timestamps: true } 
 );
-
-// 🚀 Indexing:
-// 'studentEmail' এ unique: true থাকার কারণে MongoDB অটোমেটিক ইনডেক্স বানিয়ে নেয়।
-// তাই এখানে আলাদা করে indexing এর দরকার নেই।
 
 const VisaProcess: Model<IVisaProcess> = mongoose.models.VisaProcess || mongoose.model<IVisaProcess>("VisaProcess", VisaProcessSchema);
 

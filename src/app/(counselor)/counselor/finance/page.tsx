@@ -16,7 +16,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// --- Types Definition ---
 type Student = {
   id?: string;
   _id?: string;
@@ -103,7 +102,6 @@ export default function CounselorFinancePage() {
   return (
     <div className="flex h-screen bg-gray-50">
       
-      {/* Sidebar: Student List */}
       <aside className="w-1/4 bg-white border-r border-gray-200 p-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-gray-800">My Students</h2>
         {loadingStudents ? (

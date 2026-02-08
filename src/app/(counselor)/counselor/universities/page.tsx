@@ -64,7 +64,6 @@ export default function CounselorUniversityPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center gap-2 max-w-md bg-white p-1 rounded-sm border shadow-sm">
         <Search className="h-4 w-4 text-muted-foreground ml-2" />
         <Input 

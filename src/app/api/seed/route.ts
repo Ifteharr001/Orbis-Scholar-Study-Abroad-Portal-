@@ -11,21 +11,18 @@ export async function GET() {
     const email = "admin@techbybee.com";
     const password = "123";
 
-    // ১. আগের ইউজার ডিলিট করা
     const deleted = await User.findOneAndDelete({ email });
     if (deleted) {
       console.log("Old Admin Deleted");
     }
 
-    // ২. পাসওয়ার্ড হ্যাশ করা
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ৩. নতুন অ্যাডমিন তৈরি
     const newAdmin = await User.create({
       name: "Super Admin",
       email: email,
       password: hashedPassword,
-      role: "owner", // নিশ্চিত করুন রোলটি 'owner'
+      role: "owner", 
       status: "active",
       phone: "01700000000",
       country: "Bangladesh"

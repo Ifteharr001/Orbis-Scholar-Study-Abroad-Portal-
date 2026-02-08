@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// ✅ GET: সব ইউনিভার্সিটির ফি স্ট্রাকচার লোড করা
 export async function GET() {
   try {
     await connect();
     const data = await University.find({})
-      .select("name logo country fees") // শুধু নাম, লোগো এবং ফি দরকার
+      .select("name logo country fees")
       .sort({ name: 1 })
       .lean();
     
@@ -17,7 +16,6 @@ export async function GET() {
   }
 }
 
-// ✅ PUT: ফি আপডেট করা
 export async function PUT(req: Request) {
   try {
     const body = await req.json();

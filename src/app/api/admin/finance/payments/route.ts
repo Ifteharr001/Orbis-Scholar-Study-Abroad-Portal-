@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import Payment from "@/models/Payment";
 
-// ✅ GET: সব পেমেন্ট হিস্ট্রি লোড করা
 export async function GET() {
   try {
     await connect();
@@ -13,7 +12,6 @@ export async function GET() {
   }
 }
 
-// ✅ POST: ম্যানুয়াল পেমেন্ট এন্ট্রি (যদি লাগে)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -21,7 +19,7 @@ export async function POST(req: Request) {
 
     const newPayment = await Payment.create({
         ...body,
-        transactionId: `TXN-${Date.now()}`, // Auto generate ID for manual entry
+        transactionId: `TXN-${Date.now()}`, 
         date: new Date()
     });
 

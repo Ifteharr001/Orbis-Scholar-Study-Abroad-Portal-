@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Image from "next/image";
 
-// ইন্টারফেস ডিফিনিশন
 interface Scholarship {
   _id: string;
   name: string;
@@ -34,7 +33,6 @@ interface Scholarship {
   tuitionFee: string;
   monthlyStipend: string;
   
-  // প্যারেন্ট ইউনিভার্সিটির তথ্য
   universityId: string;
   universityName: string;
   universityLogo?: string;
@@ -48,7 +46,6 @@ export default function AdminScholarshipsPage() {
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // ✅ ১. ডাটা ফেচিং
   const fetchScholarships = async () => {
     try {
       const res = await fetch("/api/admin/scholarships");
@@ -71,7 +68,6 @@ export default function AdminScholarshipsPage() {
     fetchScholarships();
   }, []);
 
-  // ✅ ২. সার্চ ফিল্টার
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = scholarships.filter(
@@ -83,7 +79,6 @@ export default function AdminScholarshipsPage() {
     setFilteredScholarships(filtered);
   }, [search, scholarships]);
 
-  // ✅ ৩. ডিলিট হ্যান্ডলার
   const handleDelete = async (scholarshipId: string, universityId: string) => {
     if (!confirm("Are you sure you want to delete this scholarship?")) return;
 
@@ -96,7 +91,7 @@ export default function AdminScholarshipsPage() {
 
       if (res.ok) {
         toast.success("Scholarship deleted successfully");
-        // স্টেট আপডেট
+      
         setScholarships((prev) => prev.filter((s) => s._id !== scholarshipId));
       } else {
         toast.error(result.error || "Failed to delete");
@@ -119,7 +114,6 @@ export default function AdminScholarshipsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">All Scholarships</h1>
@@ -134,7 +128,6 @@ export default function AdminScholarshipsPage() {
         </Link>
       </div>
 
-      {/* Search Filter */}
       <div className="relative max-w-md">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -145,7 +138,6 @@ export default function AdminScholarshipsPage() {
         />
       </div>
 
-      {/* Scholarships Table */}
       <div className="border rounded-lg bg-white overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
@@ -167,7 +159,6 @@ export default function AdminScholarshipsPage() {
             ) : (
               filteredScholarships.map((scholarship) => (
                 <TableRow key={scholarship._id}>
-                  {/* Name */}
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                         <Award className="h-4 w-4 text-yellow-600" />
@@ -175,7 +166,6 @@ export default function AdminScholarshipsPage() {
                     </div>
                   </TableCell>
 
-                  {/* University */}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-gray-100 overflow-hidden relative border">
@@ -199,12 +189,10 @@ export default function AdminScholarshipsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Type */}
                   <TableCell>
                     <Badge variant="secondary">{scholarship.type}</Badge>
                   </TableCell>
 
-                  {/* Coverage Details */}
                   <TableCell>
                     <div className="text-sm space-y-1">
                         <div className="flex items-center gap-1 text-muted-foreground">
@@ -219,7 +207,6 @@ export default function AdminScholarshipsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Actions */}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link href={`/admin/catalog/universities/${scholarship.universityId}`}>

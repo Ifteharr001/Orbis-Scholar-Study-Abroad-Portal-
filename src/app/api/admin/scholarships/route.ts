@@ -2,23 +2,20 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// ✅ GET: সব স্কলারশিপ লোড করার জন্য
 export async function GET() {
   try {
     await connect();
 
-    // ইউনিভার্সিটি এবং তার স্কলারশিপগুলো আনছি
     const universities = await University.find({})
       .select("name _id scholarships logo country")
       .lean();
 
-    // Data Flattening: সব স্কলারশিপ এক লেভেলে নিয়ে আসা হচ্ছে
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allScholarships = universities.flatMap((uni: any) => 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (uni.scholarships || []).map((sch: any) => ({
         ...sch,
-        _id: sch._id || sch.id, // সাব-ডকুমেন্ট আইডি
+        _id: sch._id || sch.id,
         universityId: uni._id,
         universityName: uni.name,
         universityLogo: uni.logo,
@@ -34,7 +31,6 @@ export async function GET() {
   }
 }
 
-// ✅ DELETE: একটি নির্দিষ্ট স্কলারশিপ ডিলিট করার জন্য
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -47,7 +43,6 @@ export async function DELETE(req: Request) {
 
     await connect();
 
-    // $pull অপারেটর দিয়ে অ্যারে থেকে রিমুভ করা হচ্ছে
     await University.findByIdAndUpdate(universityId, {
       $pull: { scholarships: { _id: scholarshipId } }
     });

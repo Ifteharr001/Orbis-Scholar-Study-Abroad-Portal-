@@ -25,7 +25,6 @@ export default function UpdatesPage() {
     toast.success("Subscribed to important updates!");
   };
 
-  // স্ট্যাটিক আপডেট ডাটা
   const updates = [
     {
       id: 1,
@@ -77,18 +76,15 @@ export default function UpdatesPage() {
     }
   ];
 
-  // ফিল্টার লজিক
   const filteredUpdates = filter === "All" 
     ? updates 
     : updates.filter(u => u.category === filter || u.type === filter);
 
-  // ফিল্টার বাটন লিস্ট
   const filters = ["All", "Visa Policy", "Partnership", "Maintenance", "Announcement"];
 
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero Banner --- */}
       <section className="bg-slate-900 text-white py-16 relative overflow-hidden">
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 mb-4">
@@ -102,15 +98,12 @@ export default function UpdatesPage() {
             Stay informed about the latest visa regulations, university partnerships, and company announcements.
           </p>
         </div>
-        {/* Background Overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black opacity-80" />
       </section>
 
-      {/* --- Section 2: Filters & Timeline --- */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4 max-w-4xl">
           
-          {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-10">
             <div className="flex items-center gap-2 mr-2 text-muted-foreground font-medium">
                 <Filter className="h-4 w-4" /> Filter by:
@@ -130,19 +123,16 @@ export default function UpdatesPage() {
             ))}
           </div>
 
-          {/* Timeline Feed */}
           <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
             
             {filteredUpdates.length > 0 ? (
                 filteredUpdates.map((update) => (
                 <div key={update.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                     
-                    {/* Icon Circle (Center Line) */}
                     <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${update.bgColor} ${update.color}`}>
                         <update.icon className="w-5 h-5" />
                     </div>
                     
-                    {/* Content Card */}
                     <Card className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl border ${update.borderColor} shadow-sm hover:shadow-md transition-all`}>
                         <div className="flex justify-between items-start mb-2">
                             <Badge variant="outline" className={`${update.color} ${update.bgColor} border-none`}>
@@ -175,7 +165,6 @@ export default function UpdatesPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Subscribe CTA --- */}
       <section className="py-16 bg-white border-t border-slate-100">
         <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center bg-blue-50 rounded-3xl p-8 md:p-12 border border-blue-100">

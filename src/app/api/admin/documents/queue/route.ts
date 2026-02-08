@@ -13,15 +13,13 @@ export async function GET(req: Request) {
 
     await connect();
 
-    // ✅ আপডেট: এখন Inquiry, In Review এবং Docs Pending সব আসবে
     const queueItems = await Application.find({
         status: { $in: ["Docs Pending", "Inquiry", "In Review"] } 
     })
     .select("studentEmail firstName lastName universityName programName status createdAt appliedDate")
-    .sort({ updatedAt: -1 }) // লেটেস্ট আগে দেখাবে
+    .sort({ updatedAt: -1 }) 
     .lean();
 
-    // ডাটা ফরম্যাট করা
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formattedQueue = queueItems.map((app: any) => ({
         _id: app._id,

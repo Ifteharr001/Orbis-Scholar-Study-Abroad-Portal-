@@ -5,7 +5,6 @@ import { connect } from "@/lib/db";
 import Application from "@/models/Application";
 import University from "@/models/University"; 
 
-// ✅ GET Method: অফার লোড করার জন্য
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -73,7 +72,6 @@ export async function GET() {
   }
 }
 
-// ✅ POST Method: অফার এক্সেপ্ট করার জন্য (Accept Logic)
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -89,7 +87,6 @@ export async function POST(req: Request) {
 
         await connect();
 
-        // 🔥 সিকিউরিটি আপডেট: শুধু আইডি না, ইমেইলও মিলতে হবে (Ownership Check)
         const updatedApp = await Application.findOneAndUpdate(
             { 
                 _id: applicationId, 

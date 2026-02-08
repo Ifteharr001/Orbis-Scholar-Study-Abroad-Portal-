@@ -13,12 +13,10 @@ export async function GET() {
 
     await connect();
 
-    // ১. স্টুডেন্ট খুঁজে কাউন্সিলর পপুলেট করা
-    // .select() ব্যবহার করিনি যাতে সব ফিল্ড ঠিকমতো আসে এবং কনফিউশন না হয়
     const studentResult = await User.findOne({ email: session.user.email })
       .populate({
-        path: "counselor", // ⚠️ আপনার মডেলে ফিল্ডের নাম 'counselor' (assignedCounselor নয়)
-        select: "-password", // পাসওয়ার্ড বাদে সব আনবে
+        path: "counselor", 
+        select: "-password",
       })
       .lean();
 
@@ -26,30 +24,25 @@ export async function GET() {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // ২. টাইপ সেফটি বাইপাস (any ব্যবহার করে)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const student: any = studentResult;
     const counselor = student.counselor;
 
-    // ৩. যদি কাউন্সিলর অ্যাসাইন করা না থাকে
     if (!counselor) {
       return NextResponse.json({ counselor: null });
     }
 
-    // ৪. রেসপন্স সাজানো (Frontend এ যেভাবে ডাটা দরকার)
     const counselorData = {
       id: counselor._id.toString(),
       name: counselor.name,
       email: counselor.email,
       phone: counselor.phone || "Not provided",
       whatsapp: counselor.phone || "Not provided",
-      image: counselor.image || "/placeholder.svg", // ইমেজ না থাকলে ডিফল্ট
+      image: counselor.image || "/placeholder.svg", 
       
-      // Professional Info (যদি মডেলে না থাকে তবে ডিফল্ট দেখাবে)
       title: counselor.title || "Education Counselor",
       location: counselor.country || "Dhaka, Bangladesh",
       
-      // সেফটি চেক: অ্যারে আছে কিনা দেখে তবেই .length চেক করবে
       languages: Array.isArray(counselor.languages) && counselor.languages.length > 0 
         ? counselor.languages 
         : ["English", "Bangla"],

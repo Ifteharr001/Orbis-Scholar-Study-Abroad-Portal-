@@ -31,7 +31,6 @@ export async function POST(req: Request) {
     let successCount = 0;
     const defaultPassword = await bcrypt.hash("123456", 10);
 
-    // ⚠️ FIX: লুপের সিনট্যাক্স ঠিক করা হয়েছে
     for (const row of jsonData) {
       const existingUser = await User.findOne({ email: row.email });
       

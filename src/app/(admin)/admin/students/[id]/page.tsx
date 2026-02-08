@@ -32,7 +32,6 @@ import {
   ExternalLink, Eye, Briefcase, ShieldCheck, UserPlus
 } from "lucide-react";
 
-// ইন্টারফেস ডিফিনিশন
 interface Application {
   _id: string;
   universityName: string;
@@ -86,12 +85,10 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Counselor Assignment States
   const [counselorsList, setCounselorsList] = useState<Counselor[]>([]);
   const [isCounselorDialogOpen, setIsCounselorDialogOpen] = useState(false);
   const [assigningCounselor, setAssigningCounselor] = useState(false);
 
-  // ১. স্টুডেন্ট ডাটা আনা
   const fetchStudent = async () => {
     if (!id) return;
     try {
@@ -114,7 +111,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
     }
   };
 
-  // ২. কাউন্সিলর লিস্ট আনা
   const fetchCounselors = async () => {
     try {
       const res = await fetch(`/api/admin/counselor?role=counselor`); 
@@ -132,14 +128,12 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
     fetchCounselors();
   }, [id, resolvedParams]);
 
-  // ৩. কাউন্সিলর অ্যাসাইন করার ফাংশন
   const handleAssignCounselor = async (counselorId: string) => {
     const selectedCounselor = counselorsList.find((c) => c._id === counselorId);
     if (!selectedCounselor) return;
 
     setAssigningCounselor(true);
     try {
-        // স্টুডেন্ট আপডেটের জন্য API কল (আপনার API স্ট্রাকচার অনুযায়ী)
         const res = await fetch(`/api/admin/students/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -287,7 +281,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Documents</span>
           </TabsTrigger>
-          {/* ✅ Conversations ট্যাবটি এখন Counselor ট্যাবে পরিবর্তন করা হয়েছে */}
           <TabsTrigger value="counselor" className="gap-2">
             <Briefcase className="h-4 w-4" />
             <span className="hidden sm:inline">Counselor</span>
@@ -424,7 +417,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
           </Card>
         </TabsContent>
 
-        {/* ✅ Counselor Tab (Updated Design & Assign Logic) */}
         <TabsContent value="counselor" className="mt-6">
             <Card className="overflow-hidden border-none shadow-md">
                 <CardHeader className="bg-gray-100 p-6">
@@ -435,7 +427,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
                 <CardContent className="p-0">
                     {student.counselor && typeof student.counselor === 'object' && student.counselor.email !== "N/A" ? (
                         <div className="flex flex-col md:flex-row">
-                            {/* Left Side: Avatar & Main Info */}
                             <div className="md:w-1/3 bg-muted/30 p-8 flex flex-col items-center text-center border-b md:border-b-0 md:border-r">
                                 <div className="relative mb-4">
                                     <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
@@ -457,7 +448,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
                                 </div>
                             </div>
 
-                            {/* Right Side: Detailed Stats */}
                             <div className="md:w-2/3 p-8">
                                 <h4 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-700">
                                     <ShieldCheck className="h-5 w-5 text-green-600" /> Professional Details
@@ -488,7 +478,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
                             </div>
                         </div>
                     ) : (
-                        // No Counselor State
                         <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/10">
                             <div className="h-24 w-24 bg-indigo-50 rounded-full flex items-center justify-center mb-4 shadow-inner">
                                 <UserPlus className="h-10 w-10 text-indigo-400" />
@@ -507,7 +496,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<any> })
         </TabsContent>
       </Tabs>
 
-      {/* Assign Counselor Dialog (Now in Student Page) */}
       <Dialog open={isCounselorDialogOpen} onOpenChange={setIsCounselorDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
             <DialogHeader>

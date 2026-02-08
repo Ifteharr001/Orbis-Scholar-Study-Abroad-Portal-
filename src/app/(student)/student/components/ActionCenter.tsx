@@ -65,9 +65,7 @@ const ActionCenter = ({ initialActions = [] }: ActionCenterProps) => {
   const [actions, setActions] = useState<ActionItem[]>(initialActions);
   const [loading, setLoading] = useState(!initialActions.length);
 
-  // ডাটা ফেচিং লজিক
   useEffect(() => {
-    // যদি বাইরে থেকে ডাটা না আসে, তবেই ফেচ করবে
     if (initialActions.length === 0) {
       const fetchActions = async () => {
         try {
@@ -130,7 +128,7 @@ const ActionCenter = ({ initialActions = [] }: ActionCenterProps) => {
               return (
                 <Link 
                     key={action._id || index} 
-                    href={action.link || "/student/documents"} // লিংকে ক্লিক করলে ডকুমেন্টস পেজে যাবে
+                    href={action.link || "/student/documents"} 
                     className="block"
                 >
                     <div

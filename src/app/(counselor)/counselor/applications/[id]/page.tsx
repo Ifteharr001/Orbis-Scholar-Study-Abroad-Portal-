@@ -18,7 +18,7 @@ import {
   DialogTitle, 
   DialogTrigger, 
   DialogFooter, 
-  DialogDescription // ✅ Added missing import
+  DialogDescription
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -28,7 +28,6 @@ import {
   Plus, XCircle, Loader2, Eye, ListTodo, Mail, Phone, AlertTriangle
 } from "lucide-react";
 
-// স্ট্যাটাস লিস্ট
 const statusOptions = [
     "Applied", "Docs Pending", "Docs Verified", "Submitted", 
     "Offer Received", "Visa Processing", "Enrolled", "Rejected"
@@ -48,16 +47,13 @@ export default function CounselorAppDetailsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [tasks, setTasks] = useState<any[]>([]);
   
-  // Notes State
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [internalNotes, setInternalNotes] = useState<any[]>([]);
   const [tempNote, setTempNote] = useState("");
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
 
-  // Status Update State
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // Task Dialog State
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [taskForm, setTaskForm] = useState({ title: "", priority: "Medium", dueDate: "" });
 
@@ -66,7 +62,6 @@ export default function CounselorAppDetailsPage() {
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  // ১. ডাটা ফেচ করা
   const fetchApplicationData = async () => {
     try {
       setLoading(true);
@@ -100,7 +95,6 @@ export default function CounselorAppDetailsPage() {
     if (applicationId) fetchApplicationData();
   }, [applicationId]);
 
-  // ২. স্ট্যাটাস আপডেট
   const handleStatusChange = async (newStatus: string) => {
     setUpdatingStatus(true);
     try {
@@ -122,7 +116,6 @@ export default function CounselorAppDetailsPage() {
   };
 
 
-  // ৫. নোট সেভ
   const handleSaveNotes = async () => {
     if(!tempNote.trim()) return;
     try {
@@ -138,7 +131,6 @@ export default function CounselorAppDetailsPage() {
     } catch { toast.error("Failed to add note"); }
   };
 
-  // ৬. টাস্ক তৈরি
   const handleCreateTask = async () => {
     try {
         const res = await fetch(`/api/counselor/applications/${applicationId}`, {
@@ -171,7 +163,6 @@ export default function CounselorAppDetailsPage() {
   return (
     <div className="space-y-6 animate-in fade-in-50">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <Link href="/counselor/applications">
@@ -183,7 +174,6 @@ export default function CounselorAppDetailsPage() {
           </div>
         </div>
         
-        {/* Status Changer */}
         <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Status:</span>
             <Select 
@@ -203,7 +193,6 @@ export default function CounselorAppDetailsPage() {
         </div>
       </div>
 
-      {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
@@ -233,7 +222,6 @@ export default function CounselorAppDetailsPage() {
         </Card>
       </div>
 
-      {/* Tabs Section */}
       <Tabs defaultValue="documents" className="w-full">
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="documents" className="gap-2"><FileText className="h-4 w-4"/> Docs</TabsTrigger>
@@ -241,7 +229,6 @@ export default function CounselorAppDetailsPage() {
           <TabsTrigger value="notes" className="gap-2"><MessageSquare className="h-4 w-4"/> Notes</TabsTrigger>
         </TabsList>
 
-        {/* --- DOCUMENTS TAB (View & Verify Only) --- */}
         <TabsContent value="documents" className="mt-6">
           <Card>
             <CardHeader>
@@ -265,7 +252,6 @@ export default function CounselorAppDetailsPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    {/* Preview Button */}
                                     <Button variant="ghost" size="icon" asChild>
                                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                                             <Eye className="h-4 w-4 text-primary"/>
@@ -282,7 +268,6 @@ export default function CounselorAppDetailsPage() {
           </Card>
         </TabsContent>
 
-        {/* --- TASKS TAB --- */}
         <TabsContent value="tasks" className="mt-6">
             <Card>
                 <CardHeader className="flex flex-row justify-between">

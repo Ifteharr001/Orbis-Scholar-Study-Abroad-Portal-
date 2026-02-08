@@ -17,7 +17,6 @@ async function getUniversities(params: SearchParams): Promise<IUniversity[]> {
     
     const queryConditions: Array<{ [key: string]: unknown }> = [];
 
-    // Search by name, location, or programs
     if (params.q) {
       queryConditions.push(
         { name: { $regex: params.q, $options: "i" } },
@@ -27,14 +26,12 @@ async function getUniversities(params: SearchParams): Promise<IUniversity[]> {
       );
     }
 
-    // Build the query
     const mongoQuery: { [key: string]: unknown } = {};
     
     if (queryConditions.length > 0) {
       mongoQuery.$or = queryConditions;
     }
 
-    // Filter by degree
     if (params.degree) {
       mongoQuery["programs.degree"] = { $regex: params.degree, $options: "i" };
     }

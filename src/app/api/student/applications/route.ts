@@ -3,56 +3,48 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import Application from "@/models/Application";
-import Payment from "@/models/Payment"; // ✅ পেমেন্ট মডেল ইম্পোর্ট করা হলো
+import Payment from "@/models/Payment"; 
 
 export async function POST(req: Request) {
   try {
-    // ১. লগইন চেক
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ২. ফ্রন্টএন্ড থেকে ডাটা রিসিভ করা
     const body = await req.json();
     const { 
       universityName, 
       programName, 
-      universityId, // যদি থাকে
-      programId,    // যদি থাকে
-      applicationFee // যদি ফ্রন্টএন্ড থেকে ফি পাঠানো হয়
+      universityId, 
+      programId,     
+      applicationFee 
     } = body;
 
-    // ভ্যালিডেশন
     if (!universityName || !programName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     await connect();
 
-    // ৩. অ্যাপ্লিকেশন তৈরি করা
     const newApplication = await Application.create({
       studentEmail: session.user.email,
       universityName,
       programName,
       universityId,
       programId,
-      status: "Pending", // শুরুতে পেন্ডিং থাকবে
+      status: "Pending",
       appliedDate: new Date(),
     });
 
-    // 💰 ৪. অটোমেটিক ইনভয়েস জেনারেট করা
-    // এটি তৈরি করলেই পেমেন্ট পেজে ডিউ দেখাবে
-    
-    // যদি ফ্রন্টএন্ড থেকে ফি না আসে, তবে ডিফল্ট $50 ধরা হলো
-    const feeAmount = applicationFee || 50; 
+    const feeAmount = applicationFee ? Number(applicationFee) : 50; 
 
     const newInvoice = await Payment.create({
       studentEmail: session.user.email,
-      invoiceId: `INV-${Date.now()}`, // ইউনিক ইনভয়েস আইডি (যেমন: INV-1709...)
+      invoiceId: `INV-${Date.now()}`,
       serviceName: `App Fee - ${universityName}`,
       amount: feeAmount,
-      status: "Pending", // পেমেন্ট না করা পর্যন্ত পেন্ডিং থাকবে
+      status: "Pending",
       createdAt: new Date()
     });
 
@@ -62,7 +54,9 @@ export async function POST(req: Request) {
       invoice: newInvoice
     });
 
-  } catch (error) {
+  } 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  catch (error: any) {
     console.error("Application Submit Error:", error);
     return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
   }

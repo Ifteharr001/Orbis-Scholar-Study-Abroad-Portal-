@@ -15,7 +15,7 @@ const TicketSchema = new Schema(
       enum: ["Open", "In Progress", "Closed"], 
       default: "Open" 
     },
-    reply: { type: String }, // অ্যাডমিনের রিপ্লাই
+    reply: { type: String }, 
   },
   { timestamps: true }
 );

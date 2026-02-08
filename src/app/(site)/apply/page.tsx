@@ -27,17 +27,14 @@ const ApplyForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ URL থেকে প্রোগ্রাম এবং ইউনিভার্সিটির নাম নেওয়া
   const urlProgramName = searchParams.get("programName") || "";
   const urlUniversityName = searchParams.get("universityName") || "";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // ✅ নতুন: ইনটেক লোড করার জন্য স্টেট
   const [availableIntakes, setAvailableIntakes] = useState<string[]>([]);
   const [isIntakesLoading, setIsIntakesLoading] = useState(false);
 
-  // ✅ ফর্ম স্টেট ইনিশিয়ালাইজেশন
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -77,12 +74,10 @@ const ApplyForm = () => {
     fetchProgramIntakes();
   }, [urlProgramName, urlUniversityName]);
 
-  // ইনপুট হ্যান্ডেলিং ফাংশন
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // সাবমিট হ্যান্ডেলিং ফাংশন
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -120,7 +115,6 @@ const ApplyForm = () => {
 
   return (
     <div className="space-y-6 container mx-auto py-8 px-4 max-w-4xl">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
         <Button variant="outline" size="icon" onClick={() => router.back()} disabled={isSubmitting}>
           <ArrowLeft className="h-5 w-5" />
@@ -135,7 +129,6 @@ const ApplyForm = () => {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         
-        {/* Card 1: Personal Information */}
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -231,7 +224,6 @@ const ApplyForm = () => {
           </CardContent>
         </Card>
 
-        {/* Card 2: Program Details */}
         <Card>
           <CardHeader>
             <CardTitle>Program Details</CardTitle>
@@ -255,7 +247,6 @@ const ApplyForm = () => {
               />
             </div>
             
-            {/* ✅ ডায়নামিক ইনটেক সেলেকশন */}
             <div className="space-y-2 sm:col-span-2">
               <Label>Preferred Intake <span className="text-red-500">*</span></Label>
               <Select onValueChange={(value) => handleInputChange("intakePreference", value)} disabled={isSubmitting || isIntakesLoading}>
@@ -284,7 +275,6 @@ const ApplyForm = () => {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
         <div className="flex justify-end gap-4">
           <Button 
             type="button" 

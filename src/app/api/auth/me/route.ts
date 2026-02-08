@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { jwtVerify } from "jose"; // Edge-compatible
+import { jwtVerify } from "jose"; 
 import { connect } from "@/lib/db";
 import User from "@/models/User";
 
@@ -13,13 +13,10 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Verify Token
     const secret = new TextEncoder().encode(
       process.env.JWT_SECRET || "your-secret-key-change-it"
     );
     const { payload } = await jwtVerify(token, secret);
-
-    // 2. Fetch User Data (Optional: if you need fresh data from DB)
     await connect();
     const user = await User.findById(payload.userId).select("name email role image");
 

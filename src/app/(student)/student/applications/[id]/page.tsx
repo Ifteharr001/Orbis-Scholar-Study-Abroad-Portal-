@@ -28,7 +28,6 @@ interface ApplicationData {
   appliedDate?: string;
 }
 
-// ✅ ১. ভার্টিক্যাল টাইমলাইনের স্টেজ লিস্ট
 const TIMELINE_STEPS = [
     { label: "Application Received", statusMatch: ["Applied", "New Applied"], description: "We have received your application." },
     { label: "Inquiry In Progress", statusMatch: ["Inquiry"], description: "We are verifying your initial details." },
@@ -40,7 +39,6 @@ const TIMELINE_STEPS = [
     { label: "Enrolled", statusMatch: ["Enrolled"], description: "Successfully enrolled in the program." }
 ];
 
-// ✅ ২. ফিক্সড রিকোয়ার্ড ডকুমেন্টের লিস্ট
 const REQUIRED_DOCUMENTS_LIST = [
     { _id: "1", name: "Passport Copy", status: "Required", fileName: "Pending Upload" },
     { _id: "2", name: "Academic Transcript", status: "Required", fileName: "Pending Upload" },
@@ -125,7 +123,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
         Back to My Applications
       </Link>
 
-      {/* Header Info Card */}
       <Card className={cn("border shadow-sm overflow-hidden", statusColorClass.split(' ')[2])}>
         <div className={cn("h-2 w-full", isRejected ? "bg-red-500" : "bg-primary/80")} />
         <CardContent className="p-6">
@@ -161,7 +158,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Timeline Section */}
           <div className="lg:col-span-2 space-y-6">
               <Card className="border-border shadow-sm">
                 <CardHeader>
@@ -219,7 +215,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
                 </CardContent>
               </Card>
 
-              {/* Remarks Section */}
               <Card className="border-border shadow-sm">
                  <CardHeader>
                     <CardTitle className="text-lg">Counselor Remarks</CardTitle>
@@ -234,7 +229,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
               </Card>
           </div>
 
-          {/* Right Side: Checklist */}
           <div className="lg:col-span-1">
               <Card className="border-border shadow-sm h-full flex flex-col hover:border-primary/50 transition-colors">
                 <CardHeader>
@@ -245,7 +239,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
                 </CardHeader>
                 <CardContent className="flex-1">
                   
-                  {/* ✅ লিস্ট এখন আর ক্লিকেবল নয় */}
                   <div className="pointer-events-none">
                     <ChecklistDocuments 
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -254,7 +247,6 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
                     />
                   </div>
                   
-                  {/* ✅ শুধু বাটনটি ক্লিকেবল এবং এটি ক্লিক করলে ডকুমেন্টস পেজে যাবে */}
                   <div className="mt-6">
                     <Button asChild className="w-full">
                         <Link href="/student/documents">

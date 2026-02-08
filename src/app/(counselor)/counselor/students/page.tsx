@@ -55,7 +55,6 @@ export default function CounselorStudentsPage() {
     fetchStudents();
   }, []);
 
-  // Search Logic (Name or Email)
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = students.filter(
@@ -77,7 +76,6 @@ export default function CounselorStudentsPage() {
   return (
     <div className="space-y-6 animate-in fade-in-50">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Students</h1>
@@ -96,7 +94,6 @@ export default function CounselorStudentsPage() {
         </div>
       </div>
 
-      {/* Students Table */}
       <Card>
         <CardHeader className="p-0"></CardHeader>
         <CardContent className="p-0">

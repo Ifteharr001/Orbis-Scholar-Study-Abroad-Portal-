@@ -6,9 +6,6 @@ export async function GET() {
   try {
     await connect();
     
-    // 🚀 Performance Optimization:
-    // ১. .select("-content"): নিউজ ফিডে বিশাল আর্টিকেল লোড না করে শুধু টাইটেল, ছবি ও সামারি আনা হচ্ছে।
-    // ২. .lean(): প্লেইন জাভাস্ক্রিপ্ট অবজেক্ট রিটার্ন করবে (ফাস্ট রেন্ডারিং)।
     const news = await News.find({})
       .sort({ createdAt: -1 })
       .select("-content") 
@@ -26,7 +23,6 @@ export async function POST(req: Request) {
     await connect();
     const body = await req.json();
 
-    // ভ্যালিডেশন: টাইটেল বা কন্টেন্ট না থাকলে এরর দিবে
     if (!body.title || !body.content || !body.category) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }

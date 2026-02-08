@@ -5,7 +5,6 @@ import Application from "@/models/Application";
 import Segment from "@/models/Segment"; 
 import bcrypt from "bcryptjs";
 
-// ✅ 1. GET Method: Fixed Filtering Logic with $and
 export async function GET(req: Request) {
   try {
     await connect();
@@ -14,14 +13,11 @@ export async function GET(req: Request) {
     const query = searchParams.get("query") || "";
     const segmentId = searchParams.get("segment");
     
-    // ✅ Fix: Initialize an array for $and conditions
-    // This ensures that ALL conditions (Role + Search + Segment Filters) must be met.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const andConditions: any[] = [
-      { role: "student" } // Default condition: User must be a student
+      { role: "student" }
     ];
 
-    // 1. Text Search (Name or Email)
     if (query) {
       andConditions.push({
         $or: [
@@ -31,7 +27,6 @@ export async function GET(req: Request) {
       });
     }
 
-    // 2. ✅ Segment Filtering (Logic using $and)
     if (segmentId) {
       const segment = await Segment.findById(segmentId);
       
@@ -41,32 +36,28 @@ export async function GET(req: Request) {
 
         segment.conditions.forEach((condition: string) => {
           const lowerCond = condition.toLowerCase(); 
-          const parts = condition.split("="); // Split by equals sign
+          const parts = condition.split("="); 
           
           if (parts.length > 1) {
-            const val = parts[1].trim(); // Get value (e.g., MSc, India)
+            const val = parts[1].trim(); 
 
-            // 🔹 Status Filter
             if (lowerCond.includes("status")) {
               andConditions.push({ status: val.toLowerCase() });
             }
 
-            // 🔹 Country Filter
             if (lowerCond.includes("country")) {
               andConditions.push({ country: { $regex: val, $options: "i" } });
             }
 
-            // 🔹 Program Filter (Fix: Validates actual value)
             if (lowerCond.includes("program")) {
               andConditions.push({
                 $or: [
-                  { programPreference: { $regex: val, $options: "i" } }, // Check string field
-                  { "programPreference.degree": { $regex: val, $options: "i" } } // Check object field
+                  { programPreference: { $regex: val, $options: "i" } }, 
+                  { "programPreference.degree": { $regex: val, $options: "i" } } 
                 ]
               });
             }
 
-            // 🔹 Intake Filter
             if (lowerCond.includes("intake")) {
                andConditions.push({
                  $or: [
@@ -76,7 +67,6 @@ export async function GET(req: Request) {
                });
             }
 
-            // 🔹 Counselor Filter
             if (lowerCond.includes("counselor")) {
                andConditions.push({
                  $or: [
@@ -86,7 +76,6 @@ export async function GET(req: Request) {
                });
             }
             
-            // 🔹 Gender Filter
             if (lowerCond.includes("gender")) {
                andConditions.push({ gender: { $regex: `^${val}$`, $options: "i" } });
             }
@@ -95,15 +84,11 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3. Execute Query with $and
-    // If andConditions only has { role: "student" }, it returns all students.
-    // If filters are added, it returns only students matching ALL criteria.
     const students = await User.find({ $and: andConditions })
       .select("-password")
       .sort({ createdAt: -1 })
       .lean();
 
-    // 4. Merge Application Data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const studentEmails = students.map((s: any) => s.email);
 
@@ -129,8 +114,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
   }
 }
-
-// ✅ 2. POST Method (Unchanged)
 export async function POST(req: Request) {
   try {
     await connect();

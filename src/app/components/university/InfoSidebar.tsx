@@ -1,13 +1,12 @@
 import { MapPin, Phone, Building, Calendar, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// ✅ ইন্টারফেস আপডেট করা হয়েছে যাতে প্যারেন্ট কম্পোনেন্ট থেকে ডাটা আসলে এরর না দেয়
 interface InfoSidebarProps {
   institutionName: string;
   location: string;
-  deadline?: string;      // নতুন: ডেডলাইন (Optional)
-  intakes?: string[];     // নতুন: ইনটেক অ্যারে (Optional)
-  tuitionRange?: string;  // নতুন: টিউশন ফি (Optional)
+  deadline?: string;     
+  intakes?: string[];   
+  tuitionRange?: string;  
 }
 
 const InfoSidebar = ({ 
@@ -21,7 +20,6 @@ const InfoSidebar = ({
     <div className="rounded-xl border border-border bg-card p-6 h-fit shadow-sm sticky top-24">
       <div className="space-y-6">
         
-        {/* Institution Name */}
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">
             Institution
@@ -36,7 +34,6 @@ const InfoSidebar = ({
           </div>
         </div>
 
-        {/* Location */}
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">
             Location
@@ -49,7 +46,6 @@ const InfoSidebar = ({
           </div>
         </div>
 
-        {/* ✅ Deadline (যদি ডাটা থাকে তবেই দেখাবে) */}
         {deadline && (
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">
@@ -66,7 +62,6 @@ const InfoSidebar = ({
           </div>
         )}
 
-        {/* ✅ Intakes (যদি ডাটা থাকে তবেই দেখাবে) */}
         {intakes && intakes.length > 0 && (
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">
@@ -83,7 +78,6 @@ const InfoSidebar = ({
           </div>
         )}
 
-        {/* ✅ Tuition Range (যদি ডাটা থাকে তবেই দেখাবে) */}
         {tuitionRange && (
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">
@@ -100,7 +94,6 @@ const InfoSidebar = ({
           </div>
         )}
 
-        {/* Call to Action (CTA) */}
         <div className="pt-6 border-t border-border mt-2">
           <p className="text-sm text-foreground font-medium mb-4 text-center">
             Are you ready to start building your future?

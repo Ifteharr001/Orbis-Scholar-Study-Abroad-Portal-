@@ -4,10 +4,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  // 👇 ১. রোল আপডেট করা হয়েছে (staff ও owner যোগ করা হয়েছে)
   role: "student" | "partner" | "admin" | "counselor" | "staff" | "owner";
   
-  // 👇 ২. স্ট্যাটাস ফিল্ড যোগ করা হয়েছে (এটি মিসিং ছিল)
   status: "active" | "inactive" | "blocked";
 
   // Profile info
@@ -58,11 +56,9 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     role: {
       type: String,
-      // 👇 Enum আপডেট: staff ও owner যোগ করা হলো
       enum: ["student", "partner", "admin", "counselor", "staff", "owner"],
       default: "student",
     },
-    // 👇 নতুন স্ট্যাটাস স্কিমা যোগ করা হলো
     status: {
       type: String,
       enum: ["active", "inactive", "blocked"],
@@ -118,7 +114,6 @@ const UserSchema: Schema<IUser> = new Schema(
 UserSchema.index({ counselor: 1 });
 UserSchema.index({ role: 1 });
 
-// Model Creation
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;

@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, Ticket as TicketIcon, MessageSquare, History } from "lucide-react";
 import { toast } from "sonner";
 
-// ইন্টারফেস
 interface Ticket {
   _id: string;
   subject: string;
@@ -26,14 +25,12 @@ export default function HelpSupportPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // ফর্ম ডাটা
   const [formData, setFormData] = useState({
     subject: "",
     type: "General Issue",
     message: "",
   });
 
-  // ১. ডাটা ফেচ করা
   const fetchTickets = async () => {
     try {
       const res = await fetch("/api/student/ticket");
@@ -52,7 +49,6 @@ export default function HelpSupportPage() {
     fetchTickets();
   }, []);
 
-  // ২. টিকেট সাবমিট করা
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.subject || !formData.message) {
@@ -70,8 +66,8 @@ export default function HelpSupportPage() {
 
       if (res.ok) {
         toast.success("Support ticket created successfully!");
-        setFormData({ subject: "", type: "General Issue", message: "" }); // ফর্ম রিসেট
-        fetchTickets(); // লিস্ট আপডেট
+        setFormData({ subject: "", type: "General Issue", message: "" });
+        fetchTickets();
       } else {
         toast.error("Failed to submit ticket");
       }
@@ -85,7 +81,6 @@ export default function HelpSupportPage() {
   return (
     <div className="container mx-auto py-8 space-y-8 max-w-5xl">
       
-      {/* হেডার */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Help & Support 🛠️</h1>
         <p className="text-muted-foreground mt-2">
@@ -95,7 +90,6 @@ export default function HelpSupportPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* বাম পাশ: টিকেট তৈরি করার ফর্ম */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -156,8 +150,6 @@ export default function HelpSupportPage() {
             </form>
           </CardContent>
         </Card>
-
-        {/* ডান পাশ: টিকেটের হিস্ট্রি */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold flex items-center gap-2">

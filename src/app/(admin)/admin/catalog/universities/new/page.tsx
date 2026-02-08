@@ -15,13 +15,22 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Save, Plus, Trash2, ArrowLeft, Loader2, HelpCircle 
+  Save, Plus, Trash2, ArrowLeft, Loader2, HelpCircle, Image as ImageIcon, FileText 
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
+// --- Zod Schemas ---
+
+const feeStructureSchema = z.object({
+  tuition: z.string().optional(),
+  accommodation: z.string().optional(),
+  insurance: z.string().optional(),
+  visaExtension: z.string().optional(),
+  medical: z.string().optional(),
+});
+
 const universitySchema = z.object({
-  
   name: z.string().min(2, "Name is required"),
   slug: z.string().optional(),
   country: z.string().min(2, "Country is required"),
@@ -37,33 +46,42 @@ const universitySchema = z.object({
   heroImage: z.string().optional(),
 
   deadline: z.string().optional(), 
-  intakes: z.string().optional(),  
+  intakes: z.string().optional(),  // Input as comma-separated string, converted to array in submit
+  
+  // Single fields for general listing
   tuitionFee: z.string().optional(),
   applicationFee: z.string().optional(),
   acceptanceRate: z.string().optional(),
   
   aboutText: z.string().optional(),
-  
+  accommodationText: z.string().optional(), // Added
+
+  // Complex Fees Object
+  fees: z.object({
+    bachelor: feeStructureSchema.optional(),
+    master: feeStructureSchema.optional(),
+    phd: feeStructureSchema.optional(),
+  }).optional(),
+
+  // Arrays
+  requiredDocuments: z.array(z.object({ value: z.string() })).default([]), // Helper object for array field
+  galleryImages: z.array(z.object({ url: z.string() })).default([]), // Helper object for array field
+
   programs: z.array(z.object({
     name: z.string().min(1, "Program Name Required"),
     degree: z.string().optional(),
     language: z.string().optional(),
     duration: z.string().optional(),
-    
-    
     tuitionFee: z.string().optional(),
     accommodationFee: z.string().optional(),
-    
     deadline: z.string().optional(), 
     intakes: z.string().optional(),  
-    
     hasScholarship: z.boolean().default(false),
   })).default([]), 
 
   scholarships: z.array(z.object({
     name: z.string().min(1, "Name Required"),
     type: z.string().optional(), 
-    
     stipend: z.string().optional(),
     yearlyStipend: z.string().optional(),
     tuitionFee: z.string().optional(), 
@@ -82,6 +100,7 @@ type UniversityFormValues = z.infer<typeof universitySchema>;
 export default function NewUniversityPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false); 
 
   const form = useForm<UniversityFormValues>({
     resolver: zodResolver(universitySchema) as any,
@@ -89,12 +108,35 @@ export default function NewUniversityPage() {
       name: "",
       country: "",
       location: "",
-      programs: [{ name: "", degree: "Bachelor", language: "English", hasScholarship: false }], 
+      slug: "",
+      image: "",
+      logo: "",
+      heroImage: "",
+      deadline: "",
+      intakes: "",
+      tuitionFee: "",
+      applicationFee: "",
+      acceptanceRate: "",
+      aboutText: "",
+      accommodationText: "",
+      ranking: 0,
+      founded: 0,
+      studentPopulation: 0,
+      rating: 0,
+      fees: {
+        bachelor: { tuition: "", accommodation: "", insurance: "", visaExtension: "", medical: "" },
+        master: { tuition: "", accommodation: "", insurance: "", visaExtension: "", medical: "" },
+        phd: { tuition: "", accommodation: "", insurance: "", visaExtension: "", medical: "" },
+      },
+      requiredDocuments: [],
+      galleryImages: [],
+      programs: [], 
       scholarships: [],
       faqs: [],
     },
   });
 
+  // Field Arrays
   const { fields: programFields, append: appendProgram, remove: removeProgram } = 
     useFieldArray({ control: form.control, name: "programs" });
 
@@ -104,12 +146,53 @@ export default function NewUniversityPage() {
   const { fields: faqFields, append: appendFAQ, remove: removeFAQ } = 
     useFieldArray({ control: form.control, name: "faqs" });
 
+  const { fields: docFields, append: appendDoc, remove: removeDoc } = 
+    useFieldArray({ control: form.control, name: "requiredDocuments" });
+
+  const { fields: galleryFields, append: appendGallery, remove: removeGallery } = 
+    useFieldArray({ control: form.control, name: "galleryImages" });
+
+  // Handle File Upload (Generic)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB Limit
+      toast.error("Image size too large! Max size is 5MB.");
+      e.target.value = ""; 
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (data.url) {
+        callback(data.url);
+        toast.success("Uploaded successfully!");
+      } else {
+        toast.error("Upload failed");
+      }
+    } catch (error) {
+      toast.error("Something went wrong during upload");
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onSubmit = async (data: any) => {
     setLoading(true);
 
     const formattedData = {
       ...data,
       intakes: data.intakes ? data.intakes.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
+      requiredDocuments: data.requiredDocuments.map((d: any) => d.value), 
+      galleryImages: data.galleryImages.map((g: any) => g.url), 
       programs: data.programs.map((p: any) => ({
         ...p,
         intakes: p.intakes ? p.intakes.split(",").map((s: string) => s.trim()).filter(Boolean) : []
@@ -153,7 +236,7 @@ export default function NewUniversityPage() {
             </div>
         </div>
         
-        <Button onClick={form.handleSubmit(onSubmit)} disabled={loading}>
+        <Button onClick={form.handleSubmit(onSubmit)} disabled={loading || uploading}>
             {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
             Save University
         </Button>
@@ -166,6 +249,7 @@ export default function NewUniversityPage() {
                 <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent p-0 space-x-6 overflow-x-auto">
                     <TabsTrigger value="basic" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Basic Info</TabsTrigger>
                     <TabsTrigger value="details" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Stats & Media</TabsTrigger>
+                    <TabsTrigger value="fees" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Fees Structure</TabsTrigger>
                     <TabsTrigger value="programs" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Programs ({programFields.length})</TabsTrigger>
                     <TabsTrigger value="scholarships" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Scholarships ({scholarshipFields.length})</TabsTrigger>
                     <TabsTrigger value="content" className="data-[state=active]:border-b-2 data-[state=active]:border-black rounded-none px-4 h-full">Content & FAQ</TabsTrigger>
@@ -205,7 +289,7 @@ export default function NewUniversityPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader><CardTitle>Deadlines & Fees</CardTitle></CardHeader>
+                        <CardHeader><CardTitle>Deadlines & General Fees</CardTitle></CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField control={form.control as any} name="deadline" render={({ field }) => (
                                 <FormItem>
@@ -215,7 +299,7 @@ export default function NewUniversityPage() {
                             )} />
                             <FormField control={form.control as any} name="intakes" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Intakes (Comma Separated)</FormLabel>
+                                    <FormLabel>General Intakes (Comma Separated)</FormLabel>
                                     <FormControl><Input placeholder="e.g. March, September" {...field} /></FormControl>
                                     <FormDescription>Separate multiple intakes with commas.</FormDescription>
                                 </FormItem>
@@ -258,26 +342,129 @@ export default function NewUniversityPage() {
                     <Card>
                         <CardHeader><CardTitle>Images & URLs</CardTitle></CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
                             <FormField control={form.control as any} name="logo" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Logo URL</FormLabel>
-                                    <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                                    <FormLabel>University Logo</FormLabel>
+                                    <FormControl>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-4">
+                                                <Input 
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    disabled={uploading}
+                                                    onChange={(e) => handleFileUpload(e, (url) => form.setValue("logo", url))}
+                                                    className="cursor-pointer"
+                                                />
+                                                {uploading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                                            </div>
+                                            
+                                            <div className="flex gap-3 items-center">
+                                                <Input placeholder="Or paste URL..." {...field} className="flex-1" />
+                                                {field.value && (
+                                                    <div className="relative h-12 w-12 border rounded-md overflow-hidden bg-gray-50 flex-shrink-0">
+                                                        <img src={field.value} alt="Logo" className="object-contain h-full w-full" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )} />
+
                             <FormField control={form.control as any} name="image" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Main Image URL</FormLabel>
-                                    <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                                    <FormLabel>Main Image</FormLabel>
+                                    <FormControl>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-4">
+                                                <Input 
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    disabled={uploading}
+                                                    onChange={(e) => handleFileUpload(e, (url) => form.setValue("image", url))}
+                                                    className="cursor-pointer"
+                                                />
+                                                {uploading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                                            </div>
+
+                                            <div className="flex gap-3 items-center">
+                                                <Input placeholder="Or paste URL..." {...field} className="flex-1" />
+                                                {field.value && (
+                                                    <div className="relative h-12 w-20 border rounded-md overflow-hidden bg-gray-50 flex-shrink-0">
+                                                        <img src={field.value} alt="Main" className="object-cover h-full w-full" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )} />
                         </CardContent>
                     </Card>
+
+                    <Card>
+                      <CardHeader><CardTitle>Gallery Images</CardTitle></CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          {galleryFields.map((field, index) => (
+                            <div key={field.id} className="relative group border rounded-lg overflow-hidden h-24">
+                              <img src={form.getValues(`galleryImages.${index}.url`)} alt="Gallery" className="w-full h-full object-cover" />
+                              <button 
+                                type="button" 
+                                onClick={() => removeGallery(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <Input 
+                              type="file" 
+                              accept="image/*"
+                              disabled={uploading}
+                              onChange={(e) => handleFileUpload(e, (url) => appendGallery({ url }))}
+                              className="cursor-pointer max-w-xs"
+                          />
+                          <span className="text-muted-foreground text-sm">Upload images for gallery</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="fees" className="mt-6 space-y-6">
+                  {['bachelor', 'master', 'phd'].map((level) => (
+                    <Card key={level} className="border-l-4 border-l-blue-500">
+                      <CardHeader><CardTitle className="capitalize">{level} Fees Structure</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField control={form.control as any} name={`fees.${level}.tuition`} render={({ field }) => (
+                          <FormItem><FormLabel>Tuition Fee (Yearly)</FormLabel><FormControl><Input placeholder="e.g. 15000 RMB" {...field} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control as any} name={`fees.${level}.accommodation`} render={({ field }) => (
+                          <FormItem><FormLabel>Accommodation Fee</FormLabel><FormControl><Input placeholder="e.g. 4000 RMB" {...field} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control as any} name={`fees.${level}.insurance`} render={({ field }) => (
+                          <FormItem><FormLabel>Insurance Fee</FormLabel><FormControl><Input placeholder="e.g. 800 RMB" {...field} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control as any} name={`fees.${level}.visaExtension`} render={({ field }) => (
+                          <FormItem><FormLabel>Visa Fee</FormLabel><FormControl><Input placeholder="e.g. 400 RMB" {...field} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control as any} name={`fees.${level}.medical`} render={({ field }) => (
+                          <FormItem><FormLabel>Medical Fee</FormLabel><FormControl><Input placeholder="e.g. 500 RMB" {...field} /></FormControl></FormItem>
+                        )} />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </TabsContent>
 
                 <TabsContent value="programs" className="mt-6">
                     <div className="space-y-4">
                         {programFields.map((field, index) => (
-                            <Card key={field.id} className="relative border-l-4 border-l-blue-500">
+                            <Card key={field.id} className="relative border-l-4 border-l-purple-500">
                                 <Button 
                                     type="button" 
                                     variant="ghost" 
@@ -336,7 +523,17 @@ export default function NewUniversityPage() {
                             type="button"
                             variant="outline"
                             className="w-full border-dashed py-6 text-muted-foreground"
-                            onClick={() => appendProgram({ name: "", degree: "", tuitionFee: "", hasScholarship: false })}
+                            onClick={() => appendProgram({ 
+                                name: "", 
+                                degree: "", 
+                                language: "",
+                                duration: "",
+                                tuitionFee: "", 
+                                accommodationFee: "",
+                                deadline: "",
+                                intakes: "",
+                                hasScholarship: false 
+                            })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Program
                         </Button>
@@ -398,7 +595,15 @@ export default function NewUniversityPage() {
                             type="button"
                             variant="outline"
                             className="w-full border-dashed py-6 text-muted-foreground"
-                            onClick={() => appendScholarship({ name: "", type: "", stipend: "" })}
+                            onClick={() => appendScholarship({ 
+                                name: "", 
+                                type: "", 
+                                stipend: "",
+                                yearlyStipend: "",
+                                tuitionFee: "",
+                                accommodationFee: "",
+                                insuranceFee: ""
+                            })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Scholarship
                         </Button>
@@ -407,15 +612,45 @@ export default function NewUniversityPage() {
 
                  <TabsContent value="content" className="mt-6 space-y-6">
                     <Card>
-                        <CardHeader><CardTitle>About University</CardTitle></CardHeader>
-                        <CardContent>
+                        <CardHeader><CardTitle>Descriptions</CardTitle></CardHeader>
+                        <CardContent className="space-y-6">
                             <FormField control={form.control as any} name="aboutText" render={({ field }) => (
                                 <FormItem>
+                                    <FormLabel>About University</FormLabel>
                                     <FormControl>
                                         <Textarea className="min-h-[150px]" placeholder="Detailed description about the university..." {...field} />
                                     </FormControl>
                                 </FormItem>
                             )} />
+                            <FormField control={form.control as any} name="accommodationText" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Accommodation Details</FormLabel>
+                                    <FormControl>
+                                        <Textarea className="min-h-[100px]" placeholder="Dormitory info, pricing, facilities..." {...field} />
+                                    </FormControl>
+                                </FormItem>
+                            )} />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle>Required Documents</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            {docFields.map((field, index) => (
+                                <div key={field.id} className="flex gap-2">
+                                    <FormField control={form.control as any} name={`requiredDocuments.${index}.value`} render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <FormControl><Input placeholder="e.g. Valid Passport" {...field} /></FormControl>
+                                        </FormItem>
+                                    )} />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeDoc(index)}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            ))}
+                            <Button type="button" variant="outline" size="sm" onClick={() => appendDoc({ value: "" })}>
+                                <Plus className="h-4 w-4 mr-2" /> Add Document
+                            </Button>
                         </CardContent>
                     </Card>
 

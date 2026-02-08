@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import Service from "@/models/Service";
 
-// স্লাগ জেনারেটর ফাংশন
 function createSlug(title: string) {
   return title
     .toLowerCase()
@@ -50,14 +49,11 @@ export async function POST(req: Request) {
     
     return NextResponse.json(newService, { status: 201 });
 
-  } catch (error: unknown) { // ✅ পরিবর্তন ১: 'any' এর বদলে 'unknown' দেওয়া হলো
+  } catch (error: unknown) { 
     console.error("Error creating service:", error); 
     
-    // ✅ পরিবর্তন ২: টাইপ কাস্টিং (Type Casting)
-    // আমরা এরর টাকে এমন একটা অবজেক্ট হিসেবে ধরছি যার 'code' এবং 'message' আছে
     const err = error as { code?: number; message?: string };
 
-    // MongoDB Duplicate Key Error (code 11000)
     if (err.code === 11000) {
         return NextResponse.json(
             { error: "A service with this title already exists. Please use a unique title." }, 

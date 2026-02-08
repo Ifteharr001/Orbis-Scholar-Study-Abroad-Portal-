@@ -40,10 +40,10 @@ const Footer = () => {
 
   return (
     <footer className="bg-foreground text-background">
-      {/* Main Footer */}
+    
       <div className="container mx-auto px-4 py-16">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
-          {/* Brand Column */}
+    
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
        <Image 
@@ -60,7 +60,6 @@ const Footer = () => {
               Your trusted partner for international education. We help students achieve their dreams of studying at top universities worldwide.
             </p>
             
-            {/* Newsletter */}
             <div className="mb-6">
               <h4 className="font-semibold mb-3">Subscribe to Newsletter</h4>
               <div className="flex gap-2">
@@ -75,7 +74,6 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Social Links */}
             <div className="flex gap-4">
               {socialLinks.map((social) => (
                 <a
@@ -90,7 +88,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
             <h4 className="font-display text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-3">
@@ -107,7 +104,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Services */}
           <div>
             <h4 className="font-display text-lg font-semibold mb-4">Our Services</h4>
             <ul className="space-y-3">
@@ -124,7 +120,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info */}
           <div>
             <h4 className="font-display text-lg font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-4">
@@ -153,7 +148,6 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Bottom Bar */}
       <div className="border-t border-background/10">
         <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-background/60 text-sm text-center md:text-left">

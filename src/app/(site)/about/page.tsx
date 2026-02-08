@@ -14,7 +14,6 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function AboutPage() {
   
-  // ১. স্ট্যাটিক স্ট্যাটস ডাটা
   const stats = [
     { label: "Students Placed", value: "5,000+", icon: Users },
     { label: "Partner Universities", value: "200+", icon: Globe },
@@ -22,7 +21,6 @@ export default function AboutPage() {
     { label: "Years Experience", value: "10+", icon: Award },
   ];
 
-  // ২. স্ট্যাটিক টিম ডাটা (আপনারা পরে ছবি চেঞ্জ করে নেবেন)
   const team = [
     {
       name: "Sarah Johnson",
@@ -44,7 +42,6 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* --- Section 1: Hero --- */}
       <section className="relative py-20 overflow-hidden bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <Badge className="mb-4" variant="secondary">About Orbis Scholar</Badge>
@@ -58,7 +55,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-     {/* --- Section 2: Stats Grid --- */}
       <section className="py-12 bg-gradient-hero border-y border-white/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -81,7 +77,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Our Mission (Image + Text) --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl">
@@ -116,7 +111,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Our Team --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -147,10 +141,9 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- Section 5: CTA --- */}
       <section className="py-20 container mx-auto px-4 text-center">
         <div className="bg-primary text-primary-foreground rounded-3xl p-12 relative overflow-hidden">
-          {/* Decorative Circle */}
+        
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
           
           <div className="relative z-10 max-w-2xl mx-auto">

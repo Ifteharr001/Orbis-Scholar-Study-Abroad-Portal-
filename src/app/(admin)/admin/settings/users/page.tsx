@@ -133,7 +133,6 @@ const UsersRolesPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Users & Roles</h1>
@@ -198,7 +197,6 @@ const UsersRolesPage = () => {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">

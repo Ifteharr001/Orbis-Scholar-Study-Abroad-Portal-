@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { connect } from "@/lib/db"; // আপনার DB কানেকশন পাথ
-import User from "@/models/User";   // ⚠️ Default import ব্যবহার করবেন
+import { connect } from "@/lib/db"; 
+import User from "@/models/User";  
 import { Invitation } from "@/models/Invitation";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    // ১. ডাটাবেস কানেকশন
     await connect();
 
-    // ২. রিকোয়েস্ট বডি থেকে ডাটা নেওয়া
     const { token, name, password } = await req.json();
 
-    // ভ্যালিডেশন
     if (!token || !name || !password) {
       return NextResponse.json(
         { message: "All fields are required" },
@@ -20,11 +17,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // ৩. টোকেন চেক করা (এটি ভ্যালিড কিনা এবং মেয়াদ আছে কিনা)
     const invite = await Invitation.findOne({
       token,
       status: "pending",
-      expiresAt: { $gt: new Date() }, // বর্তমান সময়ের চেয়ে মেয়াদ বেশি হতে হবে
+      expiresAt: { $gt: new Date() },
     });
 
     if (!invite) {
@@ -34,7 +30,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ৪. ইউজার অলরেডি আছে কিনা চেক করা (সুরক্ষার জন্য ডাবল চেক)
     const existingUser = await User.findOne({ email: invite.email });
     if (existingUser) {
       return NextResponse.json(
@@ -43,24 +38,19 @@ export async function POST(req: Request) {
       );
     }
 
-    // ৫. পাসওয়ার্ড হ্যাশ করা
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ৬. নতুন ইউজার তৈরি করা
-    // এখানে role এবং email ইনভাইটেশন ডেটা থেকে নেওয়া হচ্ছে (User input থেকে নয়)
     await User.create({
       name,
       email: invite.email,
       password: hashedPassword,
-      role: invite.role, // Admin, Counselor, Staff, etc.
-      status: "active",  // বা আপনার User মডেলে status যেভাবে ডিফাইন করা আছে
+      role: invite.role, 
+      status: "active", 
     });
 
-    // ৭. ইনভাইটেশন স্ট্যাটাস আপডেট করা
     invite.status = "accepted";
     await invite.save();
 
-    // সফল রেসপন্স
     return NextResponse.json(
       { message: "Admin account registered successfully" },
       { status: 201 }

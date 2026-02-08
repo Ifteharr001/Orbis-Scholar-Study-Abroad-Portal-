@@ -88,7 +88,7 @@ const RegisterForm = () => {
       if (res.ok) {
         toast.success("Account created successfully!");
         
-        // ৩. রোল অনুযায়ী সঠিক লগইন পেজে পাঠানো
+
         setTimeout(() => {
             if (inviteData?.role === "admin") {
                 router.push("/admin/login");
@@ -109,9 +109,6 @@ const RegisterForm = () => {
     }
   };
 
-  // --- UI States ---
-
-  // লোডিং স্টেট (যখন টোকেন চেক হচ্ছে)
   if (verifying) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-muted/10">
@@ -121,7 +118,6 @@ const RegisterForm = () => {
     );
   }
 
-  // এরর স্টেট (যদি টোকেন ভুল হয়)
   if (!inviteData) {
     return (
       <div className="flex h-screen items-center justify-center bg-muted/10 p-4">
@@ -143,7 +139,6 @@ const RegisterForm = () => {
     );
   }
 
-  // মেইন রেজিস্ট্রেশন ফর্ম
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">

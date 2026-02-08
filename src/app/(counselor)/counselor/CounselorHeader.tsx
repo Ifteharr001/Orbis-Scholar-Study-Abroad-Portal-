@@ -22,7 +22,6 @@ export default function CounselorHeader() {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background px-4 shadow-sm md:px-6">
       
-      {/* Left: Mobile Menu Trigger */}
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
@@ -42,19 +41,15 @@ export default function CounselorHeader() {
           </SheetContent>
         </Sheet>
         
-        {/* Title (Optional) */}
         <h1 className="text-lg font-semibold md:hidden">Orbis Scholar</h1>
       </div>
 
-      {/* Right: Actions */}
       <div className="flex items-center gap-4">
-        {/* Notifications (Mock) */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-600" />
         </Button>
 
-        {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">

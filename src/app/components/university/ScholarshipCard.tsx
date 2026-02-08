@@ -10,7 +10,9 @@ interface ScholarshipCardProps {
   yearlyStipend: string;
 }
 
-const isFree = (value: string) => value.toLowerCase() === "free";
+const isFree = (value: string | undefined | null) => {
+  return (value || "").toLowerCase() === "free";
+};
 
 const FeeItem = ({ label, value }: { label: string; value: string }) => (
   <div className="flex justify-between items-center py-2 border-b border-border last:border-0">

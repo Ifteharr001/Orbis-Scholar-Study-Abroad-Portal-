@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Image from "next/image";
 
-// ইন্টারফেস ডিফিনিশন
 interface Scholarship {
   _id: string;
   name: string;
@@ -29,7 +28,6 @@ interface Scholarship {
   tuitionFee: string;
   monthlyStipend: string;
   
-  // প্যারেন্ট ইউনিভার্সিটির তথ্য
   universityId: string;
   universityName: string;
   universityLogo?: string;
@@ -42,7 +40,6 @@ export default function CounselorScholarshipsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // ✅ ১. ডাটা ফেচিং (Counselor API থেকে)
   const fetchScholarships = async () => {
     try {
       const res = await fetch("/api/counselor/scholarships");
@@ -65,7 +62,6 @@ export default function CounselorScholarshipsPage() {
     fetchScholarships();
   }, []);
 
-  // ✅ ২. সার্চ ফিল্টার
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = scholarships.filter(

@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import User from "@/models/User";
 
-// ১. প্রোফাইল ডাটা ফেচ করা
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +13,6 @@ export async function GET() {
 
     await connect();
 
-    // 🚀 Performance Update: .lean() ব্যবহার করা হয়েছে
     const user = await User.findOne({ email: session.user.email })
       .select("-password")
       .lean();
@@ -31,7 +29,7 @@ export async function GET() {
       gender: user.gender || "",
       programPreference: user.programPreference || "Masters",
       image: user.image || "", 
-      bio: user.bio || "" // Bio ফিল্ডটিও পাঠালাম (যদি লাগে)
+      bio: user.bio || "" 
     });
 
   } catch (error) {
@@ -40,7 +38,6 @@ export async function GET() {
   }
 }
 
-// ২. প্রোফাইল আপডেট করা
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,14 +49,12 @@ export async function PATCH(req: Request) {
     
     const { fullName, phone, country, gender, programPreference, image, bio } = body;
 
-    // ১. ভ্যালিডেশন: নাম খালি রাখা যাবে না
     if (!fullName) {
         return NextResponse.json({ error: "Full Name is required" }, { status: 400 });
     }
 
     await connect();
 
-    // ২. ডাটাবেস আপডেট
     const updatedUser = await User.findOneAndUpdate(
       { email: session.user.email },
       { 
@@ -73,7 +68,7 @@ export async function PATCH(req: Request) {
             bio
         }
       },
-      { new: true } // আপডেটেড ডাটা রিটার্ন করবে
+      { new: true } 
     ).select("-password");
 
     return NextResponse.json({ message: "Profile updated successfully", user: updatedUser });

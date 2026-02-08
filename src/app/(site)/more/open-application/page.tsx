@@ -23,14 +23,12 @@ export default function OpenApplicationPage() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // এখানে API কল হবে
     toast.success("Application Submitted! Our counselors will analyze your profile.");
   };
 
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero Banner --- */}
       <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10" />
         
@@ -49,7 +47,6 @@ export default function OpenApplicationPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Process Steps --- */}
       <section className="py-12 bg-white border-b border-slate-100">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
@@ -72,12 +69,10 @@ export default function OpenApplicationPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Application Form & Sidebar --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-3 gap-10">
             
-            {/* Left: Application Form (2 Columns wide) */}
             <div className="lg:col-span-2">
               <Card className="shadow-lg border-none">
                 <CardHeader className="bg-white border-b border-slate-100 p-8">
@@ -88,7 +83,6 @@ export default function OpenApplicationPage() {
                 <CardContent className="p-8">
                   <form onSubmit={handleSubmit} className="space-y-8">
                     
-                    {/* 1. Personal Info */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
                         <div className="bg-primary/10 p-1.5 rounded text-primary"><CheckCircle2 className="h-4 w-4"/></div>
@@ -116,7 +110,6 @@ export default function OpenApplicationPage() {
 
                     <div className="h-px bg-border" />
 
-                    {/* 2. Academic Info */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
                         <div className="bg-primary/10 p-1.5 rounded text-primary"><GraduationCap className="h-4 w-4"/></div>
@@ -163,7 +156,6 @@ export default function OpenApplicationPage() {
 
                     <div className="h-px bg-border" />
 
-                    {/* 3. Study Preferences */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
                         <div className="bg-primary/10 p-1.5 rounded text-primary"><Globe className="h-4 w-4"/></div>
@@ -211,7 +203,6 @@ export default function OpenApplicationPage() {
 
                     <div className="h-px bg-border" />
 
-                    {/* 4. Uploads */}
                     <div className="space-y-4">
                        <Label>Upload CV / Academic Transcripts (Optional)</Label>
                        <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition cursor-pointer">
@@ -236,10 +227,8 @@ export default function OpenApplicationPage() {
               </Card>
             </div>
 
-            {/* Right: Sidebar Info */}
             <div className="lg:col-span-1 space-y-8">
               
-              {/* Why Open Application? */}
               <div className="bg-slate-900 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden">
                 <div className="relative z-10">
                   <h3 className="text-xl font-bold mb-4">Why Apply Here?</h3>
@@ -258,11 +247,9 @@ export default function OpenApplicationPage() {
                     </li>
                   </ul>
                 </div>
-                {/* Decorative Circle */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
               </div>
 
-              {/* Need Help Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>Need Assistance?</CardTitle>

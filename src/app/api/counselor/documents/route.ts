@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const student = await User.findById(id).select("email");
 
     if (student && student.email) {
-        console.log("✅ Found Student Profile:", student.email);
+        console.log(" Found Student Profile:", student.email);
         
        
         query = {

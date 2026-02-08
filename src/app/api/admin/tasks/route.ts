@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import Task from "@/models/Task";
 
-// ✅ GET: শুধুমাত্র লগইন করা অ্যাডমিনের টাস্ক আনা
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +18,6 @@ export async function GET() {
   }
 }
 
-// ✅ POST: নতুন টাস্ক তৈরি
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
 
     const newTask = await Task.create({
       ...body,
-      assignedTo: session.user.email // অটোমেটিক নিজের নামে অ্যাসাইন হবে
+      assignedTo: session.user.email
     });
 
     return NextResponse.json({ success: true, data: newTask });
@@ -39,7 +37,6 @@ export async function POST(req: Request) {
   }
 }
 
-// ✅ PUT: স্ট্যাটাস আপডেট (Complete/Pending)
 export async function PUT(req: Request) {
   try {
     const { id, status } = await req.json();
@@ -51,7 +48,6 @@ export async function PUT(req: Request) {
   }
 }
 
-// ✅ DELETE: টাস্ক ডিলিট
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

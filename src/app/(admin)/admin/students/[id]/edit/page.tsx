@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
-// Mock counselors (এটিও চাইলে API থেকে আনা যায়)
 const counselors = [
   "Sarah Khan",
   "John Doe",
@@ -27,7 +26,6 @@ const countries = [
 
 const StudentEditPage = () => {
   const params = useParams();
-  // ফোল্ডার নেম [id] তাই params.id ব্যবহার করতে হবে
   const studentId = params.id as string; 
   const router = useRouter();
   
@@ -44,12 +42,11 @@ const StudentEditPage = () => {
     status: "",
     counselor: "",
     dateOfBirth: "",
-    passportNo: "", // যদি মডেলে না থাকে তবে এটি কাজ করবে না, তবে আমি রেখেছি
+    passportNo: "", 
     address: "",
     notes: "",
   });
 
-  // ১. ডাটাবেস থেকে স্টুডেন্ট ইনফো নিয়ে আসা
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -59,18 +56,15 @@ const StudentEditPage = () => {
         const data = await res.json();
         const student = data.student;
 
-        // ডাটা সেট করা (API থেকে যা আসবে)
         setFormData({
             name: student.name || "",
             email: student.email || "",
             phone: student.phone || "",
             country: student.country || "",
-            city: student.city || "", // যদি মডেলে না থাকে তবে খালি থাকবে
-            // programPreference যদি অবজেক্ট হয় তবে degree নিবে, আর স্ট্রিং হলে সরাসরি
+            city: student.city || "", 
             program: typeof student.programPreference === 'object' ? student.programPreference?.degree : student.programPreference || "",
             status: student.status || "active",
             counselor: student.counselor || "",
-            // Date format YYYY-MM-DD তে কনভার্ট করা
             dateOfBirth: student.dob ? new Date(student.dob).toISOString().split('T')[0] : "",
             passportNo: student.passportNo || "",
             address: student.address || "",
@@ -93,7 +87,6 @@ const StudentEditPage = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // ২. ডাটা আপডেট করা (PUT Request)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -104,7 +97,6 @@ const StudentEditPage = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 ...formData,
-                // Backend এ field mapping ঠিক রাখার জন্য
                 dob: formData.dateOfBirth, 
                 programPreference: formData.program 
             }),
@@ -116,9 +108,8 @@ const StudentEditPage = () => {
             description: "Student information has been updated successfully.",
         });
         
-        // Redirect to details page
         router.push(`/admin/students/${studentId}`);
-        router.refresh(); // ডাটা রিফ্রেশ করার জন্য
+        router.refresh(); 
 
     } catch (error) {
         console.error("Update Error:", error);
@@ -138,7 +129,6 @@ const StudentEditPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/admin/students/${studentId}`}>
           <Button variant="ghost" size="icon">
@@ -153,7 +143,7 @@ const StudentEditPage = () => {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Personal Information */}
+          
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Personal Information</CardTitle>
@@ -174,7 +164,7 @@ const StudentEditPage = () => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    disabled // ইমেইল সাধারণত এডিট করতে দেওয়া হয় না
+                    disabled
                     className="bg-muted"
                   />
                 </div>
@@ -214,7 +204,6 @@ const StudentEditPage = () => {
             </CardContent>
           </Card>
 
-          {/* Location Information */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Location</CardTitle>
@@ -255,7 +244,6 @@ const StudentEditPage = () => {
             </CardContent>
           </Card>
 
-          {/* Academic Information */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Academic Interest</CardTitle>
@@ -273,7 +261,6 @@ const StudentEditPage = () => {
             </CardContent>
           </Card>
 
-          {/* Counselor Assignment */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Counselor Assignment</CardTitle>
@@ -295,7 +282,6 @@ const StudentEditPage = () => {
             </CardContent>
           </Card>
 
-          {/* Notes */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg">Internal Notes</CardTitle>
@@ -311,7 +297,6 @@ const StudentEditPage = () => {
           </Card>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4 mt-6">
           <Link href={`/admin/students/${studentId}`}>
             <Button variant="outline" type="button">Cancel</Button>

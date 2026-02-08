@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// ✅ GET: সিঙ্গেল ইউনিভার্সিটি ডাটা আনার জন্য (Edit পেজে দেখানোর জন্য)
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // Next.js 15+ compatible
+    const { id } = await params;
     await connect();
     
     const university = await University.findById(id);
@@ -24,7 +23,6 @@ export async function GET(
   }
 }
 
-// ✅ PUT: ইউনিভার্সিটি আপডেট করার জন্য
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +33,6 @@ export async function PUT(
     
     await connect();
 
-    // Slug আপডেট করলে ডুপ্লিকেট চেক (Optional)
     if (body.slug) {
         const existing = await University.findOne({ slug: body.slug, _id: { $ne: id } });
         if (existing) {
@@ -60,7 +57,6 @@ export async function PUT(
   }
 }
 
-// ✅ DELETE: আগের ডিলিট মেথড (যদি লাগে)
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

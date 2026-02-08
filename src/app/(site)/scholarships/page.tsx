@@ -130,7 +130,6 @@ const ScholarshipsPage = () => {
         scholarship.program.toLowerCase().includes(searchQuery.toLowerCase()) ||
         scholarship.university.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // 2. Basic Filters
       const matchesScholarshipType = scholarshipTypeFilter === "" || scholarshipTypeFilter === "all" ||
         scholarship.scholarshipType === scholarshipTypeFilter;
       
@@ -143,14 +142,12 @@ const ScholarshipsPage = () => {
       const matchesUniversity = universityFilter === "" || universityFilter === "all" ||
         scholarship.university === universityFilter;
 
-      // 3. New Filters Logic
       const matchesLocation = locationFilter === "" || locationFilter === "all" || 
         scholarship.location === locationFilter;
 
       const matchesMajor = majorFilter === "" || majorFilter === "all" || 
         scholarship.program === majorFilter;
 
-      // Tuition Range Logic
       let matchesTuition = true;
       if (tuitionFilter && tuitionFilter !== "all") {
         const fee = parseFee(scholarship.tuitionFee);
@@ -160,7 +157,6 @@ const ScholarshipsPage = () => {
         else if (tuitionFilter === "30000+") matchesTuition = fee > 30000;
       }
 
-      // Accommodation Range Logic
       let matchesAccommodation = true;
       if (accommodationFilter && accommodationFilter !== "all") {
         const fee = parseFee(scholarship.accommodationFee);
@@ -174,7 +170,6 @@ const ScholarshipsPage = () => {
     });
   }, [allScholarships, searchQuery, scholarshipTypeFilter, degreeFilter, languageFilter, universityFilter, locationFilter, majorFilter, tuitionFilter, accommodationFilter]);
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredScholarships.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -245,7 +240,7 @@ const ScholarshipsPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Hero Banner */}
+   
       <div className="relative h-48 md:h-64 bg-gradient-to-r from-primary/90 to-primary flex items-center justify-center">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920')] bg-cover bg-center opacity-30" />
         <h1 className="relative text-3xl md:text-5xl font-bold text-primary-foreground tracking-wide">
@@ -256,14 +251,13 @@ const ScholarshipsPage = () => {
       <main className="flex-1 bg-background">
         <div className="container py-8 mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Filter Sidebar */}
+       
             <aside className="w-full lg:w-72 shrink-0">
               <div className="bg-card rounded-lg border border-border p-4 sticky top-24 max-h-[calc(100vh-100px)] overflow-y-auto">
                 <h2 className="text-lg font-bold text-primary mb-4 border-b pb-2">FILTER PROGRAMS</h2>
                 
                 <div className="space-y-1">
                   
-                  {/* 1. Scholarship Type */}
                   <FilterSection title="SCHOLARSHIP TYPE" defaultOpen>
                     <Select onValueChange={handleFilterChange(setScholarshipTypeFilter)}>
                       <SelectTrigger>
@@ -293,7 +287,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 3. Major/Subject (New) */}
                   <FilterSection title="MAJOR / SUBJECT">
                     <Select onValueChange={handleFilterChange(setMajorFilter)}>
                       <SelectTrigger>
@@ -308,7 +301,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 4. University */}
                   <FilterSection title="UNIVERSITY">
                     <Select onValueChange={handleFilterChange(setUniversityFilter)}>
                       <SelectTrigger>
@@ -323,7 +315,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 5. Location (New) */}
                   <FilterSection title="CITY / PROVINCE">
                     <Select onValueChange={handleFilterChange(setLocationFilter)}>
                       <SelectTrigger>
@@ -338,7 +329,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 6. Language */}
                   <FilterSection title="LANGUAGE">
                     <Select onValueChange={handleFilterChange(setLanguageFilter)}>
                       <SelectTrigger>
@@ -353,7 +343,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 7. Tuition Fees (New) */}
                   <FilterSection title="TUITION FEES">
                     <Select onValueChange={handleFilterChange(setTuitionFilter)}>
                       <SelectTrigger>
@@ -369,7 +358,6 @@ const ScholarshipsPage = () => {
                     </Select>
                   </FilterSection>
 
-                  {/* 8. Accommodation Fees (New) */}
                   <FilterSection title="ACCOMMODATION FEES">
                     <Select onValueChange={handleFilterChange(setAccommodationFilter)}>
                       <SelectTrigger>
@@ -389,13 +377,11 @@ const ScholarshipsPage = () => {
               </div>
             </aside>
 
-            {/* Main Content */}
             <div className="flex-1 min-w-0">
               <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">
                 Scholarship Programs ({filteredScholarships.length})
               </h2>
 
-              {/* Controls Row */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <Select 
@@ -426,7 +412,6 @@ const ScholarshipsPage = () => {
                 </div>
               </div>
 
-              {/* Data Table */}
               <div className="rounded-lg border border-border overflow-hidden bg-card">
                 {isLoading ? (
                   <div className="p-20 flex justify-center items-center">
@@ -479,7 +464,6 @@ const ScholarshipsPage = () => {
                 )}
               </div>
 
-              {/* Pagination */}
               {!isLoading && currentScholarships.length > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
                   <p className="text-sm text-muted-foreground">

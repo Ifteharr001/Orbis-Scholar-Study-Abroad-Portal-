@@ -36,7 +36,6 @@ export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Add Modal State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
@@ -46,7 +45,6 @@ export default function MyTasksPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Fetch Tasks
   const fetchTasks = async () => {
     try {
       const res = await fetch("/api/admin/tasks");
@@ -63,7 +61,6 @@ export default function MyTasksPage() {
     fetchTasks();
   }, []);
 
-  // 2. Add Task
   const handleAddTask = async () => {
     if (!newTask.title) return toast.error("Title is required");
     setIsSubmitting(true);
@@ -88,7 +85,6 @@ export default function MyTasksPage() {
     }
   };
 
-  // 3. Toggle Status
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "Completed" ? "Pending" : "Completed";
     
@@ -107,7 +103,6 @@ export default function MyTasksPage() {
     }
   };
 
-  // 4. Delete Task
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this task?")) return;
     
@@ -122,14 +117,12 @@ export default function MyTasksPage() {
     }
   };
 
-  // Helpers
   const getPriorityColor = (p: string) => {
     if (p === "High") return "bg-red-100 text-red-700 border-red-200";
     if (p === "Medium") return "bg-yellow-100 text-yellow-700 border-yellow-200";
     return "bg-blue-100 text-blue-700 border-blue-200";
   };
 
-  // Stats
   const completedCount = tasks.filter(t => t.status === "Completed").length;
   const pendingCount = tasks.length - completedCount;
 
@@ -138,7 +131,6 @@ export default function MyTasksPage() {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       
-      {/* Header & Stats */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Tasks</h1>
@@ -151,7 +143,6 @@ export default function MyTasksPage() {
         </Button>
       </div>
 
-      {/* Progress Bar */}
       <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
         <div 
           className="bg-green-500 h-full transition-all duration-500" 
@@ -159,7 +150,6 @@ export default function MyTasksPage() {
         />
       </div>
 
-      {/* Task List */}
       <div className="grid gap-4">
         {tasks.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed rounded-lg text-muted-foreground">
@@ -170,7 +160,6 @@ export default function MyTasksPage() {
             <Card key={task._id} className={`transition-all hover:shadow-md ${task.status === "Completed" ? "opacity-60 bg-muted/20" : ""}`}>
                 <CardContent className="p-4 flex items-center justify-between gap-4">
                 
-                {/* Left: Checkbox & Info */}
                 <div className="flex items-start gap-4">
                     <button 
                         onClick={() => toggleStatus(task._id, task.status)}
@@ -199,7 +188,6 @@ export default function MyTasksPage() {
                     </div>
                 </div>
 
-                {/* Right: Delete */}
                 <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(task._id)}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
@@ -210,7 +198,6 @@ export default function MyTasksPage() {
         )}
       </div>
 
-      {/* Add Task Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>

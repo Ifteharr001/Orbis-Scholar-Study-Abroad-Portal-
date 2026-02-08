@@ -9,7 +9,7 @@ export interface IAppointment extends Document {
   date: Date;
   time: string;
   duration: string;
-  status: "pending" | "approved" | "rejected" | "completed" | "cancelled"; // 'approved'/'rejected' যোগ করা ভালো
+  status: "pending" | "approved" | "rejected" | "completed" | "cancelled"; 
   notes?: string;
   meetingLink?: string;
   createdAt: Date;

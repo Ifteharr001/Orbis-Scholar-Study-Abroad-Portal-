@@ -1,15 +1,27 @@
 import { connect } from "@/lib/db";
 import University from "@/models/University";
-import UniversityDetailsPage from "./UniversityDetailsPage";
+import UniversityDetailsPage from "@/app/(site)/university/UniversityDetailsPage";
+import { isValidObjectId } from "mongoose";
 
-// ডাটাবেস থেকে ডাটা আনার ফাংশন
-async function getUniversity(id: string) {
+async function getUniversity(identifier: string) {
   try {
     await connect();
-    const university = await University.findById(id).lean();
+    
+    const decodedId = decodeURIComponent(identifier);
+    let university = null;
+
+    if (isValidObjectId(decodedId)) {
+      university = await University.findById(decodedId).lean();
+    }
+
+    if (!university) {
+      university = await University.findOne({ 
+        slug: decodedId.toLowerCase()
+      }).lean();
+    }
+
     if (!university) return null;
     
-    // MongoDB অবজেক্ট এবং ডেট সিরিয়ালাইজ করার জন্য
     return JSON.parse(JSON.stringify(university));
   } catch (error) {
     console.error("Error fetching university details:", error);
@@ -17,9 +29,14 @@ async function getUniversity(id: string) {
   }
 }
 
-// এটি মেইন পেজ যা ব্রাউজারে লোড হবে
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const resolvedParams = await params;
+  const id = resolvedParams?.id;
+
+  if (!id) {
+     return <div>Invalid URL Parameter</div>;
+  }
+
   const universityData = await getUniversity(id);
 
   if (!universityData) {
@@ -30,6 +47,5 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  // ডাটা পাওয়া গেলে ক্লায়েন্ট কম্পোনেন্টে পাস করা হচ্ছে
   return <UniversityDetailsPage universityData={universityData} />;
 }

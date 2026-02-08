@@ -53,7 +53,6 @@ const UniversitiesSection = () => {
           </Button>
         </div>
 
-        {/* University Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             <div className="col-span-full text-center py-10 text-muted-foreground">
@@ -63,7 +62,7 @@ const UniversitiesSection = () => {
             universities.map((university) => (
               <Link
                 href={`/university/${university._id}`}
-                key={String(university._id)} // _id কে স্ট্রিংয়ে কনভার্ট করা সেইফ
+                key={String(university._id)}
                 className="group rounded-2xl bg-card border border-border overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 block"
               >
                 {/* Image */}

@@ -25,7 +25,6 @@ export default function CounselorTasksPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // ১. ডাটা ফেচিং
   const fetchTasks = async () => {
     try {
       const res = await fetch("/api/counselor/tasks");

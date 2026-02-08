@@ -12,13 +12,11 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-// ১. ডাটা আনা (GET)
 export async function GET(req: Request, props: Props) {
   try {
     const params = await props.params;
     await connect();
 
-    // টোকেন চেক
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,12 +37,10 @@ export async function GET(req: Request, props: Props) {
     
     if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-    // সিকিউরিটি চেক: এই স্টুডেন্ট কি আপনার?
     if (String(student.counselor) !== String(counselorId)) {
         return NextResponse.json({ error: "Access Denied: This student is not assigned to you." }, { status: 403 });
     }
 
-    // ✅ FIX: ডকুমেন্ট খোঁজার লজিক আপডেট (Email অথবা AppId)
     const documents = await Document.find({
         $or: [
             { applicationId: params.id },
@@ -77,7 +73,6 @@ export async function GET(req: Request, props: Props) {
   }
 }
 
-// ২. আপডেট করা (PUT)
 export async function PUT(req: Request, props: Props) {
     try {
         const params = await props.params;

@@ -120,7 +120,6 @@ export default function CounselorProfilePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
@@ -134,7 +133,6 @@ export default function CounselorProfilePage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         
-        {/* Left Column: Avatar & Basic Info */}
         <div className="md:col-span-1 space-y-6">
           <Card>
             <CardHeader>
@@ -165,10 +163,8 @@ export default function CounselorProfilePage() {
           </Card>
         </div>
 
-        {/* Right Column: Forms */}
         <div className="md:col-span-2 space-y-6">
             
-            {/* 1. Personal Information */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -201,7 +197,6 @@ export default function CounselorProfilePage() {
                 </CardContent>
             </Card>
 
-            {/* 2. Professional Information */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">

@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// ✅ GET: সব ইউনিভার্সিটির ইনটেক লিস্ট লোড করার জন্য
 export async function GET() {
   try {
     await connect();
 
-    // শুধু প্রয়োজনীয় ফিল্ডগুলো আনছি
     const universities = await University.find({})
       .select("name logo country intakes")
       .sort({ name: 1 })
@@ -21,11 +19,10 @@ export async function GET() {
   }
 }
 
-// ✅ PUT: ইনটেক আপডেট করার জন্য
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, intakes } = body; // intakes হবে একটি array of strings
+    const { id, intakes } = body; 
 
     if (!id || !Array.isArray(intakes)) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });

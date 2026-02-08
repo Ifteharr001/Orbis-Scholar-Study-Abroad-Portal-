@@ -44,7 +44,6 @@ export default function UniversityProgramPage() {
     fetchPrograms();
   }, []);
 
-  // ✅ FIX: এখানে সেফটি চেক যোগ করা হয়েছে যাতে null ভ্যালু থাকলে ক্র্যাশ না করে
   const filteredPrograms = useMemo(() => {
     const lowerSearch = searchQuery.toLowerCase();
     return programs.filter(p => 

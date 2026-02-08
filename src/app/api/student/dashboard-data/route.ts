@@ -33,7 +33,6 @@ export async function GET() {
         .lean()
     ]);
 
-    // Counselor Data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const student: any = studentResult;
     const counselor = student?.counselor ? {
@@ -51,7 +50,6 @@ export async function GET() {
         });
     }
 
-    // --- Document Stats Calculation ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uploadedDocNames = uploadedDocs.map((d: any) => d.name);
     const missingDocsCount = REQUIRED_DEFAULTS.filter(name => !uploadedDocNames.includes(name)).length;
@@ -68,13 +66,11 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rejectedDocsCount = uploadedDocs.filter((d: any) => d.status === "Rejected").length;
 
-    // Offer Stats
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const offersCount = applications.filter((app: any) => 
       app.status === "Offer Received" || app.status === "Conditional Offer" || app.status === "Approved"
     ).length;
 
-    // Final Stats Object
     const stats = {
       applications: applications.length,
       pendingDocs: totalPendingDocs,
@@ -84,11 +80,9 @@ export async function GET() {
       rejectedDocs: rejectedDocsCount
     };
 
-    // --- Actions / Notifications ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actions: any[] = [];
 
-    // Rejected Notification
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rejectedDocs = uploadedDocs.filter((d: any) => d.status === "Rejected");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +109,6 @@ export async function GET() {
         });
     });
 
-    // Missing Docs Alert
     if (missingDocsCount > 0) {
         actions.push({
             _id: "missing-docs-alert",
@@ -126,7 +119,6 @@ export async function GET() {
         });
     }
 
-    // Offer Alert
     if (offersCount > 0) {
       actions.push({
         _id: "offer-alert",
@@ -137,7 +129,6 @@ export async function GET() {
       });
     }
 
-    // Counselor Alert
     if (!counselor) {
         actions.push({
             _id: "counselor-pending",

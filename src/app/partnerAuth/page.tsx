@@ -107,30 +107,29 @@ const PartnerAuth = () => {
 
     try {
       if (isLogin) {
-        // ✅ Login Logic
         const result = await signIn("credentials", {
           redirect: false, 
           email,
           password,
-          loginType: "partner", // ব্যাকএন্ডে এই টাইপ চেক করা হচ্ছে
+          loginType: "partner",
         });
 
         if (result?.error) {
           toast.error("Login failed", {
-            description: "Invalid email or password", // জেনেরিক এরর মেসেজ
+            description: "Invalid email or password", 
           });
         } else {
           toast.success("Login Successful", {
             description: "Redirecting to dashboard...",
           });
           
-          // 🚀 Router Push (Better UX than window.location)
-          router.refresh(); // সেশন আপডেট নিশ্চিত করতে
+          
+          router.refresh(); 
           router.push("/partner/dashboard");
         }
 
       } else {
-        // ✅ Registration Logic
+        
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -140,7 +139,7 @@ const PartnerAuth = () => {
             password,
             gender,
             country,
-            role: "partner", // রোল হার্ডকোড করা হলো
+            role: "partner", 
           }),
         });
 
@@ -154,7 +153,6 @@ const PartnerAuth = () => {
           description: "Please login with your new credentials.",
         });
         
-        // অটোমেটিক লগইন মোডে নিয়ে যাওয়া
         setIsLogin(true);
       }
     } catch (error: unknown) {
@@ -173,7 +171,7 @@ const PartnerAuth = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side - Illustration */}
+      
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
@@ -320,7 +318,7 @@ const PartnerAuth = () => {
                   <Checkbox
                     id="terms"
                     checked={termsAccepted}
-                    // ✅ TypeScript Fix: Type Casting
+                    
                     onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                     className={errors.terms ? "border-destructive" : ""}
                   />

@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
 import Ticket from "@/models/Ticket";
 
-// ১. টিকেট তৈরি করা (POST)
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,7 +28,6 @@ export async function POST(req: Request) {
   }
 }
 
-// ২. নিজের সব টিকেট দেখা (GET)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -39,7 +37,6 @@ export async function GET() {
 
     await connect();
 
-    // লেটেস্ট টিকেট আগে আসবে
     const tickets = await Ticket.find({ studentEmail: session.user.email }).sort({ createdAt: -1 });
 
     return NextResponse.json(tickets);

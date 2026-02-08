@@ -58,7 +58,6 @@ export default function StudentDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  // ডাটা ফেচিং লজিক
   useEffect(() => {
     if (authLoading) return;
 
@@ -103,7 +102,6 @@ export default function StudentDashboardPage() {
   return (
     <div className="space-y-8 pb-10">
       
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
            <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -135,7 +133,6 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* Stats Section */}
       <DashboardStats stats={data?.stats || { 
           applications: 0, 
           pendingDocs: 0, 
@@ -145,20 +142,14 @@ export default function StudentDashboardPage() {
           rejectedDocs: 0 
       }} />
 
-      {/* Main Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
-        {/* Left Column (Main Content) */}
         <div className="xl:col-span-2 space-y-8">
           <ActionCenter initialActions={data?.actions || []} />
           <ActiveApplications applications={data?.applications || []} />
         </div>
 
-        {/* Right Column (Sidebar) */}
         <div className="space-y-8">
-          
-          {/* 🔥 FIX: এখানে কন্ডিশন তুলে দিয়ে সরাসরি কম্পোনেন্ট বসানো হলো */}
-          {/* যদি data.counselor null থাকে, কম্পোনেন্ট নিজেই হ্যান্ডেল করবে */}
           <CounselorCard
              counselor={data?.counselor} 
              unreadCount={data?.stats?.unreadMessages || 0}

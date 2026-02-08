@@ -21,9 +21,7 @@ export default function FAQPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  // FAQ ডাটাবেস (স্ট্যাটিক)
   const faqs = [
-    // General
     {
       category: "General",
       question: "What services does Orbis Scholar provide?",
@@ -34,7 +32,6 @@ export default function FAQPage() {
       question: "Do you charge for consultation?",
       answer: "Our initial counseling session is completely FREE. We charge a service fee only when you decide to start your application process with us."
     },
-    // Admission
     {
       category: "Admission",
       question: "Which countries can I apply to?",
@@ -50,7 +47,6 @@ export default function FAQPage() {
       question: "What is the processing time for an offer letter?",
       answer: "It varies by country. UK universities usually take 1-2 weeks, while Canada and USA can take 4-8 weeks. Our partner universities offer priority processing."
     },
-    // Visa
     {
       category: "Visa",
       question: "What is your visa success rate?",
@@ -61,7 +57,6 @@ export default function FAQPage() {
       question: "Do you help with bank statements/financial proof?",
       answer: "Yes, we guide you on how to present your financial documents correctly to meet the embassy's requirements and avoid rejection."
     },
-    // Scholarship
     {
       category: "Scholarship",
       question: "Can I get a 100% scholarship?",
@@ -74,7 +69,6 @@ export default function FAQPage() {
     }
   ];
 
-  // ক্যাটাগরি এবং সার্চ ফিল্টার লজিক
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = activeCategory === "All" || faq.category === activeCategory;
     const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -93,7 +87,6 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero & Search --- */}
       <section className="py-20 bg-muted/30 text-center">
         <div className="container mx-auto px-4 max-w-3xl">
           <Badge variant="outline" className="mb-4 text-primary border-primary/20 bg-primary/5">
@@ -106,7 +99,6 @@ export default function FAQPage() {
             Everything you need to know about the product and billing. Can’t find the answer you’re looking for? Please chat to our friendly team.
           </p>
           
-          {/* Search Bar */}
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
             <Input 
@@ -119,7 +111,6 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Category Tabs --- */}
       <section className="py-10 border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 overflow-x-auto">
           <div className="flex justify-start md:justify-center gap-4 min-w-max">
@@ -141,7 +132,6 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* --- Section 3: FAQ Accordion --- */}
       <section className="py-20 container mx-auto px-4 max-w-3xl">
         {filteredFaqs.length > 0 ? (
           <Accordion type="single" collapsible className="w-full space-y-4">
@@ -164,7 +154,6 @@ export default function FAQPage() {
         )}
       </section>
 
-      {/* --- Section 4: Contact CTA --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-2xl mx-auto bg-card border border-border p-8 rounded-3xl shadow-lg">

@@ -13,7 +13,6 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function TeamPage() {
 
-  // ১. স্ট্যাটিক টিম ডাটা (আপনারা ছবি ও নাম চেঞ্জ করে নেবেন)
   const teamMembers = [
     {
       id: 1,
@@ -92,7 +91,6 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* --- Section 1: Hero --- */}
       <section className="py-20 bg-muted/30 text-center">
         <div className="container mx-auto px-4">
           <Badge className="mb-4" variant="outline">Meet The Team</Badge>
@@ -106,14 +104,12 @@ export default function TeamPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Team Grid --- */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {teamMembers.map((member) => (
               <Card key={member.id} className="overflow-hidden group border-border hover:shadow-xl transition-all duration-300">
                 
-                {/* Image Area */}
                 <div className="relative h-80 w-full overflow-hidden bg-muted">
                   <Image
                     src={member.image}
@@ -122,7 +118,6 @@ export default function TeamPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   
-                  {/* Social Overlay (Only shows on hover) */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
                     <Link href={member.social.linkedin} className="p-3 bg-white rounded-full text-black hover:bg-primary hover:text-white transition-colors">
                       <Linkedin className="h-5 w-5" />
@@ -136,7 +131,6 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* Content Area */}
                 <CardContent className="text-center pt-8 pb-8 px-6">
                   <h3 className="text-2xl font-bold mb-1">{member.name}</h3>
                   <p className="text-primary font-medium mb-4">{member.role}</p>
@@ -149,8 +143,6 @@ export default function TeamPage() {
           </div>
         </div>
       </section>
-
-      {/* --- Section 3: Join Us CTA --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-card border border-border p-10 rounded-3xl shadow-sm">

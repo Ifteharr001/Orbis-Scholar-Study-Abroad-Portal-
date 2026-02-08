@@ -95,12 +95,10 @@ export default function EventsPage() {
             Connect with universities, attend workshops, and get expert guidance. Dont miss out on opportunities to shape your future.
           </p>
         </div>
-        {/* Background Decoration */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -ml-20 -mt-20 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-20 -mb-20 pointer-events-none" />
       </section>
 
-      {/* --- Section 2: Featured Events (Mega Expos) --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="flex items-center gap-2 mb-8">
             <Ticket className="text-primary h-6 w-6" />
@@ -110,7 +108,7 @@ export default function EventsPage() {
         <div className="grid md:grid-cols-2 gap-8">
           {featuredEvents.map((event) => (
             <div key={event.id} className="group relative rounded-3xl overflow-hidden shadow-lg border border-border">
-              {/* Image Background */}
+          
               <div className="absolute inset-0">
                 <Image 
                   src={event.image} 
@@ -121,7 +119,6 @@ export default function EventsPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
               </div>
 
-              {/* Content Overlay */}
               <div className="relative h-[400px] p-8 flex flex-col justify-end text-white">
                 <div className="absolute top-6 right-6 bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-sm font-medium border border-white/20">
                   {event.category}
@@ -150,7 +147,6 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Upcoming Seminars & Workshops --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-10">
@@ -203,7 +199,6 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Past Events Gallery --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Glimpses of Past Events</h2>
@@ -232,7 +227,6 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* --- Section 5: Newsletter CTA --- */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">

@@ -52,9 +52,8 @@ export default function PartnerPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Hero Banner --- */}
       <section className="relative py-24 overflow-hidden bg-slate-900 text-white">
-        {/* Background Overlay */}
+       
         <div className="absolute inset-0 z-0">
           <Image 
             src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&q=80" 
@@ -87,7 +86,6 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Stats --- */}
       <section className="py-10 bg-white border-b border-slate-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -106,7 +104,6 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Why Partner With Us --- */}
       <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 max-w-3xl mx-auto">
@@ -136,12 +133,10 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Who We Work With --- */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
-            {/* Left Image */}
             <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl">
               <Image 
                 src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80"
@@ -152,7 +147,6 @@ export default function PartnerPage() {
               <div className="absolute inset-0 bg-blue-900/10" />
             </div>
 
-            {/* Right Content */}
             <div>
               <h2 className="text-3xl font-bold text-slate-900 mb-6">Who Can Join Our Network?</h2>
               <p className="text-slate-600 mb-8 text-lg">
@@ -202,7 +196,6 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* --- Section 5: Partnership Form --- */}
       <section id="partner-form" className="py-24 bg-slate-50">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

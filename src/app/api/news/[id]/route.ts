@@ -12,13 +12,10 @@ export async function GET(
 
     const { id } = await params; 
 
-    // ১. সুরক্ষা: আইডি টি ভ্যালিড MongoDB ObjectId কিনা চেক করা
-    // যদি কেউ /api/news/abc লিখে হিট করে, তাহলে সার্ভার ক্র্যাশ করবে না, 400 এরর দিবে
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid News ID" }, { status: 400 });
     }
 
-    // ২. পারফর্ম্যান্স: .lean() ব্যবহার করে দ্রুত ডাটা আনা
     const news = await News.findById(id).lean();
     
     if (!news) {

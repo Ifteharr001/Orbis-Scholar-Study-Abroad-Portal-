@@ -54,7 +54,6 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("All");
 
-  // Fetch Data
   const fetchPayments = async () => {
     try {
       const res = await fetch("/api/admin/finance/payments");
@@ -74,11 +73,9 @@ export default function PaymentsPage() {
     fetchPayments();
   }, []);
 
-  // Filter Logic
   useEffect(() => {
     let data = payments;
 
-    // Search Filter
     if (search) {
       const lowerSearch = search.toLowerCase();
       data = data.filter(p => 

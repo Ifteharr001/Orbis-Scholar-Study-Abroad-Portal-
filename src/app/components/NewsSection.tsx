@@ -7,7 +7,6 @@ import { Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// ডাটার টাইপ ডিফাইন করা
 interface NewsItem {
   _id: string;
   title: string;
@@ -26,7 +25,6 @@ const NewsSection = () => {
       try {
         const res = await fetch("/api/news");
         const data = await res.json();
-        // হোমপেজে আমরা মাত্র ৩টা নিউজ দেখাবো
         setNews(data.slice(0, 3));
       } catch (error) {
         console.error("Error fetching news:", error);
@@ -104,7 +102,7 @@ const NewsSection = () => {
                   {article.excerpt}
                 </p>
                 <Link
-                  href={`/blog/${article._id}`} // ✅ ডায়নামিক লিংক
+                  href={`/blog/${article._id}`}
                   className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all"
                 >
                   Read More

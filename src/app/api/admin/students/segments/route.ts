@@ -3,7 +3,6 @@ import { connect } from "@/lib/db";
 import Segment from "@/models/Segment";
 import User from "@/models/User"; 
 
-// GET: সব সেগমেন্ট এবং স্টুডেন্ট কাউন্ট নিয়ে আসা
 export async function GET() {
   try {
     await connect();
@@ -55,7 +54,6 @@ export async function GET() {
                             ]
                         });
                     }
-                    // Gender added
                     if (lowerCond.includes("gender")) {
                         andConditions.push({ gender: { $regex: `^${val}$`, $options: "i" } });
                     }
@@ -63,7 +61,6 @@ export async function GET() {
             });
         }
 
-        // Fix: Use $and logic for accurate counting
         const count = await User.countDocuments(andConditions.length > 0 ? { $and: andConditions } : filter);
         return { ...seg, studentCount: count }; 
     }));
@@ -75,7 +72,6 @@ export async function GET() {
   }
 }
 
-// POST: নতুন সেগমেন্ট তৈরি
 export async function POST(req: Request) {
   try {
     await connect();
@@ -88,7 +84,6 @@ export async function POST(req: Request) {
   }
 }
 
-// ✅ DELETE: সেগমেন্ট ডিলিট করার মেথড (নতুন যোগ করা হয়েছে)
 export async function DELETE(req: Request) {
   try {
     await connect();

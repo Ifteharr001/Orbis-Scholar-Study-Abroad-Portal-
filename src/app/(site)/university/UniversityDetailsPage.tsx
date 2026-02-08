@@ -21,7 +21,6 @@ import {
 
 
 
-// ✅ 1. মডেল থেকে ইন্টারফেস ইম্পোর্ট (Strict Type)
 import { IUniversity } from "@/models/University";
 import SectionNav from "@/app/components/university/SectionNav";
 import ProgramCard from "@/app/components/university/ProgramCard";
@@ -29,7 +28,6 @@ import ScholarshipCard from "@/app/components/university/ScholarshipCard";
 import InfoSidebar from "@/app/components/university/InfoSidebar";
 import GallerySection from "@/app/components/university/GallerySection";
 
-// ✅ 2. Props ইন্টারফেস
 interface Props {
   universityData: IUniversity;
 }
@@ -39,11 +37,9 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
   const [showFullAccommodation, setShowFullAccommodation] = useState(false);
   const [showFullAdmission, setShowFullAdmission] = useState(false);
 
-  // Helper variables with Fallback
   const aboutText = universityData.aboutText || "Detailed information is being updated.";
   const accommodationText = universityData.accommodationText || "Accommodation details are being updated.";
 
-  // Text truncation helper
   const getTruncatedText = (text: string, paragraphs: number = 2) => {
     if (!text) return "";
     const parts = text.split("\n\n");
@@ -110,17 +106,13 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
         </div>
       </section>
 
-      {/* Section Navigation (Sticky) */}
       <SectionNav />
 
-      {/* Main Content */}
       <div className="container py-12 mx-auto px-4">
         <div className="flex flex-col lg:flex-row gap-8">
           
-          {/* Left Column: Main Content Area */}
           <div className="flex-1 space-y-16">
             
-            {/* Programs Section */}
             <section id="programs" className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-foreground mb-6 border-l-4 border-primary pl-3">Programs</h2>
               <div className="space-y-4">
@@ -148,7 +140,6 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
               </div>
             </section>
 
-            {/* About Section */}
             <section id="about" className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-foreground mb-6 border-l-4 border-primary pl-3">About</h2>
               <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
@@ -172,7 +163,6 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
               </div>
             </section>
 
-            {/* Fees Structure Section */}
             <section id="fees" className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-foreground mb-6 border-l-4 border-primary pl-3">Fees Structure</h2>
               {universityData.fees?.bachelor ? (
@@ -210,7 +200,6 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
               )}
             </section>
 
-            {/* Accommodation Section */}
             <section id="accommodation" className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-foreground mb-6 border-l-4 border-primary pl-3">Accommodation</h2>
               <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
@@ -233,12 +222,10 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
               </div>
             </section>
 
-            {/* Admission Process Section */}
             <section id="admission" className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-foreground mb-6 border-l-4 border-primary pl-3">Admission Process</h2>
               <div className="space-y-6">
                 
-                {/* Application Fee */}
                 <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -251,7 +238,6 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
                   </p>
                 </div>
 
-                {/* Required Documents */}
                 <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -346,14 +332,13 @@ const UniversityDetailsPage = ({ universityData }: Props) => {
             </section>
           </div>
 
-          {/* Right Column: Sidebar (Sticky) */}
           <div className="w-full lg:w-80 h-fit lg:sticky lg:top-24">
             <InfoSidebar
               institutionName={universityData.name}
               location={universityData.location}
-              deadline={universityData.deadline} // ডাটাবেস থেকে ডেডলাইন
-              intakes={universityData.intakes}   // ডাটাবেস থেকে ইনটেক
-              tuitionRange={universityData.tuitionFee} // রেঞ্জ বা এভারেজ ফি
+              deadline={universityData.deadline}
+              intakes={universityData.intakes}   
+              tuitionRange={universityData.tuitionFee}
             />
           </div>
 

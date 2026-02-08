@@ -5,14 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Gift, ArrowRight, Sparkles } from "lucide-react";
 
-// ১. টাইপ ইন্টারফেস
 interface Application {
   status: string;
 }
 
 const OffersCard = ({ applications = [] }: { applications: Application[] }) => {
   
-  // ২. অফার কাউন্ট লজিক আপডেট (Conditional Offer সহ)
   const offerCount = applications.filter(
     (app) => 
       app.status === "Offer Received" || 
@@ -20,12 +18,11 @@ const OffersCard = ({ applications = [] }: { applications: Application[] }) => {
       app.status === "Conditional Offer"
   ).length;
 
-  // ৩. অফার থাকলে স্পেশাল স্টাইল
   const hasOffers = offerCount > 0;
 
   return (
     <Card className="border-border shadow-sm flex flex-col relative overflow-hidden">
-      {/* অফার থাকলে ব্যাকগ্রাউন্ডে একটু গ্লো এফেক্ট */}
+
       {hasOffers && (
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-400/20 rounded-full blur-2xl" />
       )}
@@ -58,7 +55,6 @@ const OffersCard = ({ applications = [] }: { applications: Application[] }) => {
           </div>
         </div>
 
-        {/* Action Button */}
       <Button 
   asChild 
   className={`w-full mt-6 text-white ${hasOffers ? "bg-primary hover:bg-yellow-600 border-none" : "bg-primary hover:bg-primary/90"}`}

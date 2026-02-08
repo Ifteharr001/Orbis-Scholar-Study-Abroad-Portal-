@@ -13,7 +13,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
-// টাইপ ডিফাইন
 type Counselor = {
   _id: string;
   name: string;
@@ -30,7 +29,7 @@ type Message = {
 };
 
 export default function StudentMessagePage() {
-  const { user } = useAuth(); // লগড ইন ইউজার (স্টুডেন্ট) এর তথ্য
+  const { user } = useAuth(); 
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   
@@ -38,27 +37,23 @@ export default function StudentMessagePage() {
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
 
-  // অটো-স্ক্রল রিফ
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // ১. কাউন্সিলর এবং মেসেজ লোড করা
   const fetchData = async () => {
     try {
-      // কাউন্সিলরের তথ্য আনার জন্য আগের API টি ব্যবহার করছি
+    
       const resCounselor = await fetch("/api/student/counselor");
       const dataCounselor = await resCounselor.json();
       
       if (dataCounselor.counselor) {
-        // ডাটা ফরম্যাট ঠিক করা (আইডি স্ট্রিং হিসেবে আসলে)
         setCounselor({
             _id: dataCounselor.counselor.id, 
             name: dataCounselor.counselor.name,
             image: dataCounselor.counselor.image,
-            isOnline: true // ডেমো স্ট্যাটাস
+            isOnline: true
         });
       }
 
-      // মেসেজ আনা
       const resMsg = await fetch("/api/student/message");
       const dataMsg = await resMsg.json();
       if (dataMsg.success) {
@@ -75,7 +70,6 @@ export default function StudentMessagePage() {
   useEffect(() => {
     fetchData();
     
-    // ৫ সেকেন্ড পর পর নতুন মেসেজ চেক করবে (Polling)
     const interval = setInterval(async () => {
         const resMsg = await fetch("/api/student/message");
         const dataMsg = await resMsg.json();
@@ -87,20 +81,18 @@ export default function StudentMessagePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // অটো-স্ক্রল টু বটম
   useEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // ২. মেসেজ পাঠানো
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputText.trim()) return;
 
     const tempText = inputText;
-    setInputText(""); // ইনপুট ক্লিয়ার
+    setInputText(""); 
     setSending(true);
 
     try {
@@ -112,7 +104,7 @@ export default function StudentMessagePage() {
         const data = await res.json();
 
         if (data.success) {
-            setMessages(prev => [...prev, data.message]); // তাৎক্ষণিক আপডেট
+            setMessages(prev => [...prev, data.message]); 
         } else {
             toast.error("Failed to send message");
             setInputText(tempText); 
@@ -131,7 +123,6 @@ export default function StudentMessagePage() {
   return (
     <div className="flex h-[calc(100vh-80px)] bg-gray-50 border rounded-lg overflow-hidden m-4">
       
-      {/* --- Sidebar: Active Chat List (Only Counselor) --- */}
       <aside className="w-1/4 min-w-[250px] bg-white border-r border-gray-200 flex flex-col hidden md:flex">
         <div className="p-4 border-b bg-gray-50/50">
             <h2 className="text-lg font-bold text-gray-800">Messages</h2>
@@ -166,11 +157,9 @@ export default function StudentMessagePage() {
         </ScrollArea>
       </aside>
 
-      {/* --- Main Content: Chat Box --- */}
       <main className="flex-1 flex flex-col bg-white">
         {counselor ? (
           <>
-            {/* Chat Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white shadow-sm z-10">
                 <div className="flex items-center gap-3">
                     <Avatar>
@@ -191,7 +180,6 @@ export default function StudentMessagePage() {
                 </div>
             </div>
 
-            {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -200,7 +188,6 @@ export default function StudentMessagePage() {
                     </div>
                 ) : (
                     messages.map((msg, idx) => {
-                        // স্টুডেন্টের নিজের আইডি দিয়ে চেক করা হচ্ছে
                         const isMe = msg.sender === user?.id; 
                         
                         return (
@@ -222,7 +209,6 @@ export default function StudentMessagePage() {
                 <div ref={scrollRef} />
             </div>
 
-            {/* Input Area */}
             <div className="p-4 bg-white border-t">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                     <Input 

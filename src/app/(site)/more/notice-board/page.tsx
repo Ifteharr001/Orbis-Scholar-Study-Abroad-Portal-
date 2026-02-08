@@ -26,7 +26,6 @@ export default function NoticeBoardPage() {
     toast.success(`Downloading ${fileName}...`);
   };
 
-  // স্ট্যাটিক নোটিশ ডাটা
   const notices = [
     {
       id: 1,
@@ -80,25 +79,22 @@ export default function NoticeBoardPage() {
       category: "Event",
       isPinned: false,
       fileSize: "N/A",
-      fileName: null // মানে কোনো ফাইল নেই, শুধু নোটিশ
+      fileName: null 
     }
   ];
 
-  // ফিল্টার লজিক
   const filteredNotices = notices.filter((notice) => {
     const matchesSearch = notice.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = category === "All" || notice.category === category;
     return matchesSearch && matchesCategory;
   });
 
-  // পিন করা নোটিশ আলাদা করা
   const pinnedNotices = filteredNotices.filter(n => n.isPinned);
   const regularNotices = filteredNotices.filter(n => !n.isPinned);
 
   return (
     <div className="min-h-screen bg-background font-sans">
       
-      {/* --- Section 1: Header --- */}
       <section className="bg-slate-50 border-b border-slate-200 py-12">
         <div className="container mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full mb-4 shadow-sm">
@@ -114,11 +110,9 @@ export default function NoticeBoardPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Search & Filter --- */}
       <section className="py-8 container mx-auto px-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
           
-          {/* Search Input */}
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <Input 
@@ -129,7 +123,6 @@ export default function NoticeBoardPage() {
             />
           </div>
 
-          {/* Category Filter */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <Filter className="h-4 w-4 text-slate-400" />
             <Select value={category} onValueChange={setCategory}>
@@ -148,10 +141,8 @@ export default function NoticeBoardPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Notice List --- */}
       <section className="pb-20 container mx-auto px-4">
         
-        {/* Pinned Notices (Only if available) */}
         {pinnedNotices.length > 0 && (
           <div className="mb-10">
             <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -193,7 +184,6 @@ export default function NoticeBoardPage() {
           </div>
         )}
 
-        {/* Regular Notices */}
         <div>
           <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-600" /> Recent Notices
@@ -204,13 +194,11 @@ export default function NoticeBoardPage() {
               {regularNotices.map((notice) => (
                 <div key={notice.id} className="group bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-4">
                   
-                  {/* Date Box */}
                   <div className="hidden md:flex flex-col items-center justify-center w-16 h-16 bg-slate-50 rounded-lg border border-slate-100 shrink-0 text-slate-600">
                     <span className="text-xs font-bold uppercase">{notice.date.split(" ")[1]}</span>
                     <span className="text-xl font-bold">{notice.date.split(" ")[0]}</span>
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1">
                      <div className="flex items-center gap-2 mb-1 md:hidden">
                         <Badge variant="outline">{notice.category}</Badge>
@@ -227,7 +215,6 @@ export default function NoticeBoardPage() {
                      </div>
                   </div>
 
-                  {/* Action */}
                   <div className="w-full md:w-auto mt-2 md:mt-0">
                     {notice.fileName ? (
                       <Button size="sm" variant="secondary" className="w-full gap-2" onClick={() => handleDownload(notice.fileName!)}>

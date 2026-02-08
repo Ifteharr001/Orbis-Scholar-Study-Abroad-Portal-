@@ -56,7 +56,6 @@ export default function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  // Fetch Data
   const fetchInvoices = async () => {
     try {
       const res = await fetch("/api/admin/finance/invoices");

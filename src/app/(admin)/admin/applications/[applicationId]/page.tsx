@@ -98,7 +98,7 @@ const ApplicationDetailsPage = () => {
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  // 1. Fetch Application Data
+  // Fetch Application Data
   const fetchApplicationData = async () => {
     try {
       const res = await fetch(`/api/admin/applications/${applicationId}`, {
@@ -281,7 +281,6 @@ const ApplicationDetailsPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/applications">

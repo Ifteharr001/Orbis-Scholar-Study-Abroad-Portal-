@@ -15,11 +15,10 @@ interface ITask {
   fileName?: string;
 }
 
-// ✅ Fix: Generic Names for Visa Steps (Compatible with UK/USA)
 const DEFAULT_TASKS: ITask[] = [
   { id: 1, name: "CAS/Offer Letter Received", status: "done", auto: true, hasLink: false, hasUpload: false },
-  { id: 2, name: "Visa Application Form", status: "pending", auto: false, hasLink: true, hasUpload: false }, // Renamed from DS-160
-  { id: 3, name: "Visa Fee Payment", status: "locked", auto: false, hasLink: false, hasUpload: true }, // Start locked
+  { id: 2, name: "Visa Application Form", status: "pending", auto: false, hasLink: true, hasUpload: false }, 
+  { id: 3, name: "Visa Fee Payment", status: "locked", auto: false, hasLink: false, hasUpload: true }, 
   { id: 4, name: "Appointment Booking", status: "locked", auto: false, hasLink: false, hasUpload: false },
   { id: 5, name: "Biometric Submission", status: "locked", auto: false, hasLink: false, hasUpload: false },
   { id: 6, name: "Medical Test Report", status: "locked", auto: false, hasLink: false, hasUpload: true },

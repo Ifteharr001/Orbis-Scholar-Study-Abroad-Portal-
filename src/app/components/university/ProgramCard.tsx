@@ -15,8 +15,8 @@ interface ProgramCardProps {
   tuitionFee: string;
   accommodationFee: string;
   hasScholarship?: boolean;
-  deadline?: string;      // ✅ নতুন যোগ করা হয়েছে
-  intakes?: string[];     // ✅ নতুন যোগ করা হয়েছে
+  deadline?: string;      
+  intakes?: string[];   
   onApply?: () => void;
 }
 
@@ -82,7 +82,6 @@ const ProgramCard = ({
             </Badge>
           </div>
 
-          {/* ✅ New Section: Deadline & Intakes */}
           {(deadline || (intakes && intakes.length > 0)) && (
             <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-dashed border-border/60">
               {deadline && (
@@ -103,7 +102,6 @@ const ProgramCard = ({
           )}
         </div>
 
-        {/* Right Side: Fees & Action */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6 border-t lg:border-t-0 lg:border-l border-border pt-4 lg:pt-0 lg:pl-6">
           <div className="flex gap-6">
             <div>

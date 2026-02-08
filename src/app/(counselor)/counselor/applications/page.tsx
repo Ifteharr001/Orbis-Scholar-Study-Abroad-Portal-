@@ -18,7 +18,6 @@ import {
   Search, Loader2, Eye, Building2, Calendar, FileText, User 
 } from "lucide-react";
 
-// ডাটা টাইপ ইন্টারফেস
 interface ApplicationData {
   _id: string;
   applicationId: string;
@@ -38,7 +37,6 @@ export default function CounselorApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // ১. ডাটা ফেচ করা
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -63,7 +61,6 @@ export default function CounselorApplicationsPage() {
     fetchApplications();
   }, []);
 
-  // ২. সার্চ লজিক
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = applications.filter(
@@ -76,7 +73,6 @@ export default function CounselorApplicationsPage() {
     setFilteredApps(filtered);
   }, [search, applications]);
 
-  // ৩. স্ট্যাটাস অনুযায়ী ব্যাজ কালার
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Enrolled": return "bg-green-500 hover:bg-green-600";
@@ -98,7 +94,6 @@ export default function CounselorApplicationsPage() {
   return (
     <div className="space-y-6 animate-in fade-in-50">
       
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -110,7 +105,6 @@ export default function CounselorApplicationsPage() {
           </p>
         </div>
         
-        {/* Search Bar */}
         <div className="relative w-full md:w-72">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -122,7 +116,6 @@ export default function CounselorApplicationsPage() {
         </div>
       </div>
 
-      {/* Applications Table */}
       <Card>
         <CardHeader className="p-0"></CardHeader>
         <CardContent className="p-0">
@@ -148,12 +141,10 @@ export default function CounselorApplicationsPage() {
                         filteredApps.map((app) => (
                             <TableRow key={app._id} className="hover:bg-muted/50 transition-colors">
                                 
-                                {/* Application ID */}
                                 <TableCell className="pl-6 font-mono text-xs font-medium">
                                     {app.applicationId || app._id.slice(-6).toUpperCase()}
                                 </TableCell>
                                 
-                                {/* Student Info */}
                                 <TableCell>
                                     <div className="flex flex-col">
                                         <span className="font-medium flex items-center gap-1">
@@ -176,14 +167,12 @@ export default function CounselorApplicationsPage() {
                                     </div>
                                 </TableCell>
                                 
-                                {/* Status Badge */}
                                 <TableCell>
                                     <Badge className={`${getStatusBadge(app.status)} whitespace-nowrap`}>
                                         {app.status}
                                     </Badge>
                                 </TableCell>
                                 
-                                {/* Date */}
                                 <TableCell>
                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                         <Calendar className="h-3.5 w-3.5" />
@@ -191,7 +180,6 @@ export default function CounselorApplicationsPage() {
                                     </div>
                                 </TableCell>
                                 
-                                {/* Action Button */}
                                 <TableCell className="text-right pr-6">
                                     <Link href={`/counselor/applications/${app._id}`}>
                                         <Button variant="outline" size="sm" className="h-8 gap-1">

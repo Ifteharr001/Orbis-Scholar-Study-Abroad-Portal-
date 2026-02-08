@@ -75,7 +75,7 @@ export default function ProfileSettingsPage() {
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB Limit check
+      if (file.size > 5 * 1024 * 1024) { // 5MB Limit checker
           toast.error("File size too large (Max 5MB)");
           return;
       }
@@ -103,7 +103,6 @@ export default function ProfileSettingsPage() {
 
       if (!res.ok) throw new Error("Failed to update");
 
-      // Update session to reflect changes immediately
       await update({
         ...session,
         user: {
@@ -140,7 +139,6 @@ export default function ProfileSettingsPage() {
   return (
     <div className="space-y-6 pb-10">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 className="text-3xl font-bold text-foreground">Profile & Settings</h1>
@@ -164,7 +162,6 @@ export default function ProfileSettingsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* --- Profile Tab --- */}
         <TabsContent value="profile" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
@@ -192,7 +189,6 @@ export default function ProfileSettingsPage() {
                 onChange={handleImageUpload}
               />
 
-              {/* Avatar Section */}
               <div className="flex items-center gap-6">
                 <div className="relative group">
                   <Avatar className="w-24 h-24 border-4 border-background shadow-md">
@@ -272,7 +268,7 @@ export default function ProfileSettingsPage() {
                   <Select 
                     value={profile.country} 
                     onValueChange={(value) => setProfile({...profile, country: value})}
-                    disabled={!isEditing} // ✅ Disabled prop on Select works correctly here
+                    disabled={!isEditing} 
                   >
                     <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select Country" />
@@ -342,7 +338,6 @@ export default function ProfileSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* --- Notifications Tab --- */}
         <TabsContent value="notifications" className="space-y-6">
           <Card className="border-border">
             <CardHeader>

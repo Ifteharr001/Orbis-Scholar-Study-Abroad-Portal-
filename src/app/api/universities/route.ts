@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connect } from "@/lib/db";
 import University from "@/models/University";
 
-// স্লাগ জেনারেটর ফাংশন
 function createSlug(name: string) {
   return name
     .toLowerCase()
@@ -16,26 +15,21 @@ export async function GET(req: Request) {
   try {
     await connect();
 
-    // URL Query Parameters রিড করা
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get("limit") || "10"); // ডিফল্ট ১০টি দেখাবে
-    const featured = searchParams.get("featured"); // যদি ?featured=true থাকে
+    const limit = parseInt(searchParams.get("limit") || "10"); 
+    const featured = searchParams.get("featured"); 
 
-    // কুয়েরি ফিল্টার তৈরি
+   
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = {};
     if (featured === "true") {
-      // যদি আপনার মডেলে featured ফিল্ড থাকে তবে এটি কাজ করবে, 
-      // না থাকলে এটি ইগনোর করতে পারেন বা ranking দিয়ে ফিল্টার করতে পারেন
-      query.ranking = { $lte: 100 }; // উদাহরণ: টপ ১০০ র‍্যাংকিং
+    
+      query.ranking = { $lte: 100 }; 
     }
 
-    // 🚀 Performance Optimization:
-    // লিস্ট পেজে পুরো ডিটেইলস (faqs, gallery, programs) দরকার নেই।
-    // .select() ব্যবহার করে শুধু কার্ড দেখানোর জন্য প্রয়োজনীয় ডাটা আনা হচ্ছে।
     const universities = await University.find(query)
       .limit(limit)
-      .sort({ ranking: 1 }) // র‍্যাংকিং অনুযায়ী সর্ট (ভাল র‍্যাংক আগে)
+      .sort({ ranking: 1 }) 
       .select("name slug location country image ranking tuitionFee") 
       .lean();
 
@@ -52,7 +46,6 @@ export async function POST(request: Request) {
     await connect();
     const body = await request.json();
     
-    // ১. ভ্যালিডেশন
     if (!body.name || !body.location || !body.country) {
       return NextResponse.json(
         { error: "Missing required fields: name, location, or country" }, 
@@ -60,13 +53,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // ২. স্লাগ জেনারেট (যদি ফ্রন্টএন্ড না পাঠায়)
     let slug = body.slug;
     if (!slug) {
       slug = createSlug(body.name);
     }
 
-    // ৩. ডাটা প্রিপারেশন
     const universityData = {
         ...body,
         slug
@@ -82,7 +73,6 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     console.error("Create University Error:", error);
     
-    // ৪. ডুপ্লিকেট এরর হ্যান্ডলিং
     const err = error as { code?: number; message?: string };
     if (err.code === 11000) {
         return NextResponse.json(

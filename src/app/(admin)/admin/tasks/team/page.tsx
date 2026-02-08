@@ -51,7 +51,6 @@ export default function TeamTasksPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Fetch Data
   const fetchData = async () => {
     try {
       const res = await fetch("/api/admin/tasks/team");
@@ -71,7 +70,6 @@ export default function TeamTasksPage() {
     fetchData();
   }, []);
 
-  // 2. Handle Member Selection (Multi-select)
   const toggleMember = (member: TeamMember) => {
     if (selectedMembers.find(m => m._id === member._id)) {
       setSelectedMembers(prev => prev.filter(m => m._id !== member._id));
@@ -80,7 +78,6 @@ export default function TeamTasksPage() {
     }
   };
 
-  // 3. Assign Task
   const handleAssignTask = async () => {
     if (!newTask.title || selectedMembers.length === 0) {
         return toast.error("Please enter a title and select at least one member");
@@ -93,7 +90,7 @@ export default function TeamTasksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             ...newTask,
-            assignees: selectedMembers // পুরো অবজেক্ট পাঠানো হচ্ছে
+            assignees: selectedMembers
         }),
       });
 
@@ -102,7 +99,7 @@ export default function TeamTasksPage() {
         setIsDialogOpen(false);
         setNewTask({ title: "", description: "", priority: "Medium", dueDate: "" });
         setSelectedMembers([]);
-        fetchData(); // রিফ্রেশ
+        fetchData();
       } else {
         toast.error("Failed to assign task");
       }
@@ -113,7 +110,6 @@ export default function TeamTasksPage() {
     }
   };
 
-  // 4. Delete Task
   const handleDelete = async (id: string) => {
     if(!confirm("Revoke this task?")) return;
     try {
@@ -125,7 +121,6 @@ export default function TeamTasksPage() {
     }
   };
 
-  // Helpers
   const getRoleBadge = (role: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const colors: any = { partner: "bg-purple-100 text-purple-700", counselor: "bg-blue-100 text-blue-700", staff: "bg-orange-100 text-orange-700" };
@@ -137,7 +132,6 @@ export default function TeamTasksPage() {
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Team Assignments</h1>
@@ -148,7 +142,6 @@ export default function TeamTasksPage() {
         </Button>
       </div>
 
-      {/* Task List Table */}
       <Card>
         <CardHeader>
             <CardTitle>Assigned Tasks ({tasks.length})</CardTitle>
@@ -196,7 +189,6 @@ export default function TeamTasksPage() {
         </CardContent>
       </Card>
 
-      {/* Assign Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -205,7 +197,6 @@ export default function TeamTasksPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
             
-            {/* Left: Task Details */}
             <div className="space-y-4">
                 <div>
                     <label className="text-sm font-medium mb-1 block">Task Title</label>
@@ -242,7 +233,6 @@ export default function TeamTasksPage() {
                 </div>
             </div>
 
-            {/* Right: Select Members */}
             <div className="border rounded-md p-4 bg-muted/20 flex flex-col h-full max-h-[350px]">
                 <h4 className="font-semibold mb-3 flex items-center justify-between">
                     Select Assignees 

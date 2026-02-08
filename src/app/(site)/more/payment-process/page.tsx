@@ -26,7 +26,6 @@ export default function PaymentProcessPage() {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* --- Section 1: Hero Banner (Informational) --- */}
       <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20" />
         
@@ -44,7 +43,6 @@ export default function PaymentProcessPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Payment Methods Guide --- */}
       <section className="py-16 container mx-auto px-4 -mt-10 relative z-20">
         <Card className="shadow-2xl border-none">
           <CardContent className="p-6 md:p-10">
@@ -61,7 +59,6 @@ export default function PaymentProcessPage() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* 1. Wire Transfer Instruction */}
               <TabsContent value="wire" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl flex items-start gap-4">
                   <Info className="h-6 w-6 text-blue-600 shrink-0 mt-1" />
@@ -74,7 +71,6 @@ export default function PaymentProcessPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
-                   {/* Bank Details Card */}
                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                       <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
                         <Building2 className="text-primary" /> Beneficiary Details
@@ -114,7 +110,6 @@ export default function PaymentProcessPage() {
                       </div>
                    </div>
 
-                   {/* Instructions List */}
                    <div className="space-y-6">
                       <h3 className="text-xl font-bold mb-4">Step-by-Step Process</h3>
                       <ol className="relative border-l border-slate-200 ml-3 space-y-8">
@@ -148,7 +143,6 @@ export default function PaymentProcessPage() {
                 </div>
               </TabsContent>
 
-              {/* 2. Flywire / Convera Instruction */}
               <TabsContent value="portal" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid md:grid-cols-2 gap-10 items-center">
                   <div>
@@ -208,7 +202,6 @@ export default function PaymentProcessPage() {
                 </div>
               </TabsContent>
 
-              {/* 3. Card Payment Instruction */}
               <TabsContent value="card" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center max-w-2xl mx-auto py-10">
                   <div className="flex justify-center gap-4 mb-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
@@ -240,7 +233,6 @@ export default function PaymentProcessPage() {
         </Card>
       </section>
 
-      {/* --- Section 3: Need Help --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold mb-4">Confused about the process?</h2>

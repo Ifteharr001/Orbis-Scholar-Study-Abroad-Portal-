@@ -63,18 +63,15 @@ export default function DashboardStats({ stats }: StatsProps) {
   ];
 
   return (
-    // গ্রিড আপডেট করা হয়েছে যাতে ৫টি কার্ড সুন্দরভাবে থাকে
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
       {data.map((item, index) => (
         <Card key={index} className={cn("border shadow-sm hover:shadow-md transition-all relative overflow-hidden", item.border)}>
           <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-3 h-full">
             
-            {/* Icon */}
             <div className={cn("p-3 rounded-full", item.bg, item.color)}>
               <item.icon className="h-5 w-5" />
             </div>
 
-            {/* Value & Title */}
             <div>
               <h3 className="text-2xl font-bold text-foreground">
                 {item.value}
@@ -84,7 +81,6 @@ export default function DashboardStats({ stats }: StatsProps) {
               </p>
             </div>
 
-            {/* ✅ Special Section for Verified/Rejected Card */}
             {item.rejectedCount !== undefined && item.rejectedCount > 0 && (
                 <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full border border-red-200 dark:border-red-800">
                     <XCircle className="h-3 w-3 text-red-600 dark:text-red-400" />

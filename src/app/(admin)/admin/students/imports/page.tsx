@@ -23,7 +23,6 @@ import {
 import { Upload, Download, FileSpreadsheet, Clock, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Mock history (পরে এটিও API থেকে আনা যাবে)
 const importHistory = [
   {
     id: "IMP001",
@@ -41,11 +40,10 @@ const StudentImportsPage = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // লোডিং স্টেট
+  const [isUploading, setIsUploading] = useState(false); 
 
-  // ✅ টেমপ্লেট ডাউনলোড ফাংশন
   const handleDownloadTemplate = () => {
-    // CSV কন্টেন্ট তৈরি
+
     const headers = ["firstName", "lastName", "email", "phone", "country", "programPreference", "intakePreference"];
     const sampleRow = ["John", "Doe", "john.doe@example.com", "+8801700000000", "Bangladesh", "MSc", "Fall 2025"];
     
@@ -54,7 +52,6 @@ const StudentImportsPage = () => {
       sampleRow.join(",")
     ].join("\n");
 
-    // ডাউনলোড লিঙ্ক তৈরি ও ক্লিক করা
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -94,7 +91,6 @@ const StudentImportsPage = () => {
     }
   };
 
-  // ✅ ফাইল আপলোড হ্যান্ডলার (API Call)
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -155,7 +151,6 @@ const StudentImportsPage = () => {
           <p className="text-muted-foreground">Bulk import students from CSV or Excel files</p>
         </div>
         <div className="flex gap-2">
-          {/* Download Template Button */}
           <Button variant="outline" className="gap-2" onClick={handleDownloadTemplate}>
             <Download className="h-4 w-4" />
             Download Template
@@ -244,10 +239,7 @@ const StudentImportsPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards & Table (Same as before) */}
       <div className="grid gap-4 sm:grid-cols-3">
-         {/* ... Stats cards code remains same as your snippet ... */}
-         {/* For brevity, keeping your existing cards code here */}
          <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -261,7 +253,6 @@ const StudentImportsPage = () => {
             </div>
           </CardContent>
         </Card>
-        {/* ... other cards ... */}
       </div>
 
       <Card>

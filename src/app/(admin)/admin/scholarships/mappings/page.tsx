@@ -15,7 +15,6 @@ import { Loader2, Save, Link2, BookOpen, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
-// ইন্টারফেস
 interface Program {
   _id: string;
   name: string;
@@ -39,12 +38,10 @@ export default function ScholarshipMappingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Selection States
   const [selectedUniId, setSelectedUniId] = useState<string>("");
   const [selectedScholarshipId, setSelectedScholarshipId] = useState<string>("");
   const [mappedPrograms, setMappedPrograms] = useState<string[]>([]);
 
-  // 1. Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -62,14 +59,12 @@ export default function ScholarshipMappingsPage() {
     fetchData();
   }, []);
 
-  // 2. Handle University Change
   const handleUniChange = (uniId: string) => {
     setSelectedUniId(uniId);
-    setSelectedScholarshipId(""); // Reset scholarship
+    setSelectedScholarshipId("");
     setMappedPrograms([]);
   };
 
-  // 3. Handle Scholarship Change (Load existing mappings)
   const handleScholarshipChange = (scholarshipId: string) => {
     setSelectedScholarshipId(scholarshipId);
     
@@ -83,7 +78,6 @@ export default function ScholarshipMappingsPage() {
     }
   };
 
-  // 4. Toggle Program Selection
   const toggleProgram = (programId: string) => {
     setMappedPrograms(prev => 
       prev.includes(programId) 
@@ -92,19 +86,17 @@ export default function ScholarshipMappingsPage() {
     );
   };
 
-  // 5. Select All Logic
   const handleSelectAll = () => {
     const uni = universities.find(u => u._id === selectedUniId);
     if (!uni) return;
     
     if (mappedPrograms.length === uni.programs.length) {
-      setMappedPrograms([]); // Deselect all
+      setMappedPrograms([]); 
     } else {
-      setMappedPrograms(uni.programs.map(p => p._id)); // Select all
+      setMappedPrograms(uni.programs.map(p => p._id)); 
     }
   };
 
-  // 6. Save Mappings
   const handleSave = async () => {
     if (!selectedUniId || !selectedScholarshipId) return;
     setSaving(true);
@@ -123,7 +115,6 @@ export default function ScholarshipMappingsPage() {
       if (res.ok) {
         toast.success("Mapping saved successfully! 🔗");
         
-        // Update Local State to reflect changes immediately
         const updatedUnis = universities.map(u => {
             if (u._id === selectedUniId) {
                 const updatedSch = u.scholarships.map(s => 
@@ -145,7 +136,6 @@ export default function ScholarshipMappingsPage() {
     }
   };
 
-  // Helper vars
   const currentUni = universities.find(u => u._id === selectedUniId);
   const currentScholarship = currentUni?.scholarships.find(s => s._id === selectedScholarshipId);
 
@@ -154,7 +144,6 @@ export default function ScholarshipMappingsPage() {
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
       
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
             <Link2 className="h-6 w-6 text-primary" /> Scholarship Mappings
@@ -162,13 +151,11 @@ export default function ScholarshipMappingsPage() {
         <p className="text-muted-foreground">Link scholarships to specific programs.</p>
       </div>
 
-      {/* 1. Selection Area */}
       <Card>
         <CardHeader>
             <CardTitle>Step 1: Select Context</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* University Select */}
             <div className="space-y-2">
                 <label className="text-sm font-medium">Select University</label>
                 <Select value={selectedUniId} onValueChange={handleUniChange}>
@@ -183,7 +170,6 @@ export default function ScholarshipMappingsPage() {
                 </Select>
             </div>
 
-            {/* Scholarship Select */}
             <div className="space-y-2">
                 <label className="text-sm font-medium">Select Scholarship</label>
                 <Select value={selectedScholarshipId} onValueChange={handleScholarshipChange} disabled={!selectedUniId}>
@@ -200,7 +186,6 @@ export default function ScholarshipMappingsPage() {
         </CardContent>
       </Card>
 
-      {/* 2. Mapping Area */}
       {selectedUniId && selectedScholarshipId && currentUni && (
         <Card className="border-primary/20 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">

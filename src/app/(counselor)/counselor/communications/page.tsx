@@ -141,7 +141,6 @@ export default function CounselorCommunicationPage() {
   return (
     <div className="flex h-[calc(100vh-60px)] bg-gray-50 border rounded-lg overflow-hidden">
       
-      {/* --- Sidebar: Student List --- */}
       <aside className="w-1/4 min-w-[250px] bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b bg-gray-50/50">
             <h2 className="text-lg font-bold text-gray-800">Messages</h2>
@@ -193,7 +192,6 @@ export default function CounselorCommunicationPage() {
       <main className="flex-1 flex flex-col bg-white">
         {selectedStudentId && selectedStudentInfo ? (
           <>
-            {/* Chat Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white shadow-sm z-10">
                 <div className="flex items-center gap-3">
                     <Avatar>
@@ -214,7 +212,6 @@ export default function CounselorCommunicationPage() {
                 </div>
             </div>
 
-            {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
                 {loadingChat ? (
                     <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-blue-500" /></div>

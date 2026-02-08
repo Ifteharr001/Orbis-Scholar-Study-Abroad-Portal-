@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
-import Invoice from "@/models/Invoice"; // 🔥 Payment এর বদলে Invoice ব্যবহার করা হলো
+import Invoice from "@/models/Invoice";
 
 export async function GET() {
   try {
@@ -13,12 +13,10 @@ export async function GET() {
 
     await connect();
 
-    // ১. সব ইনভয়েস ডাটা আনা (যেহেতু ইনভয়েসেই Paid/Pending স্ট্যাটাস থাকে)
     const invoices = await Invoice.find({ studentEmail: session.user.email })
       .sort({ createdAt: -1 }) 
       .lean();
 
-    // ২. স্ট্যাটস ক্যালকুলেশন
     let totalPaid = 0;
     let totalPending = 0;
 
@@ -31,14 +29,13 @@ export async function GET() {
       }
     });
 
-    // ৩. ফ্রন্টএন্ডে ডাটা পাঠানো
     return NextResponse.json({
       stats: {
         totalPaid,
         totalPending,
         totalInvoices: invoices.length
       },
-      history: invoices // ইনভয়েস লিস্ট পাঠানো হলো যাতে টেবিলে দেখানো যায়
+      history: invoices 
     });
 
   } catch (error) {

@@ -79,7 +79,6 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
 
   const user = session?.user || { name: "Counselor", email: "counselor@orbisscholar.com" };
 
-  // Toggle Function
   const onToggle = () => {
     setCollapsed(!collapsed);
   };
@@ -92,7 +91,6 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
     );
   };
 
-  // Active Route Logic
   const isActive = (path: string) => {
     if (path === "/counselor") {
         return pathname === "/counselor";
@@ -120,7 +118,7 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
           collapsed ? isMobile ? "-translate-x-full" : "w-16" : "w-64"
         )}
       >
-        {/* Logo Area */}
+      
         <div className="p-4 border-b border-border flex items-center justify-between h-16">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -149,7 +147,6 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
           )}
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-muted">
           <ul className="space-y-1">
             {sidebarItems.map((item) => {

@@ -7,17 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, ArrowRight, Building2, GraduationCap, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ১. ইন্টারফেস আপডেট (API থেকে এই ডাটাগুলো আসছে)
 interface Application {
   _id?: string;
-  universityName?: string; // Optional marked safe for TS
+  universityName?: string; 
   programName?: string;
   status: string;
 }
 
-// ২. অ্যাডমিন পাইপলাইন অনুযায়ী স্টেজ লিস্ট (ক্রম অনুসারে)
 const PIPELINE_STAGES = [
-  "Applied",        // or New Applied
+  "Applied",        
   "Inquiry",
   "In Review",
   "Docs Pending",
@@ -30,21 +28,17 @@ const PIPELINE_STAGES = [
 
 export default function ActiveApplications({ applications = [] }: { applications: Application[] }) {
 
-  // প্রোগ্রেস ক্যালকুলেশন হেল্পার
   const getProgress = (status: string) => {
     if (status === "Rejected") return 100;
     
-    // "New Applied" কে "Applied" হিসেবে ধরা হবে
     const normalizedStatus = status === "New Applied" ? "Applied" : status;
     const index = PIPELINE_STAGES.indexOf(normalizedStatus);
     
-    if (index === -1) return 10; // অজানা স্ট্যাটাস হলে ১০%
+    if (index === -1) return 10;
     
-    // (Current Index + 1) / Total Stages * 100
     return Math.round(((index + 1) / PIPELINE_STAGES.length) * 100);
   };
 
-  // কালার হেল্পার
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Rejected": return "bg-red-100 text-red-700 border-red-200";
@@ -56,7 +50,6 @@ export default function ActiveApplications({ applications = [] }: { applications
     }
   };
 
-  // যদি কোনো অ্যাপ্লিকেশন না থাকে (Empty State)
   if (applications.length === 0) {
     return (
         <Card className="border-border shadow-sm  flex flex-col justify-center">
@@ -100,7 +93,7 @@ export default function ActiveApplications({ applications = [] }: { applications
 
             return (
                 <div key={app._id || index} className="border border-border rounded-lg p-4 bg-card hover:shadow-sm transition-all">
-                    {/* Header: University & Status */}
+             
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
                         <div className="space-y-1">
                             <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -117,7 +110,6 @@ export default function ActiveApplications({ applications = [] }: { applications
                         </Badge>
                     </div>
 
-                    {/* Progress Bar Section */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
                             <span>Process Completion</span>
@@ -126,7 +118,6 @@ export default function ActiveApplications({ applications = [] }: { applications
                             </span>
                         </div>
                         
-                        {/* Custom Progress Bar */}
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                             <div 
                                 className={cn(
@@ -137,7 +128,6 @@ export default function ActiveApplications({ applications = [] }: { applications
                             />
                         </div>
 
-                        {/* Status Message based on Stage */}
                         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
                             {isRejected ? (
                                 <><AlertCircle className="h-3.5 w-3.5 text-red-500" /> Application has been rejected.</>

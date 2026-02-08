@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation"; // 👈 ১. Import
+import { useSearchParams } from "next/navigation"; 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Filter, Download, MoreHorizontal, Eye, Trash2, UserPlus, Loader2, X } from "lucide-react";
 
-// Interface
 interface Student {
   _id: string;
   name: string;
@@ -46,9 +45,8 @@ interface Student {
 }
 
 const AllStudentsPage = () => {
-  const searchParams = useSearchParams(); // 👈 ২. Hook Use
-  const segmentId = searchParams.get("segment"); // URL থেকে 'segment' প্যারামিটার নেওয়া
-
+  const searchParams = useSearchParams();
+  const segmentId = searchParams.get("segment"); 
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,10 +56,9 @@ const AllStudentsPage = () => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
-        // ৩. Query Params তৈরি
         const params = new URLSearchParams();
-        if (segmentId) params.append("segment", segmentId); // সেগমেন্ট আইডি থাকলে পাঠানো হবে
-        if (statusFilter !== "all") params.append("status", statusFilter); // স্ট্যাটাস ফিল্টার থাকলে পাঠানো হবে (API তে হ্যান্ডেল করতে হবে)
+        if (segmentId) params.append("segment", segmentId); 
+        if (statusFilter !== "all") params.append("status", statusFilter);
 
         const res = await fetch(`/api/admin/students?${params.toString()}`);
         const data = await res.json();
@@ -76,15 +73,13 @@ const AllStudentsPage = () => {
     };
 
     fetchStudents();
-  }, [segmentId, statusFilter]); // segmentId চেঞ্জ হলে রি-ফেচ হবে
+  }, [segmentId, statusFilter]); 
 
-  // Client-side search filtering (API তেও করা যায়, এখানে সিম্পল রাখা হলো)
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase());
       
-    // Status filter API তে হ্যান্ডেল করলে এখানে আর দরকার নেই, তবে ডাবল চেকের জন্য রাখা যায়
     const matchesStatus = statusFilter === "all" || (student.status && student.status.toLowerCase() === statusFilter);
     
     return matchesSearch && matchesStatus;
@@ -115,7 +110,6 @@ const AllStudentsPage = () => {
         </Link>
       </div>
 
-      {/* ৪. সেগমেন্ট ফিল্টার একটিভ থাকলে ব্যানার দেখানো */}
       {segmentId && (
         <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700">
           <span className="text-sm font-medium">Filtering by Segment ID: {segmentId}</span>

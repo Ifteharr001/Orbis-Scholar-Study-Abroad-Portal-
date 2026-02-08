@@ -23,14 +23,11 @@ import { toast } from "sonner";
 
 export default function ChinaExpoPage() {
   
-  // ফর্ম সাবমিশন হ্যান্ডলার
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // এখানে ভবিষ্যতে API কল হবে
     toast.success("Registration Successful! We will contact you soon.");
   };
 
-  // স্ট্যাটিক ডাটা: ফিচারস
   const features = [
     "On-spot Admission Assessment",
     "Up to 100% Scholarship Opportunities",
@@ -40,7 +37,6 @@ export default function ChinaExpoPage() {
     "Gift Hampers for Attendees"
   ];
 
-  // স্ট্যাটিক ডাটা: ইউনিভার্সিটি
   const universities = [
     { name: "Tsinghua University", rank: "#1 in China", image: "https://images.unsplash.com/photo-1599587426629-9e6b4e6d4272?w=500&q=80" },
     { name: "Peking University", rank: "#2 in China", image: "https://images.unsplash.com/photo-1565038827725-b873322fb689?w=500&q=80" },
@@ -50,7 +46,6 @@ export default function ChinaExpoPage() {
     { name: "Wuhan University", rank: "Medical Top Choice", image: "https://images.unsplash.com/photo-1582260667353-839335a13364?w=500&q=80" },
   ];
 
-  // স্ট্যাটিক ডাটা: শিডিউল
   const schedule = [
     { time: "10:00 AM", title: "Gates Open & Registration", desc: "Collect your ID card and welcome kit." },
     { time: "11:00 AM", title: "Keynote: Study in China 2026", desc: "Speaker: Cultural Attaché, Embassy of China." },
@@ -61,9 +56,8 @@ export default function ChinaExpoPage() {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* --- Section 1: Hero (Banner) --- */}
       <section className="relative min-h-[600px] flex items-center justify-center text-white overflow-hidden">
-        {/* Background Image with Dark Overlay */}
+  
         <div className="absolute inset-0 z-0">
           <Image 
             src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1600&q=80" 
@@ -87,7 +81,6 @@ export default function ChinaExpoPage() {
               Unlock your future with fully funded scholarships. Meet representatives from top Chinese universities directly.
             </p>
             
-            {/* Event Details Badges */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/20">
                 <Calendar className="text-red-500 h-6 w-6" />
@@ -110,7 +103,6 @@ export default function ChinaExpoPage() {
             </Button>
           </div>
 
-          {/* Right Side: Visual Element (Optional - Glass Card) */}
           <div className="hidden lg:block relative">
              <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-3xl">
                 <div className="grid grid-cols-2 gap-4">
@@ -128,7 +120,6 @@ export default function ChinaExpoPage() {
         </div>
       </section>
 
-      {/* --- Section 2: Why Attend? --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -151,7 +142,6 @@ export default function ChinaExpoPage() {
         </div>
       </section>
 
-      {/* --- Section 3: Participating Universities --- */}
       <section className="py-20 container mx-auto px-4">
         <div className="flex justify-between items-end mb-12">
           <div>
@@ -174,14 +164,12 @@ export default function ChinaExpoPage() {
         </div>
       </section>
 
-      {/* --- Section 4: Event Schedule & Registration Form --- */}
       <section id="register-form" className="py-20 bg-black text-white relative overflow-hidden">
-        {/* Decorative Background */}
+    
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-600/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
 
         <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-16">
           
-          {/* Left: Schedule */}
           <div>
             <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
               <Clock className="text-red-500" /> Event Agenda
@@ -189,7 +177,7 @@ export default function ChinaExpoPage() {
             <div className="space-y-8 border-l-2 border-white/10 ml-3 pl-8 relative">
               {schedule.map((item, index) => (
                 <div key={index} className="relative">
-                  {/* Dot */}
+            
                   <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full bg-red-600 border-4 border-black" />
                   <span className="text-red-500 font-bold text-sm uppercase tracking-wider">{item.time}</span>
                   <h3 className="text-xl font-bold mt-1">{item.title}</h3>
@@ -199,7 +187,6 @@ export default function ChinaExpoPage() {
             </div>
           </div>
 
-          {/* Right: Registration Form */}
           <div className="bg-white text-black p-8 rounded-3xl shadow-2xl">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold">Book Your Seat</h3>
@@ -260,7 +247,6 @@ export default function ChinaExpoPage() {
         </div>
       </section>
 
-      {/* --- Section 5: FAQ --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 max-w-4xl">
           <h2 className="text-3xl font-bold text-center mb-10">Frequently Asked Questions</h2>

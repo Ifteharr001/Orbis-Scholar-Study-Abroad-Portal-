@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
 
-// --- Zod Schemas ---
+
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -33,7 +33,7 @@ const signupSchema = z.object({
   phone: z.string().trim().min(5, { message: "Phone number is required" }),
   gender: z.string().min(1, { message: "Please select gender" }),
   country: z.string().min(1, { message: "Please select country" }),
-  programPreference: z.string().min(1, { message: "Please select a program" }), // ✅ নতুন ফিল্ড
+  programPreference: z.string().min(1, { message: "Please select a program" }), 
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string(),
   terms: z.boolean().refine((val) => val === true, { message: "You must accept the terms" }),
@@ -59,7 +59,7 @@ const countryCodes = [
   { code: "+44", country: "UK" },
 ];
 
-const programs = ["Bachelors", "Masters", "PhD", "Diploma"]; // ✅ স্টুডেন্ট প্রেফারেন্স অপশন
+const programs = ["Bachelors", "Masters", "PhD", "Diploma"]; 
 
 // --- Main Form Component ---
 const AuthForm = () => {
@@ -71,10 +71,10 @@ const AuthForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+880"); // ডিফল্ট বাংলাদেশ
+  const [countryCode, setCountryCode] = useState("+880");
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
-  const [programPreference, setProgramPreference] = useState(""); // ✅ নতুন স্টেট
+  const [programPreference, setProgramPreference] = useState(""); 
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -85,8 +85,6 @@ const AuthForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/student/dashboard";
-
-  // --- Validation ---
   const validateForm = () => {
     if (isLogin) {
       const result = loginSchema.safeParse({ email, password });
@@ -132,12 +130,12 @@ const AuthForm = () => {
 
     try {
       if (isLogin) {
-        // ✅ Login Logic
+        
         const result = await signIn("credentials", {
           redirect: false,
           email,
           password,
-          loginType: "student", // ব্যাকএন্ডে রোল চেক করবে
+          loginType: "student",
           callbackUrl: callbackUrl, 
         });
 
@@ -155,7 +153,7 @@ const AuthForm = () => {
           router.push(callbackUrl);
         }
       } else {
-        // ✅ Registration Logic
+        
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,7 +164,7 @@ const AuthForm = () => {
             phone: countryCode + phone,
             gender,
             country,
-            programPreference, // ✅ ডাটাবেসে সেভ হবে
+            programPreference, 
             role: "student",
           }),
         });
@@ -181,7 +179,7 @@ const AuthForm = () => {
           description: "Please login with your new account.",
         });
         
-        setIsLogin(true); // অটোমেটিক লগইন স্ক্রিনে পাঠানো
+        setIsLogin(true); 
       }
     } catch (error: unknown) {
       let errorMessage = "Something went wrong.";
@@ -199,7 +197,7 @@ const AuthForm = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side (Illustration) */}
+      
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
@@ -222,7 +220,7 @@ const AuthForm = () => {
         </div>
       </div>
 
-      {/* Right Side (Form) */}
+      
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
@@ -322,8 +320,6 @@ const AuthForm = () => {
                     {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
                     </div>
                 </div>
-
-                {/* ✅ Program Preference Added */}
                 <div className="space-y-1.5">
                   <Label>Interested Program</Label>
                   <Select value={programPreference} onValueChange={setProgramPreference}>
@@ -395,7 +391,7 @@ const AuthForm = () => {
                   <Checkbox
                     id="terms"
                     checked={termsAccepted}
-                    // ✅ Type Fix
+                    
                     onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                     className={errors.terms ? "border-destructive" : ""}
                   />
@@ -440,8 +436,6 @@ const AuthForm = () => {
     </div>
   );
 };
-
-// Main Page with Suspense
 const AuthPage = () => {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>

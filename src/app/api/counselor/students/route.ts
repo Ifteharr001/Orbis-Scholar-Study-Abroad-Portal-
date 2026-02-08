@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     try {
         counselorObjectId = new mongoose.Types.ObjectId(rawId as string);
     } catch (e) {
-        console.error("❌ Invalid ID format:", rawId);
+        console.error(" Invalid ID format:", rawId);
     }
     const myStudents = await User.find({
         role: "student", 

@@ -8,21 +8,19 @@ import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// ডাটা টাইপ ডিফাইন করা (আপনার নতুন মডেল অনুযায়ী)
 interface ServiceDetail {
   _id: string;
   title: string;
   description: string;
   icon: string;
-  gallery: string[]; // একাধিক ইমেজ
+  gallery: string[];
   sections: {
     heading: string;
     body: string;
-  }[]; // একাধিক সেকশন
+  }[]; 
 }
 
 export default function ServiceDetailsPage() {
-  // URL থেকে ID নেওয়া (যেমন: services/65c0...)
   const params = useParams();
   const id = params?.id as string;
 
@@ -37,18 +35,14 @@ export default function ServiceDetailsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // ১. মেইন সার্ভিস ফেচ করা
         const res = await fetch(`/api/services/${id}`);
         if (!res.ok) throw new Error("Service not found");
         const data = await res.json();
         setService(data);
 
-        // ২. রিলেটেড সার্ভিস ফেচ করা
         const resAll = await fetch("/api/services");
         const allData = await resAll.json();
         
-        // বর্তমান সার্ভিস বাদ দিয়ে অন্য ৩টি র‍্যান্ডম বা প্রথম ৩টি সার্ভিস নেওয়া
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const related = allData.filter((s: any) => s._id !== id).slice(0, 3);
         setRelatedServices(related);
@@ -63,7 +57,6 @@ export default function ServiceDetailsPage() {
     fetchData();
   }, [id]);
 
-  // লোডিং স্টেট
   if (loading) {
     return (
       <div className="h-screen flex flex-col justify-center items-center gap-4">
@@ -73,7 +66,6 @@ export default function ServiceDetailsPage() {
     );
   }
 
-  // যদি সার্ভিস না পাওয়া যায়
   if (!service) {
     return (
       <div className="py-20 text-center">
@@ -88,7 +80,6 @@ export default function ServiceDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* 1. Hero Section (Title & Description) */}
       <section className="bg-muted/30 py-20">
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <Badge variant="secondary" className="mb-4 px-4 py-1 text-sm uppercase tracking-wide">
@@ -113,7 +104,6 @@ export default function ServiceDetailsPage() {
 
       <div className="container mx-auto px-4 py-16">
         
-        {/* 2. Gallery Grid (ইমেজগুলো দেখাবে) */}
         {service.gallery && service.gallery.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {service.gallery.map((img, index) => (
@@ -132,9 +122,8 @@ export default function ServiceDetailsPage() {
           </div>
         )}
 
-        {/* 3. Dynamic Sections (বিস্তারিত তথ্য) */}
         <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
-          {/* Left Content (Sections) */}
+       
           <div className="lg:col-span-2 space-y-12">
             {service.sections?.map((section, index) => (
               <div key={index} className="prose prose-lg dark:prose-invert max-w-none">
@@ -149,7 +138,6 @@ export default function ServiceDetailsPage() {
             ))}
           </div>
 
-          {/* Right Sidebar (Quick Info Card) */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-card border border-border rounded-2xl p-6 shadow-lg">
               <h4 className="text-xl font-bold mb-4">Why Choose Us?</h4>
@@ -172,7 +160,6 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
 
-        {/* 4. Related Services Section */}
         <div className="border-t border-border mt-20 pt-16">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold">Other Services You Might Need</h2>

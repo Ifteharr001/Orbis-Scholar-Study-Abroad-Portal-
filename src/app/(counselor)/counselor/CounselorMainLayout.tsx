@@ -1,4 +1,4 @@
-"use client"; // ⚠️ এটি অবশ্যই থাকতে হবে
+"use client";
 
 import { useState, useEffect } from "react";
 import CounselorSidebar from "./CounselorSidebar";
@@ -34,7 +34,7 @@ export default function CounselorMainLayout({
 
   return (
     <div className="min-h-screen bg-muted/20">
-      {/* Sidebar */}
+   
       <CounselorSidebar
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed} 

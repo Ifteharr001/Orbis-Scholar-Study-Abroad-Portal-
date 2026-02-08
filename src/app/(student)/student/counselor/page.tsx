@@ -80,7 +80,7 @@ export default function MyCounselorPage() {
 
       if (res.ok) {
         toast.success("Message sent successfully!");
-        setMessage(""); // ইনপুট ক্লিয়ার
+        setMessage("");
       } else {
         toast.error(data.error || "Failed to send message");
       }
@@ -117,7 +117,6 @@ export default function MyCounselorPage() {
       );
   }
 
-  // If no counselor is assigned
   if (!counselor) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
@@ -135,19 +134,19 @@ export default function MyCounselorPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+     
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">My Counselor</h1>
         <p className="text-muted-foreground">Your dedicated education advisor</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Counselor Card */}
+   
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-border">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6">
-                {/* Avatar & Basic Info */}
+ 
                 <div className="flex flex-col items-center text-center md:items-start md:text-left">
                   <Avatar className="w-28 h-28 mb-4">
                     <AvatarImage src={counselor.image} alt={counselor.name} />
@@ -163,7 +162,6 @@ export default function MyCounselorPage() {
                   <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400">Available</Badge>
                 </div>
 
-                {/* Details */}
                 <div className="flex-1 space-y-4">
                   <div>
                     <h2 className="text-2xl font-bold text-foreground">{counselor.name}</h2>
@@ -180,7 +178,6 @@ export default function MyCounselorPage() {
 
                   <Separator className="bg-border" />
 
-                  {/* Stats */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-3 bg-muted/50 rounded-lg border border-border">
                       <p className="text-2xl font-bold text-primary">{counselor.totalStudents}+</p>
@@ -200,7 +197,7 @@ export default function MyCounselorPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Message */}
+       
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -227,7 +224,6 @@ export default function MyCounselorPage() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
           <Card className="border-border">
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
@@ -249,9 +245,8 @@ export default function MyCounselorPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Contact Card */}
+       
           <Card className="border-border">
             <CardHeader>
               <CardTitle>Contact Information</CardTitle>

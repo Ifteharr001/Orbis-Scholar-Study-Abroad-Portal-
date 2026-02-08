@@ -6,9 +6,6 @@ import { jwtVerify } from "jose";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ============================================================
-  // ১. ADMIN AUTHENTICATION (Custom Cookie + Jose)
-  // ============================================================
   if (pathname.startsWith("/admin")) {
     const adminToken = request.cookies.get("token")?.value;
     const secret = new TextEncoder().encode(
@@ -45,9 +42,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ============================================================
-  // ২. COUNSELOR / STUDENT / PARTNER AUTHENTICATION (NextAuth)
-  // ============================================================
   
   if (pathname === "/counselor/login") {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });

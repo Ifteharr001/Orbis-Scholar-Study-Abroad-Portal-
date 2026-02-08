@@ -4,7 +4,6 @@ import User from "@/models/User";
 import Application from "@/models/Application";
 import Documents from "@/models/Document"; 
 
-// 1. GET Method
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -45,7 +44,6 @@ export async function GET(
   }
 }
 
-// 2. PUT Method
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -115,7 +113,6 @@ export async function PUT(
   }
 }
 
-// 3. DELETE Method
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

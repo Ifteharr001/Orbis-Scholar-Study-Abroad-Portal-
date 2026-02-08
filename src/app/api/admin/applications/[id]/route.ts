@@ -12,7 +12,6 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-// GET Method (No Change)
 export async function GET(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -74,7 +73,6 @@ export async function GET(req: Request, props: Props) {
   }
 }
 
-// PATCH Method (No Change)
 export async function PATCH(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -105,7 +103,6 @@ export async function PATCH(req: Request, props: Props) {
   }
 }
 
-// POST Method (🔥 FORCE FIXED HERE)
 export async function POST(req: Request, props: Props) {
   try {
     const params = await props.params;
@@ -162,7 +159,6 @@ export async function POST(req: Request, props: Props) {
 
 
 
-// PUT Method
 export async function PUT(req: Request, props: Props) {
     try {
       const params = await props.params;

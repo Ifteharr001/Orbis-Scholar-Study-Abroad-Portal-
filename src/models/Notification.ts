@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// ১. TypeScript Interface
 export interface INotification extends Document {
   studentEmail: string;
   message: string;

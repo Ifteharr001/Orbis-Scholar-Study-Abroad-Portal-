@@ -31,7 +31,6 @@ import {
 import { Plus, MoreHorizontal, Users, Trash2, Tag, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
-// Interface define
 interface Segment {
   _id: string;
   name: string;
@@ -48,7 +47,6 @@ const StudentSegmentsPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   
-  // Segment creation state
   const [newSegment, setNewSegment] = useState({
     name: "",
     description: "",
@@ -56,11 +54,9 @@ const StudentSegmentsPage = () => {
     conditions: [] as string[]
   });
 
-  // Condition builder state
   const [condField, setCondField] = useState("Country");
   const [condValue, setCondValue] = useState("");
 
-  // 1. Data Fetching
   const fetchSegments = async () => {
     try {
       const res = await fetch("/api/admin/students/segments"); 
@@ -78,7 +74,6 @@ const StudentSegmentsPage = () => {
     fetchSegments();
   }, []);
 
-  // 2. Add Condition
   const addCondition = () => {
     if (!condValue) return;
     const conditionString = `${condField} = ${condValue}`;
@@ -91,14 +86,11 @@ const StudentSegmentsPage = () => {
     setCondValue(""); 
   };
 
-  // 3. Remove Condition
   const removeCondition = (index: number) => {
     const updated = [...newSegment.conditions];
     updated.splice(index, 1);
     setNewSegment({ ...newSegment, conditions: updated });
   };
-
-  // 4. Create Segment
   const handleCreateSegment = async () => {
     if (newSegment.conditions.length === 0) {
         toast.error("Please add at least one condition");
@@ -128,9 +120,8 @@ const StudentSegmentsPage = () => {
     }
   };
 
-  // ✅ 5. Delete Segment Logic (NEW)
   const handleDeleteSegment = async (id: string) => {
-    // কনফার্মেশন চাইবে
+ 
     if (!confirm("Are you sure you want to delete this segment?")) return;
 
     try {
@@ -140,7 +131,7 @@ const StudentSegmentsPage = () => {
 
         if (res.ok) {
             toast.success("Segment Deleted");
-            // UI থেকে সরিয়ে ফেলা
+           
             setSegments(segments.filter((seg) => seg._id !== id));
         } else {
             toast.error("Failed to delete segment");
@@ -289,7 +280,6 @@ const StudentSegmentsPage = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {/* ✅ Delete Button Connected */}
                     <DropdownMenuItem 
                         className="gap-2 text-destructive cursor-pointer"
                         onClick={() => handleDeleteSegment(segment._id)}

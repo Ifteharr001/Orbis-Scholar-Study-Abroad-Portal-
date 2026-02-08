@@ -8,12 +8,11 @@ import { Loader2, CreditCard, CheckCircle, Clock, FileText, Lock, GraduationCap 
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 
-// ✅ ইনভয়েস ইন্টারফেস (API রেসপন্স অনুযায়ী)
 interface Invoice {
   _id: string;
   invoiceId: string;
-  programName?: string; // প্রোগ্রামের নাম (যেমন: Computer Science)
-  type: string;         // ফি এর ধরন (যেমন: Tuition Fee)
+  programName?: string;
+  type: string;      
   amount: number;
   currency: string;
   createdAt: string;
@@ -40,7 +39,6 @@ export default function PaymentPage() {
         const res = await fetch("/api/student/payment-stats");
         if (res.ok) {
           const data = await res.json();
-          // API থেকে আসা হিস্ট্রি এবং স্ট্যাটাস সেট করা হচ্ছে
           setInvoices(data.history || []);
           setStats(data.stats || { totalPaid: 0, totalPending: 0, totalInvoices: 0 });
         } else {
@@ -56,7 +54,6 @@ export default function PaymentPage() {
 
     fetchPaymentData();
 
-    // পেমেন্ট সাকসেস বা ক্যানসেল হ্যান্ডলিং
     if (searchParams.get("success")) {
       toast.success("Payment successful! Invoice updated.");
     } else if (searchParams.get("canceled")) {
@@ -64,7 +61,6 @@ export default function PaymentPage() {
     }
   }, [searchParams]);
 
-  // ✅ পেমেন্ট হ্যান্ডলার
   const handleStripePayment = async (mongoId: string) => {
     setProcessingId(mongoId);
     
@@ -72,7 +68,6 @@ export default function PaymentPage() {
       const res = await fetch("/api/student/payment/checkout", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" },
-        // আমরা মঙ্গোডিবি আইডি পাঠাচ্ছি, কারণ route.ts এ _id দিয়ে খোঁজা হচ্ছে
         body: JSON.stringify({ invoiceId: mongoId })
       });
       
@@ -83,7 +78,7 @@ export default function PaymentPage() {
       }
 
       if (data.url) {
-        window.location.href = data.url; // স্ট্রাইপ চেকআউটে রিডাইরেক্ট
+        window.location.href = data.url;
       } else {
         toast.error("Invalid payment link received");
       }
@@ -92,7 +87,6 @@ export default function PaymentPage() {
       console.error(error);
       toast.error(error.message || "Failed to start payment");
     } finally {
-      // রিডাইরেক্ট না হলে লোডিং বন্ধ হবে, অন্যথায় রিডাইরেক্ট হবে
       setTimeout(() => setProcessingId(null), 2000); 
     }
   };
@@ -112,7 +106,6 @@ export default function PaymentPage() {
   return (
     <div className="container mx-auto py-8 space-y-8 max-w-5xl">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Payments & Billing 💳</h1>
@@ -125,7 +118,6 @@ export default function PaymentPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -161,7 +153,6 @@ export default function PaymentPage() {
         </Card>
       </div>
 
-      {/* Pending Payments Section (Due Fees) */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Clock className="h-5 w-5 text-yellow-600" /> Due Invoices
@@ -181,13 +172,12 @@ export default function PaymentPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start gap-4">
                     <div>
-                      {/* 🔥 এখানে প্রোগ্রামের নাম দেখানো হচ্ছে */}
                       <CardTitle className="text-lg flex items-center gap-2">
                         <GraduationCap className="h-5 w-5 text-primary" />
                         {inv.programName || "University Program"}
                       </CardTitle>
                       <CardDescription className="mt-1 font-medium text-foreground/80">
-                        {inv.type} {/* e.g. Tuition Fee */}
+                        {inv.type}
                       </CardDescription>
                       <p className="text-xs text-muted-foreground mt-1">Invoice: {inv.invoiceId}</p>
                     </div>
@@ -199,7 +189,7 @@ export default function PaymentPage() {
                 <CardContent>
                   <div className="flex justify-between items-center text-sm mb-2 pt-2 border-t">
                     <span className="text-muted-foreground">Due Date:</span>
-                    {/* ইনভয়েস ক্রিয়েট হওয়ার ডেট */}
+                  
                     <span className="font-medium">{new Date(inv.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-bold">
@@ -227,7 +217,6 @@ export default function PaymentPage() {
         )}
       </div>
 
-      {/* Payment History Section */}
       <div className="space-y-4 pt-4">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <FileText className="h-5 w-5 text-muted-foreground" /> Payment History

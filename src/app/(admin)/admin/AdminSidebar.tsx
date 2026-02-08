@@ -32,7 +32,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-// Interfaces
 interface SubItem {
   label: string;
   path: string;
@@ -45,7 +44,6 @@ interface MenuItem {
   subItems?: SubItem[];
 }
 
-// 👇 AdminLayout থেকে আসা Props এর সাথে মিল রাখা হয়েছে
 interface AdminSidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
@@ -57,7 +55,6 @@ interface AdminSidebarProps {
   } | null;
 }
 
-// Menu Configuration
 const menuItems: MenuItem[] = [
   { 
     icon: LayoutDashboard, 
@@ -138,8 +135,6 @@ const menuItems: MenuItem[] = [
     path: "/admin/comms",
     subItems: [
       { label: "Inbox", path: "/admin/comms/inbox" },
-      { label: "Campaigns", path: "/admin/comms/campaigns" },
-      { label: "Appointments", path: "/admin/comms/appointments" },
     ]
   },
   { 
@@ -159,8 +154,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { label: "Funnels", path: "/admin/reports/funnels" },
       { label: "Conversions", path: "/admin/reports/conversions" },
-      { label: "Revenue", path: "/admin/reports/revenue" },
-      { label: "Visa Rates", path: "/admin/reports/visa" },
     ]
   },
   { 
@@ -169,8 +162,6 @@ const menuItems: MenuItem[] = [
     path: "/admin/security",
     subItems: [
       { label: "Audit Log", path: "/admin/security/audit" },
-      { label: "Access Changes", path: "/admin/security/access" },
-      { label: "Data Retention", path: "/admin/security/retention" },
     ]
   },
   { 
@@ -178,10 +169,8 @@ const menuItems: MenuItem[] = [
     label: "Settings", 
     path: "/admin/settings",
     subItems: [
-      { label: "Organization", path: "/admin/settings/organization" },
       { label: "Users & Roles", path: "/admin/settings/users" },
       { label: "Pipelines", path: "/admin/settings/pipelines" },
-      { label: "Integrations", path: "/admin/settings/integrations" },
     ]
   },
   { 
@@ -198,7 +187,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
   const pathname = usePathname(); 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
-  // সাইডবার টগল ফাংশন
   const onToggle = () => {
     setCollapsed(!collapsed);
   };
@@ -211,7 +199,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
     );
   };
 
-  // অ্যাক্টিভ রাউট লজিক
   const isActive = (path: string) => pathname === path;
   
   const isParentActive = (item: MenuItem) => {
@@ -221,7 +208,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
 
   return (
     <>
-      {/* মোবাইল ওভারলে */}
       {isMobile && !collapsed && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
@@ -235,7 +221,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
           collapsed ? isMobile ? "-translate-x-full" : "w-16" : "w-64"
         )}
       >
-        {/* Logo Area */}
         <div className="p-4 border-b border-border flex items-center justify-between h-16">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center flex-shrink-0">
@@ -256,7 +241,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
           >
             {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </Button>
-          {/* মোবাইল ক্লোজ বাটন */}
           {!collapsed && isMobile && (
              <Button variant="ghost" size="icon" onClick={() => setCollapsed(true)} className="md:hidden">
                <PanelLeftClose className="h-4 w-4" />
@@ -264,7 +248,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
           )}
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-muted">
           <ul className="space-y-1">
             {menuItems.map((item) => {
@@ -333,7 +316,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
           </ul>
         </nav>
 
-        {/* User Profile Area (Footer) */}
         {!collapsed && (
           <div className="p-4 border-t border-border">
             <div className="flex items-center gap-3">
@@ -353,7 +335,6 @@ const AdminSidebar = ({ collapsed, setCollapsed, isMobile, user }: AdminSidebarP
         )}
       </div>
       
-      {/* Mobile Hamburger Button (If Sidebar is completely hidden) */}
       {isMobile && collapsed && (
         <Button
           variant="outline"

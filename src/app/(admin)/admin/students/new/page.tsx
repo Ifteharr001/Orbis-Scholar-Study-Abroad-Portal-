@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 const NewStudentPage = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // লোডিং স্টেট
+  const [loading, setLoading] = useState(false); 
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -46,7 +46,6 @@ const NewStudentPage = () => {
     setLoading(true);
 
     try {
-      // ✅ API কল করা হচ্ছে
       const res = await fetch("/api/admin/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,12 +58,10 @@ const NewStudentPage = () => {
         throw new Error(data.message || "Something went wrong");
       }
       
-      // সফল হলে টোস্ট দেখাবে
       toast.success("Success", {
         description: "Student account created successfully.",
       });
       
-      // লিস্ট পেজে রিডাইরেক্ট করবে
       router.push("/admin/students");
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -248,7 +245,6 @@ const NewStudentPage = () => {
                   <SelectValue placeholder="Select counselor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* এখানে আপনি চাইলে ডায়নামিক কাউন্সিলর লিস্ট আনতে পারেন */}
                   <SelectItem value="Sarah Khan">Sarah Khan</SelectItem>
                   <SelectItem value="John Doe">John Doe</SelectItem>
                 </SelectContent>

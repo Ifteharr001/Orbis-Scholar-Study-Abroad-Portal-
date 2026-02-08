@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// ... (বাকি ইম্পোর্ট আগের মতোই)
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +18,6 @@ import {
   ChevronDown, ChevronUp, Eye, Loader2 
 } from "lucide-react";
 
-// ... (ইন্টারফেসগুলো আগের মতোই থাকবে)
 interface Task {
   id: number;
   name: string;
@@ -54,7 +52,6 @@ interface VisaUpdatePayload {
 }
 
 export default function VisaPreDeparturePage() {
-  // ... (স্টেট ভেরিয়েবলগুলো আগের মতোই)
   const [loading, setLoading] = useState(true);
   const [visaProgress, setVisaProgress] = useState(0);
   const [visaTasks, setVisaTasks] = useState<Task[]>([]);
@@ -86,7 +83,6 @@ export default function VisaPreDeparturePage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Fetch Data (Same as before)
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/student/visa-process");
@@ -137,7 +133,6 @@ export default function VisaPreDeparturePage() {
     }
   };
 
-  // 🔥 Fix: Sequential Unlock Logic Here
   const handleTaskUpdate = async (taskId: number, newStatus: string, fileData?: { fileName: string, fileUrl: string }) => {
     const updatedTasks = visaTasks.map(t => 
       t.id === taskId 
@@ -145,13 +140,12 @@ export default function VisaPreDeparturePage() {
         : t
     );
     
-    // ✅ Logic: যদি বর্তমান টাস্ক 'done' হয়, তবে পরের টাস্ক 'locked' থেকে 'pending' হবে
     if (newStatus === "done") {
         const currentTaskIndex = updatedTasks.findIndex(t => t.id === taskId);
-        // যদি পরের টাস্ক থাকে
+     
         if (currentTaskIndex < updatedTasks.length - 1) {
             const nextTask = updatedTasks[currentTaskIndex + 1];
-            // যদি পরের টাস্ক লক করা থাকে, তবে সেটা আনলক করো
+           
             if (nextTask.status === "locked") {
                 updatedTasks[currentTaskIndex + 1] = { ...nextTask, status: "pending" };
                 toast.info(`Next step unlocked: ${nextTask.name}`);
@@ -159,22 +153,18 @@ export default function VisaPreDeparturePage() {
         }
     }
 
-    // Progress Calculation
     const completedCount = updatedTasks.filter(t => t.status === "done" || t.status === "verified").length;
     const newProgress = Math.round((completedCount / updatedTasks.length) * 100);
 
-    // Optimistic Update
     setVisaTasks(updatedTasks);
     setVisaProgress(newProgress);
 
-    // API Call
     await updateVisaProcess({ 
       tasks: updatedTasks, 
       progress: newProgress 
     });
   };
 
-  // ... (Rest of the handlers: handleUpload, handleFormComplete etc. remain SAME)
   const handleUpload = async () => {
     if (selectedFile && selectedTask) {
       const dummyUrl = URL.createObjectURL(selectedFile); 
@@ -232,12 +222,10 @@ export default function VisaPreDeparturePage() {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // ✅ Fix: Generic URL or UK specific
   const formUrls: { [key: number]: string } = {
     2: "https://visas-immigration.service.gov.uk/product/uk-visit-visa", // UK Link
   };
 
-  // ... (Helpers: getStatusBadge, getStatusIcon remain SAME)
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "done": return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Done</Badge>;
@@ -261,16 +249,14 @@ export default function VisaPreDeparturePage() {
     return <div className="flex justify-center h-[60vh] items-center"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>;
   }
 
-  // JSX Return (Same structure, verify the Header Text)
   return (
     <div className="space-y-6 pb-10">
       <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 rounded-2xl p-8 text-white shadow-md">
         <div className="flex flex-col md:flex-row items-start justify-between gap-6">
           <div className="flex-1">
-            {/* ✅ নিশ্চিত করুন টাইটেল ঠিক আছে */}
             <h1 className="text-2xl font-bold mb-2">Visa Process for United Kingdom</h1> 
             <p className="text-cyan-100 mb-6">Track your visa application and pre-departure tasks</p>
-            {/* ... rest of the UI ... */}
+        
             <div className="flex items-center gap-6">
               <div className="relative w-24 h-24 shrink-0">
                 <svg className="w-24 h-24 transform -rotate-90">
@@ -295,14 +281,12 @@ export default function VisaPreDeparturePage() {
               <MapPin className="w-5 h-5" />
               <span className="font-medium">Embassy Details</span>
             </div>
-            {/* ✅ UK Embassy Address */}
             <p className="text-sm text-cyan-100 mb-1">British High Commission</p>
             <p className="text-sm text-cyan-100">Dhaka, Bangladesh</p>
           </div>
         </div>
       </div>
 
-      {/* 1. Visa Tasks (UI Code remains same, logic updated above) */}
       <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
         <button onClick={() => toggleSection('visaApplication')} className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors">
           <div className="flex items-center gap-3">
@@ -327,7 +311,6 @@ export default function VisaPreDeparturePage() {
                 <div className="flex items-center gap-3">
                   {getStatusBadge(task.status)}
                   
-                  {/* Action Buttons */}
                   {task.hasUpload && task.status === "done" && (
                     <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => { setSelectedTask(task); setViewDialogOpen(true); }}>
                       <Eye className="w-3 h-3 mr-1" /> View
@@ -350,8 +333,6 @@ export default function VisaPreDeparturePage() {
         )}
       </div>
 
-      {/* ... (Rest of the UI for Appointments, Travel, Pre-Departure, Dialogs stays EXACTLY same) */}
-      {/* 2. Appointments */}
       <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
         {/* ... Appointment UI Code ... */}
         <button onClick={() => toggleSection('appointments')} className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors">
@@ -399,7 +380,6 @@ export default function VisaPreDeparturePage() {
         )}
       </div>
 
-      {/* 3. Travel */}
       <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
          <button onClick={() => toggleSection('travel')} className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
@@ -439,7 +419,6 @@ export default function VisaPreDeparturePage() {
          )}
       </div>
 
-      {/* 4. Pre-Departure */}
       <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
          <button onClick={() => toggleSection('preDeparture')} className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
@@ -464,7 +443,6 @@ export default function VisaPreDeparturePage() {
          )}
       </div>
 
-      {/* Dialogs (Upload, Form, View) - Same as before */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent>
            <DialogHeader><DialogTitle>Upload {selectedTask?.name}</DialogTitle></DialogHeader>

@@ -70,7 +70,6 @@ export default function CounselorAppointmentsPage() {
 
   if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-  // Filter lists
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pendingList = appointments.filter((a: any) => a.status === "pending");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

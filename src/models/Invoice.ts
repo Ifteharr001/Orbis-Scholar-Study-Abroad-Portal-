@@ -4,13 +4,13 @@ export interface IInvoice extends Document {
   invoiceId: string;
   studentName: string;
   studentEmail: string;
-  applicationId?: string; // Optional linkage
+  applicationId?: string; 
   programName?: string;
   amount: number;
   currency: string;
   type: "Application Fee" | "Tuition Fee" | "Security Deposit";
   status: "Paid" | "Pending" | "Failed" | "Refunded";
-  paymentMethod?: string; // Stripe, Bank Transfer, etc.
+  paymentMethod?: string;
   createdAt: Date;
 }
 

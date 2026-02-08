@@ -25,7 +25,6 @@ export interface IApplication extends Document {
   appliedDate: Date;
   applicationId?: string;
   
-  // Offer Details
   scholarship: string;
   tuitionFee: string;
   expiryDate: string;
@@ -39,8 +38,6 @@ export interface IApplication extends Document {
   isOfferAccepted: boolean;
   offerAcceptedDate?: Date;
 
-  // ✅ Internal Notes Array (FIXED HERE)
-  // আগে এটি String ছিল, এখন এটি Object এর Array
   internalNotes: {
     content: string;
     createdAt: Date;

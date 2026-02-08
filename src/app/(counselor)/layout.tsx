@@ -14,7 +14,6 @@ export default async function CounselorLayout({
     redirect("/counselor/login"); 
   }
 
-  // ২. রোল চেক
   if (session.user?.role !== "counselor") {
     redirect("/unauthorized");
   }

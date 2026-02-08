@@ -49,7 +49,6 @@ export default function OffersPage() {
           const result = await res.json();
 
           if (result.success && Array.isArray(result.data)) {
-            // ✅ Fix: সরাসরি Application মডেলের প্রপার্টিগুলো ব্যবহার করা হচ্ছে
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const mappedOffers = result.data.map((item: any) => {
                 return {
@@ -58,16 +57,13 @@ export default function OffersPage() {
                     programName: item.programName,
                     status: item.status,
                     
-                    // সরাসরি আইটেম থেকে ভ্যালু নেওয়া হচ্ছে, না থাকলে ফলব্যাক স্ট্রিং
                     scholarship: item.scholarship || "None", 
                     expiryDate: item.expiryDate || "N/A",
                     
-                    // এখানেও সরাসরি ভ্যালু নেওয়া হচ্ছে
                     tuitionFee: item.tuitionFee || "Contact University",
                     duration: item.duration || "N/A",
                     location: item.location || "N/A",
                     
-                    // অন্যান্য তথ্য
                     startDate: item.startDate || "Next Intake", 
                     accommodation: item.accommodation || "On Campus",
                     workPermit: item.workPermit || "N/A",
@@ -94,7 +90,6 @@ export default function OffersPage() {
     fetchOffers();
   }, [isAuthenticated, user?.email]);
 
-  // Handle Accept Offer
   const handleAcceptOffer = async (offerId: string) => {
     const confirmed = window.confirm("Are you sure you want to accept this offer? This will start your visa processing.");
     if (!confirmed) return;
@@ -128,7 +123,6 @@ export default function OffersPage() {
     }
   };
 
-  // Handle Download
   const handleDownload = (url: string, fileNamePrefix: string) => {
     if (!url) return;
 
@@ -194,7 +188,6 @@ export default function OffersPage() {
   return (
     <div className="space-y-6 pb-10">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Offers & Scholarships</h1>
@@ -218,7 +211,6 @@ export default function OffersPage() {
         </div>
       )}
 
-      {/* Offers Grid */}
       {offers.length === 0 ? (
          <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/5">
             <div className="bg-muted p-4 rounded-full mb-4">
@@ -233,7 +225,6 @@ export default function OffersPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {offers.map((offer) => {
             
-            // Status Logic
             const hasOffer = offer.status === "Offer Received" || offer.status === "Conditional Offer";
             const isAccepted = offer.isOfferAccepted;
             const isVisaProcessing = offer.status === "Visa Processing";
@@ -242,7 +233,6 @@ export default function OffersPage() {
             return (
                 <div key={offer._id} className={cn("bg-card rounded-xl border border-border p-6 shadow-sm transition-all hover:shadow-md", selectedOffers.includes(offer._id) && "ring-2 ring-primary border-primary")}>
                 
-                {/* Card Header & Selection */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
                     <Checkbox
@@ -261,10 +251,8 @@ export default function OffersPage() {
                     </span>
                 </div>
 
-                {/* Card Body */}
                 <div className={cn("ml-8 space-y-4 transition-opacity", !isCardActive && "opacity-60 grayscale")}>
                     
-                    {/* Key Details Grid */}
                     <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg border border-border/50">
                         <div>
                             <p className="text-xs text-muted-foreground font-medium mb-1">Scholarship</p>
@@ -292,10 +280,8 @@ export default function OffersPage() {
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex flex-wrap items-center gap-3 pt-2">
                         
-                        {/* Accept Button Logic */}
                         {!offer.isOfferAccepted && hasOffer ? (
                             <Button 
                                 size="sm" 
@@ -312,7 +298,6 @@ export default function OffersPage() {
                             </Button>
                         )}
 
-                        {/* Download Button Logic */}
                         {offer.offerLetterUrl ? (
                             <Button 
                                 variant="outline" 
@@ -348,7 +333,6 @@ export default function OffersPage() {
         </div>
       )}
 
-      {/* Compare Dialog (UI Unchanged) */}
       <Dialog open={compareDialogOpen} onOpenChange={setCompareDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="px-1">

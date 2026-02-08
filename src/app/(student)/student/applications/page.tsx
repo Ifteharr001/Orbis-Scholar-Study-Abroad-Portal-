@@ -5,16 +5,15 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Settings, Loader2, Plus, FileText } from "lucide-react";
-import ApplicationCard from "../components/ApplicationCard"; // এই কম্পোনেন্টটি পরে চেক করব
+import ApplicationCard from "../components/ApplicationCard"; 
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-// ✅ Backend Model এর সাথে মিল রেখে ইন্টারফেস তৈরি
 interface Application {
   _id: string;
-  applicationId: string; // যেমন: APP-123456
+  applicationId: string; 
   universityName: string;
-  programName: string; // আগে 'course' ছিল, এখন 'programName'
+  programName: string; 
   status: string;
   appliedDate: string;
 }
@@ -26,13 +25,11 @@ export default function MyApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ১. ডাটা ফেচিং
   useEffect(() => {
     const fetchApplications = async () => {
       if (!isAuthenticated) return;
 
       try {
-        // আমরা ড্যাশবোর্ড API থেকেই ডাটা নিচ্ছি (কারণ এটি ফাস্ট এবং অপটিমাইজড)
         const res = await fetch("/api/student/dashboard-data");
         const data = await res.json();
         
@@ -51,14 +48,12 @@ export default function MyApplicationsPage() {
     fetchApplications();
   }, [isAuthenticated]);
 
-  // ২. সার্চ ফিল্টার (Client Side)
   const filteredApplications = applications.filter((app) =>
     app.universityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     app.programName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     app.applicationId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // লোডিং স্টেট
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-[60vh] w-full">
@@ -70,9 +65,8 @@ export default function MyApplicationsPage() {
   return (
     <div className="space-y-6">
       
-      {/* --- Top Bar --- */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-        {/* Search */}
+     
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -83,7 +77,6 @@ export default function MyApplicationsPage() {
           />
         </div>
         
-        {/* Actions */}
         <div className="w-full md:w-auto flex justify-end gap-2">
            <Button asChild className="bg-primary text-white">
               <Link href="/student/university-program">
@@ -97,7 +90,6 @@ export default function MyApplicationsPage() {
         </div>
       </div>
 
-      {/* --- Main Content --- */}
       <div className="bg-card border border-border rounded-xl p-6 shadow-sm min-h-[500px]">
         <div className="mb-6 border-b pb-4 border-border/50">
           <h1 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">
@@ -112,7 +104,6 @@ export default function MyApplicationsPage() {
           </p>
         </div>
 
-        {/* --- List / Grid Rendering --- */}
         {filteredApplications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="bg-muted/30 p-4 rounded-full mb-4">
@@ -132,11 +123,10 @@ export default function MyApplicationsPage() {
               <ApplicationCard 
                 key={app._id} 
                 id={app._id} 
-                applicationId={app.applicationId} // ইউনিক অ্যাপ আইডি পাঠানো হলো
+                applicationId={app.applicationId} 
                 university={app.universityName} 
                 status={app.status}
-                program={app.programName} // ✅ Fixed: course -> programName
-                // তারিখ সুন্দর করে ফরম্যাট করা হলো
+                program={app.programName}
                 lastUpdated={new Date(app.appliedDate).toLocaleDateString("en-US", {
                     day: 'numeric', month: 'short', year: 'numeric'
                 })}

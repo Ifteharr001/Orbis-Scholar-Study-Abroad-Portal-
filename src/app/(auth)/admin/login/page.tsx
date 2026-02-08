@@ -27,7 +27,6 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // 1. Call the Login API
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,8 +36,6 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // 2. Check Role (Optional but recommended for Admin Login page)
-        // যদিও API-তে চেক করা যায়, এখানেও ডাবল চেক করা ভালো ইউজার এক্সপেরিয়েন্সের জন্য
         if (data.user.role === "student" || data.user.role === "partner") {
           toast.error("Access Denied. This portal is for Admins and Staff only.");
           setLoading(false);
@@ -46,7 +43,6 @@ export default function AdminLoginPage() {
         }
 
         toast.success("Welcome back, Admin!");
-        // 3. Redirect to Admin Dashboard
         router.push("/admin/dashboard");
         router.refresh(); 
       } else {

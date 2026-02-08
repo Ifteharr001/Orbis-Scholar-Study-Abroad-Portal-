@@ -143,7 +143,6 @@ export default function AppointmentsPage() {
   return (
     <div className="space-y-6">
       
-      {/* Header & Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Appointments</h1>
@@ -255,7 +254,6 @@ export default function AppointmentsPage() {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-border">
           <CardContent className="p-5 flex items-center gap-4">
