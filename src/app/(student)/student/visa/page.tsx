@@ -85,7 +85,7 @@ export default function VisaPreDeparturePage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch("/api/student/visa-process");
+      const res = await fetch("/api/student/visa-process", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch data");
       
       const data = await res.json();
@@ -124,6 +124,7 @@ export default function VisaPreDeparturePage() {
       const res = await fetch("/api/student/visa-process", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updates),
       });
       if (!res.ok) throw new Error("Update failed");

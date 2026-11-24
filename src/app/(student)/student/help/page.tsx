@@ -33,7 +33,7 @@ export default function HelpSupportPage() {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch("/api/student/ticket");
+      const res = await fetch("/api/student/ticket", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setTickets(data);
@@ -61,6 +61,7 @@ export default function HelpSupportPage() {
       const res = await fetch("/api/student/ticket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 

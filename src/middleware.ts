@@ -58,9 +58,14 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!token) {
-     
-      const signInPage = pathname.startsWith("/counselor") ? "/counselor/login" : "/userAuth";
-      
+
+      let signInPage = "/userAuth";
+      if (pathname.startsWith("/counselor")) {
+        signInPage = "/counselor/login";
+      } else if (pathname.startsWith("/partner")) {
+        signInPage = "/partnerAuth";
+      }
+
       const loginUrl = new URL(signInPage, request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
@@ -70,13 +75,13 @@ export async function middleware(request: NextRequest) {
 
     if (pathname.startsWith("/student") && userRole !== "student") {
       if (userRole === "partner") return NextResponse.redirect(new URL("/partner/dashboard", request.url));
-      if (userRole === "counselor") return NextResponse.redirect(new URL("/counselor", request.url));
+      if (userRole === "counselor") return NextResponse.redirect(new URL("/counselor/dashboard", request.url));
       return NextResponse.rewrite(new URL("/unauthorized", request.url));
     }
 
     if (pathname.startsWith("/partner") && userRole !== "partner") {
       if (userRole === "student") return NextResponse.redirect(new URL("/student/dashboard", request.url));
-      if (userRole === "counselor") return NextResponse.redirect(new URL("/counselor", request.url));
+      if (userRole === "counselor") return NextResponse.redirect(new URL("/counselor/dashboard", request.url));
       return NextResponse.rewrite(new URL("/unauthorized", request.url));
     }
 

@@ -62,7 +62,7 @@ export default function AppointmentsPage() {
 
   const fetchAppointments = useCallback(async () => {
     try {
-      const res = await fetch("/api/student/appointments");
+      const res = await fetch("/api/student/appointments", { credentials: "include" });
       
       if (!res.ok) throw new Error("Failed to fetch");
       
@@ -94,6 +94,7 @@ export default function AppointmentsPage() {
       const res = await fetch("/api/student/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           topic: selectedTopic,
           type: selectedType,

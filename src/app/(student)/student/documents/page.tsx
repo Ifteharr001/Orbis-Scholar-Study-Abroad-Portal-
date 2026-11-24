@@ -82,7 +82,7 @@ export default function DocumentsPage() {
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const res = await fetch("/api/student/documents");
+      const res = await fetch("/api/student/documents", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch");
       
       const data = await res.json();
@@ -142,10 +142,11 @@ export default function DocumentsPage() {
       const res = await fetch("/api/student/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: docName,
           fileName: selectedFile.name,
-          fileUrl: fakeUrl, 
+          fileUrl: fakeUrl,
           category: category,
         }),
       });

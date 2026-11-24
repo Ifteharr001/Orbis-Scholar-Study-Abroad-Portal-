@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation"; 
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,13 +40,13 @@ interface Student {
   status: string;
   createdAt: string;
   image?: string;
-  programPreference?: { degree: string; country: string }; 
+  programPreference?: { degree: string; country: string };
   applications?: { _id: string; programName: string; universityName: string }[];
 }
 
-const AllStudentsPage = () => {
+function AllStudentsPageContent() {
   const searchParams = useSearchParams();
-  const segmentId = searchParams.get("segment"); 
+  const segmentId = searchParams.get("segment");
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +57,7 @@ const AllStudentsPage = () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (segmentId) params.append("segment", segmentId); 
+        if (segmentId) params.append("segment", segmentId);
         if (statusFilter !== "all") params.append("status", statusFilter);
 
         const res = await fetch(`/api/admin/students?${params.toString()}`);
@@ -73,15 +73,15 @@ const AllStudentsPage = () => {
     };
 
     fetchStudents();
-  }, [segmentId, statusFilter]); 
+  }, [segmentId, statusFilter]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesStatus = statusFilter === "all" || (student.status && student.status.toLowerCase() === statusFilter);
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -207,7 +207,7 @@ const AllStudentsPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>{student.country || "N/A"}</TableCell>
-                      
+
                       <TableCell className="max-w-[200px]">
                         {student.applications && student.applications.length > 0 ? (
                           <div className="flex items-center gap-2">
@@ -264,6 +264,12 @@ const AllStudentsPage = () => {
       </Card>
     </div>
   );
-};
+}
 
-export default AllStudentsPage;
+export default function AllStudentsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <AllStudentsPageContent />
+    </Suspense>
+  );
+}

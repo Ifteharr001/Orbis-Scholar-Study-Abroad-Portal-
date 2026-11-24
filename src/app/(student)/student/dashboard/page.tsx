@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Settings, Loader2, Bell } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import DashboardStats from "../components/DashboardStats";
@@ -48,23 +57,31 @@ interface DashboardStatsData {
 interface DashboardData {
   stats: DashboardStatsData;
   applications: Application[];
-  actions: Action[]; 
+  actions: Action[];
   counselor: Counselor | null;
 }
 
 export default function StudentDashboardPage() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  
+
   const [data, setData] = useState<DashboardData | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
+    // Don't fetch if auth is still loading
     if (authLoading) return;
 
     const fetchData = async () => {
+      // If not authenticated yet, don't fetch - the component will re-render when auth state changes
+      if (!isAuthenticated) {
+        setLoadingData(false);
+        return;
+      }
+
       try {
         const res = await fetch("/api/student/dashboard-data", {
           cache: "no-store",
+          credentials: "include",
         });
 
         if (!res.ok) {
@@ -81,11 +98,7 @@ export default function StudentDashboardPage() {
       }
     };
 
-    if (isAuthenticated) {
-      fetchData();
-    } else {
-      setLoadingData(false);
-    }
+    fetchData();
   }, [authLoading, isAuthenticated]);
 
 
@@ -121,15 +134,61 @@ export default function StudentDashboardPage() {
             />
           </div>
           
-          <Button variant="outline" size="icon" className="rounded-full relative">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            {data?.actions && data.actions.length > 0 && (
-                <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background" />
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
-            <Settings className="h-5 w-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full relative cursor-pointer">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                {data?.actions && data.actions.length > 0 && (
+                    <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 p-2">
+              <DropdownMenuLabel className="font-bold flex items-center justify-between">
+                <span>Notifications</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  {data?.actions?.length || 0} updates
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="max-h-[300px] overflow-y-auto space-y-1 py-1">
+                {data?.actions && data.actions.length > 0 ? (
+                  data.actions.map((action, idx) => (
+                    <DropdownMenuItem key={idx} asChild className="cursor-pointer p-2 focus:bg-muted">
+                      <Link href={action.link || "/student/documents"} className="flex flex-col gap-1 w-full">
+                        <span className="text-xs font-medium text-foreground">{action.message}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(action.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="py-6 text-center text-xs text-muted-foreground">
+                    No new notifications
+                  </div>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary cursor-pointer">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Settings & Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/student/profile">Profile & Settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/student/help">Help & Resources</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, MoreHorizontal, Mail, Shield, Users, UserPlus, Crown, Edit, Trash2, Send, Clock, CheckCircle } from "lucide-react";
+import { Search, MoreHorizontal, Mail, Shield, Users, UserPlus, Crown, Edit, Trash2, Send, Clock, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface User {
@@ -35,19 +35,6 @@ interface Invitation {
   expiresAt: string;
 }
 
-const mockUsers: User[] = [
-  { id: "1", name: "Ahmed Rahman", email: "ahmed@educonsult.com", role: "Owner", status: "active", lastActive: "Just now" },
-  { id: "2", name: "Fatima Khan", email: "fatima@educonsult.com", role: "Admin", status: "active", lastActive: "2 hours ago" },
-  { id: "3", name: "Mohammad Ali", email: "ali@educonsult.com", role: "Counselor", status: "active", lastActive: "1 day ago" },
-  { id: "4", name: "Sarah Begum", email: "sarah@educonsult.com", role: "Counselor", status: "active", lastActive: "3 hours ago" },
-  { id: "5", name: "Karim Hassan", email: "karim@educonsult.com", role: "Staff", status: "inactive", lastActive: "1 week ago" },
-];
-
-const mockInvitations: Invitation[] = [
-  { id: "1", email: "newcounselor@gmail.com", role: "Counselor", status: "pending", sentAt: "2024-01-15", expiresAt: "2024-01-22" },
-  { id: "2", email: "admin2@educonsult.com", role: "Admin", status: "expired", sentAt: "2024-01-01", expiresAt: "2024-01-08" },
-];
-
 const roles = [
   { name: "Owner", description: "Full access to all features and settings", color: "bg-yellow-500" },
   { name: "Admin", description: "Manage users, settings, and all operations", color: "bg-red-500" },
@@ -56,12 +43,14 @@ const roles = [
 ];
 
 const UsersRolesPage = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [invitations, setInvitations] = useState<Invitation[]>(mockInvitations);
+  const [users, setUsers] = useState<User[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("Counselor");
+  const [inviteRole, setInviteRole] = useState("counselor");
+  const [isLoading, setIsLoading] = useState(true);
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -69,39 +58,162 @@ const UsersRolesPage = () => {
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendInvite = () => {
+  // Fetch users and invitations on mount
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [usersRes, invitesRes] = await Promise.all([
+        fetch("/api/admin/users"),
+        fetch("/api/admin/invitations"),
+      ]);
+
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        const rawUsers = usersData.users || [];
+        setUsers(
+          rawUsers.map((u: Record<string, unknown>) => ({
+            id: u._id as string,
+            name: u.name as string,
+            email: u.email as string,
+            role: u.role as string,
+            status: (u.status as User["status"]) || "active",
+            avatar: (u.image as string) || undefined,
+            lastActive: u.updatedAt
+              ? new Date(u.updatedAt as string).toLocaleDateString()
+              : "—",
+          }))
+        );
+      } else {
+        console.error("Failed to fetch users:", await usersRes.text());
+      }
+
+      if (invitesRes.ok) {
+        const invitesData = await invitesRes.json();
+        const rawInvites = invitesData.invitations || [];
+        setInvitations(
+          rawInvites.map((i: Record<string, unknown>) => ({
+            id: i._id as string,
+            email: i.email as string,
+            role: i.role as string,
+            status: (i.status as Invitation["status"]) || "pending",
+            sentAt: i.createdAt ? new Date(i.createdAt as string).toLocaleDateString() : "—",
+            expiresAt: i.expiresAt ? new Date(i.expiresAt as string).toLocaleDateString() : "—",
+          }))
+        );
+      } else {
+        console.error("Failed to fetch invitations:", await invitesRes.text());
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSendInvite = async () => {
     if (!inviteEmail) {
       toast.error("Please enter an email address");
       return;
     }
-    
-    const newInvitation: Invitation = {
-      id: Date.now().toString(),
-      email: inviteEmail,
-      role: inviteRole,
-      status: "pending",
-      sentAt: new Date().toISOString().split("T")[0],
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    };
-    
-    setInvitations([newInvitation, ...invitations]);
-    setInviteEmail("");
-    setInviteDialogOpen(false);
-    toast.success(`Invitation sent to ${inviteEmail}`);
+
+    setSendingInvite(true);
+    try {
+      const res = await fetch("/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send invitation");
+      }
+
+      toast.success(data.message || `Invitation sent to ${inviteEmail}`);
+
+      // Show the invitation link in a toast for development
+      if (data.link) {
+        toast.info(`Invitation link (dev): ${data.link}`, { duration: 10000 });
+      }
+
+      setInviteEmail("");
+      setInviteDialogOpen(false);
+
+      // Refresh invitations list
+      fetchData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to send invitation";
+      toast.error(message);
+    } finally {
+      setSendingInvite(false);
+    }
   };
 
-  const handleResendInvite = (invitation: Invitation) => {
-    toast.success(`Invitation resent to ${invitation.email}`);
+  const handleResendInvite = async (invitation: Invitation) => {
+    try {
+      const res = await fetch("/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: invitation.email, role: invitation.role }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to resend invitation");
+      }
+
+      toast.success(data.message || `Invitation resent to ${invitation.email}`);
+
+      if (data.link) {
+        toast.info(`Invitation link (dev): ${data.link}`, { duration: 10000 });
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to resend invitation";
+      toast.error(message);
+    }
   };
 
-  const handleRevokeInvite = (invitationId: string) => {
-    setInvitations(invitations.filter((i) => i.id !== invitationId));
-    toast.success("Invitation revoked");
+  const handleRevokeInvite = async (invitationId: string) => {
+    try {
+      const res = await fetch(`/api/admin/invitations/${invitationId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to revoke invitation");
+      }
+
+      setInvitations(invitations.filter((i) => i.id !== invitationId));
+      toast.success("Invitation revoked");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to revoke invitation";
+      toast.error(message);
+    }
   };
 
-  const handleRemoveUser = (userId: string) => {
-    setUsers(users.filter((u) => u.id !== userId));
-    toast.success("User removed successfully");
+  const handleRemoveUser = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to remove user");
+      }
+
+      setUsers(users.filter((u) => u.id !== userId));
+      toast.success("User removed successfully");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to remove user";
+      toast.error(message);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -122,11 +234,12 @@ const UsersRolesPage = () => {
   };
 
   const getRoleBadge = (role: string) => {
+    const displayRole = role.charAt(0).toUpperCase() + role.slice(1);
     return (
       <Badge variant="outline" className="gap-1">
-        {role === "Owner" && <Crown className="h-3 w-3 text-yellow-500" />}
-        {role === "Admin" && <Shield className="h-3 w-3 text-red-500" />}
-        {role}
+        {displayRole === "Owner" && <Crown className="h-3 w-3 text-yellow-500" />}
+        {displayRole === "Admin" && <Shield className="h-3 w-3 text-red-500" />}
+        {displayRole}
       </Badge>
     );
   };
@@ -174,13 +287,13 @@ const UsersRolesPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Counselor">Counselor</SelectItem>
-                    <SelectItem value="Staff">Staff</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="counselor">Counselor</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  {roles.find((r) => r.name === inviteRole)?.description}
+                  {roles.find((r) => r.name.toLowerCase() === inviteRole)?.description}
                 </p>
               </div>
             </div>

@@ -21,8 +21,8 @@ export async function GET(req: Request) {
     const query = role ? { role } : {};
 
     const users = await User.find(query)
-      .select("name email image role")
-      .sort({ createdAt: -1 }); 
+      .select("name email image role status updatedAt")
+      .sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, users });
 

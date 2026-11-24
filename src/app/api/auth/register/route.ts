@@ -34,18 +34,20 @@ export async function POST(req: Request) {
     }
 
     const safeRole = (role === "partner") ? "partner" : "student";
+    const status = (safeRole === "partner") ? "inactive" : "active";
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await User.create({
-      name: fullName, 
+      name: fullName,
       email,
       password: hashedPassword,
       role: safeRole,
+      status,
       phone,
       gender,
       country,
-      programPreference: programPreference || "Masters", 
+      programPreference: programPreference || "Masters",
     });
 
     return NextResponse.json(

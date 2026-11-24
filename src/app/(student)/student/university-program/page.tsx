@@ -27,7 +27,7 @@ export default function UniversityProgramPage() {
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
-        const res = await fetch("/api/all-scholarships");
+        const res = await fetch("/api/all-scholarships", { credentials: "include" });
         if (!res.ok) throw new Error("Failed to fetch data");
         const data = await res.json();
         

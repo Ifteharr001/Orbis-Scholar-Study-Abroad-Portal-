@@ -36,8 +36,8 @@ const RegisterForm = () => {
       }
 
       try {
-        
-        const res = await fetch(`/api/verify-token?token=${token}`); //
+
+        const res = await fetch(`/api/admin/verify-token?token=${token}`);
         const data = await res.json();
 
         if (res.ok) {
@@ -93,9 +93,9 @@ const RegisterForm = () => {
             if (inviteData?.role === "admin") {
                 router.push("/admin/login");
             } else if (inviteData?.role === "counselor") {
-                router.push("/counselor/login"); 
+                router.push("/counselor/login");
             } else {
-                router.push("/login"); 
+                router.push("/userAuth");
             }
         }, 1500);
 

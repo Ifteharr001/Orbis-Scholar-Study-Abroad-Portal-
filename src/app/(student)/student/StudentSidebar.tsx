@@ -78,7 +78,7 @@ const StudentSidebar = () => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
         try {
-          const res = await fetch("/api/student/profile"); 
+          const res = await fetch("/api/student/profile", { credentials: "include" }); 
           if (res.ok) {
              const data = await res.json();
              if (data.image && data.image !== userImage) setUserImage(data.image);

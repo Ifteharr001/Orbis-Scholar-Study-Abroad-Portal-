@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ interface Invoice {
   _id: string;
   invoiceId: string;
   programName?: string;
-  type: string;      
+  type: string;
   amount: number;
   currency: string;
   createdAt: string;
@@ -25,18 +25,18 @@ interface PaymentStats {
   totalInvoices: number;
 }
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [stats, setStats] = useState<PaymentStats>({ totalPaid: 0, totalPending: 0, totalInvoices: 0 });
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  
+
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
-        const res = await fetch("/api/student/payment-stats");
+        const res = await fetch("/api/student/payment-stats", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
           setInvoices(data.history || []);
@@ -63,14 +63,15 @@ export default function PaymentPage() {
 
   const handleStripePayment = async (mongoId: string) => {
     setProcessingId(mongoId);
-    
+
     try {
-      const res = await fetch("/api/student/payment/checkout", { 
-        method: "POST", 
+      const res = await fetch("/api/student/payment/checkout", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ invoiceId: mongoId })
       });
-      
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -87,7 +88,7 @@ export default function PaymentPage() {
       console.error(error);
       toast.error(error.message || "Failed to start payment");
     } finally {
-      setTimeout(() => setProcessingId(null), 2000); 
+      setTimeout(() => setProcessingId(null), 2000);
     }
   };
 
@@ -105,13 +106,13 @@ export default function PaymentPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8 max-w-5xl">
-      
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Payments & Billing 💳</h1>
           <p className="text-muted-foreground mt-1">Manage your program fees and invoices securely.</p>
         </div>
-        
+
         <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full border border-green-200 text-sm font-medium">
           <Lock className="h-4 w-4" />
           Secured by Stripe
@@ -129,7 +130,7 @@ export default function PaymentPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Due</CardTitle>
@@ -140,7 +141,7 @@ export default function PaymentPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Invoices</CardTitle>
@@ -157,7 +158,7 @@ export default function PaymentPage() {
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Clock className="h-5 w-5 text-yellow-600" /> Due Invoices
         </h2>
-        
+
         {pendingInvoices.length === 0 ? (
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-10 text-muted-foreground">
@@ -189,7 +190,7 @@ export default function PaymentPage() {
                 <CardContent>
                   <div className="flex justify-between items-center text-sm mb-2 pt-2 border-t">
                     <span className="text-muted-foreground">Due Date:</span>
-                  
+
                     <span className="font-medium">{new Date(inv.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-bold">
@@ -198,8 +199,8 @@ export default function PaymentPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button 
-                    className="w-full bg-[#635BFF] hover:bg-[#5851df] text-white font-medium shadow-md" 
+                  <Button
+                    className="w-full bg-[#635BFF] hover:bg-[#5851df] text-white font-medium shadow-md"
                     onClick={() => handleStripePayment(inv._id)}
                     disabled={processingId === inv._id}
                   >
@@ -221,7 +222,7 @@ export default function PaymentPage() {
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <FileText className="h-5 w-5 text-muted-foreground" /> Payment History
         </h2>
-        
+
         {paidInvoices.length === 0 ? (
            <div className="text-center py-8 text-muted-foreground border rounded-md bg-muted/10">
               No payment history found.
@@ -270,5 +271,13 @@ export default function PaymentPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <PaymentPageContent />
+    </Suspense>
   );
 }

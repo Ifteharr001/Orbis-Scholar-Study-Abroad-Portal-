@@ -103,7 +103,8 @@ const contactLinks = [
              
                 <button
                   onClick={async () => {
-                    await signOut();
+                    const redirectUrl = role === "partner" ? "/partnerAuth" : "/userAuth";
+                    await signOut({ callbackUrl: redirectUrl });
                   }}
                   className="flex items-center gap-2 hover:text-red-200 transition-colors"
                 >
@@ -494,7 +495,8 @@ const contactLinks = [
                   </Link>
                   <button
                     onClick={async () => {
-                      await signOut();
+                      const redirectUrl = role === "partner" ? "/partnerAuth" : "/userAuth";
+                      await signOut({ callbackUrl: redirectUrl });
                       setIsMobileMenuOpen(false);
                     }}
                     className="flex items-center justify-center gap-2 py-2 text-destructive font-medium w-full"

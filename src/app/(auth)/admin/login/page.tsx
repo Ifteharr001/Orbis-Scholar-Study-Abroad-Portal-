@@ -43,8 +43,7 @@ export default function AdminLoginPage() {
         }
 
         toast.success("Welcome back, Admin!");
-        router.push("/admin/dashboard");
-        router.refresh(); 
+        router.push("/admin/dashboard"); 
       } else {
         toast.error(data.message || "Invalid credentials");
       }
@@ -79,7 +78,7 @@ export default function AdminLoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="admin@techbybee.com"
+                  placeholder="securelogin@orbis.com"
                   className="pl-9"
                   required
                   value={formData.email}

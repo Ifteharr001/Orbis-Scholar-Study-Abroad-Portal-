@@ -45,7 +45,7 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("/api/student/profile");
+        const res = await fetch("/api/student/profile", { credentials: "include" });
         
         if (res.ok) {
           const data = await res.json();
@@ -98,6 +98,7 @@ export default function ProfileSettingsPage() {
       const res = await fetch("/api/student/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(profile),
       });
 
@@ -124,7 +125,7 @@ export default function ProfileSettingsPage() {
   };
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: "/userAuth" });
     toast.success("Logged out successfully");
   };
 

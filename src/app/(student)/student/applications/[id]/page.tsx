@@ -56,7 +56,7 @@ export default function ApplicationDetailsPage({ params }: PageProps) {
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const res = await fetch(`/api/student/applications/${id}`);
+        const res = await fetch(`/api/student/applications/${id}`, { credentials: "include" });
         
         if (!res.ok) {
             if (res.status === 404) throw new Error("Application not found");

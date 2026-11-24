@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { signIn } from "next-auth/react"; 
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
+import ForgotPassword from "@/components/auth/ForgotPassword";
 
 // --- Schemas ---
 const loginSchema = z.object({
@@ -47,7 +48,8 @@ const countries = [
 ];
 
 const PartnerAuth = () => {
-  const [isLogin, setIsLogin] = useState(false); 
+  const [isLogin, setIsLogin] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,7 +57,7 @@ const PartnerAuth = () => {
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,15 +124,13 @@ const PartnerAuth = () => {
           toast.success("Login Successful", {
             description: "Redirecting to dashboard...",
           });
-          
-          
-          router.refresh(); 
+
           router.push("/partner/dashboard");
         }
 
       } else {
         
-        const res = await fetch("/api/register", {
+        const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -171,7 +171,7 @@ const PartnerAuth = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      
+
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
@@ -195,10 +195,13 @@ const PartnerAuth = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
-            {isLogin ? "Partner Login" : "Become a Partner"}
+            {showForgotPassword ? "Reset Password" : isLogin ? "Partner Login" : "Become a Partner"}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {showForgotPassword ? (
+            <ForgotPassword loginType="partner" onBackToLogin={() => setShowForgotPassword(false)} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-1.5">
                 <Label htmlFor="fullName">Full name</Label>
@@ -357,7 +360,20 @@ const PartnerAuth = () => {
                 </>
               )}
             </p>
+
+            {isLogin && (
+              <p className="text-center text-sm text-muted-foreground pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </p>
+            )}
           </form>
+          )}
         </div>
       </div>
     </div>

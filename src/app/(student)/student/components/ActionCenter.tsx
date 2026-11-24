@@ -69,7 +69,9 @@ const ActionCenter = ({ initialActions = [] }: ActionCenterProps) => {
     if (initialActions.length === 0) {
       const fetchActions = async () => {
         try {
-          const res = await fetch("/api/student/dashboard-data");
+          const res = await fetch("/api/student/dashboard-data", {
+            credentials: "include",
+          });
           if (res.ok) {
             const data = await res.json();
             setActions(data.actions);

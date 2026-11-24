@@ -45,7 +45,7 @@ export default function OffersPage() {
   const fetchOffers = async () => {
       if (isAuthenticated && user?.email) { 
         try {
-          const res = await fetch(`/api/student/offers`);
+          const res = await fetch(`/api/student/offers`, { credentials: "include" });
           const result = await res.json();
 
           if (result.success && Array.isArray(result.data)) {
@@ -99,6 +99,7 @@ export default function OffersPage() {
       const res = await fetch("/api/student/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ applicationId: offerId }),
       });
 

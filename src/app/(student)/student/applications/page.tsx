@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Search, Settings, Loader2, Plus, FileText } from "lucide-react";
 import ApplicationCard from "../components/ApplicationCard"; 
 import { useAuth } from "@/hooks/useAuth";
@@ -30,7 +38,9 @@ export default function MyApplicationsPage() {
       if (!isAuthenticated) return;
 
       try {
-        const res = await fetch("/api/student/dashboard-data");
+        const res = await fetch("/api/student/dashboard-data", {
+          credentials: "include",
+        });
         const data = await res.json();
         
         if (res.ok && data.applications) {
@@ -84,9 +94,23 @@ export default function MyApplicationsPage() {
               </Link>
            </Button>
              
-           <Button variant="outline" size="icon" className="text-muted-foreground">
-             <Settings className="h-5 w-5" />
-           </Button>
+           <DropdownMenu>
+             <DropdownMenuTrigger asChild>
+               <Button variant="outline" size="icon" className="text-muted-foreground hover:text-primary cursor-pointer">
+                 <Settings className="h-5 w-5" />
+               </Button>
+             </DropdownMenuTrigger>
+             <DropdownMenuContent align="end" className="w-48">
+               <DropdownMenuLabel>Settings & Account</DropdownMenuLabel>
+               <DropdownMenuSeparator />
+               <DropdownMenuItem asChild className="cursor-pointer">
+                 <Link href="/student/profile">Profile & Settings</Link>
+               </DropdownMenuItem>
+               <DropdownMenuItem asChild className="cursor-pointer">
+                 <Link href="/student/help">Help & Resources</Link>
+               </DropdownMenuItem>
+             </DropdownMenuContent>
+           </DropdownMenu>
         </div>
       </div>
 

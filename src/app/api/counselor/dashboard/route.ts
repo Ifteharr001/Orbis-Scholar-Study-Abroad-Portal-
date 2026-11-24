@@ -24,25 +24,25 @@ export async function GET() {
       upcomingTasks,
       recentApplications
     ] = await Promise.all([
-      Task.countDocuments({ 
-        assignedTo: counselorEmail, 
-        status: { $ne: "Completed" } 
+      Task.countDocuments({
+        assignedTo: counselorEmail,
+        status: { $ne: "Completed" }
       }),
 
-      Application.countDocuments({ 
+      Application.countDocuments({
         counselorEmail: counselorEmail,
-        status: { $nin: ["Rejected", "Cancelled"] } 
+        status: { $nin: ["Rejected", "Cancelled"] }
       }),
 
-      Application.distinct("studentEmail", { 
-        counselorEmail: counselorEmail 
+      Application.distinct("studentEmail", {
+        counselorEmail: counselorEmail
       }),
 
-      Task.find({ 
-        assignedTo: counselorEmail, 
-        status: { $ne: "Completed" } 
+      Task.find({
+        assignedTo: counselorEmail,
+        status: { $ne: "Completed" }
       })
-      .sort({ priority: -1, dueDate: 1 }) 
+      .sort({ priority: -1, dueDate: 1 })
       .limit(5)
       .lean(),
 
@@ -53,19 +53,27 @@ export async function GET() {
         .lean()
     ]);
 
+    // Fetch all student profiles in one query instead of N+1
+    const studentEmails = [...new Set(recentApplications.map((app: any) => app.studentEmail))];
+    const studentProfiles = await Student.find({ email: { $in: studentEmails } })
+      .select("name email phone image")
+      .lean();
+
+    // Create a map for quick lookup
+    const studentProfileMap = new Map(studentProfiles.map(s => [s.email, s]));
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recentStudents = await Promise.all(recentApplications.map(async (app: any) => {
-       
-        const studentProfile = await Student.findOne({ email: app.studentEmail }).select("phone").lean();
-        
-        return {
-            _id: app.studentId || app._id, 
-            name: app.studentName,
-            email: app.studentEmail,
-            image: "", 
-            joinedAt: app.updatedAt 
-        };
-    }));
+    const recentStudents = recentApplications.map((app: any) => {
+      const studentProfile = studentProfileMap.get(app.studentEmail);
+
+      return {
+        _id: app.studentId || app._id,
+        name: app.studentName,
+        email: app.studentEmail,
+        image: studentProfile?.image || "",
+        joinedAt: app.updatedAt
+      };
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uniqueRecentStudents = recentStudents.filter((student, index, self) =>

@@ -57,7 +57,7 @@ interface CounselorSidebarProps {
 }
 
 const sidebarItems: MenuItem[] = [
-  { title: "Dashboard", href: "/counselor", icon: LayoutDashboard },
+  { title: "Dashboard", href: "/counselor/dashboard", icon: LayoutDashboard },
   { title: "My Students", href: "/counselor/students", icon: Users },
   { title: "Applications", href: "/counselor/applications", icon: FileText },
   { title: "Documents", href: "/counselor/documents", icon: FolderOpen },
@@ -92,8 +92,8 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
   };
 
   const isActive = (path: string) => {
-    if (path === "/counselor") {
-        return pathname === "/counselor";
+    if (path === "/counselor/dashboard") {
+        return pathname === "/counselor" || pathname === "/counselor/dashboard";
     }
     return pathname === path || pathname.startsWith(`${path}/`);
   };
@@ -232,11 +232,11 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
                     </div>
                 </div>
                 
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
+                <Button
+                    variant="ghost"
+                    size="icon"
                     className="text-muted-foreground hover:text-red-500"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    onClick={() => signOut({ callbackUrl: "/counselor/login" })}
                 >
                     <LogOut className="h-4 w-4" />
                 </Button>
@@ -246,12 +246,12 @@ export default function CounselorSidebar({ collapsed, setCollapsed, isMobile }: 
         
         {collapsed && (
              <div className="p-4 border-t border-border flex justify-center">
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    title="Logout" 
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Logout"
                     className="text-muted-foreground hover:text-red-500"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    onClick={() => signOut({ callbackUrl: "/counselor/login" })}
                 >
                     <LogOut className="h-5 w-5" />
                 </Button>

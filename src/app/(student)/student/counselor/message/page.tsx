@@ -42,19 +42,19 @@ export default function StudentMessagePage() {
   const fetchData = async () => {
     try {
     
-      const resCounselor = await fetch("/api/student/counselor");
+      const resCounselor = await fetch("/api/student/counselor", { credentials: "include" });
       const dataCounselor = await resCounselor.json();
-      
+
       if (dataCounselor.counselor) {
         setCounselor({
-            _id: dataCounselor.counselor.id, 
+            _id: dataCounselor.counselor.id,
             name: dataCounselor.counselor.name,
             image: dataCounselor.counselor.image,
             isOnline: true
         });
       }
 
-      const resMsg = await fetch("/api/student/message");
+      const resMsg = await fetch("/api/student/message", { credentials: "include" });
       const dataMsg = await resMsg.json();
       if (dataMsg.success) {
         setMessages(dataMsg.messages);
@@ -71,7 +71,7 @@ export default function StudentMessagePage() {
     fetchData();
     
     const interval = setInterval(async () => {
-        const resMsg = await fetch("/api/student/message");
+        const resMsg = await fetch("/api/student/message", { credentials: "include" });
         const dataMsg = await resMsg.json();
         if (dataMsg.success) {
             setMessages(dataMsg.messages);
@@ -99,6 +99,7 @@ export default function StudentMessagePage() {
         const res = await fetch("/api/student/message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ text: tempText })
         });
         const data = await res.json();

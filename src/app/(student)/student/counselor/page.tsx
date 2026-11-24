@@ -43,7 +43,7 @@ export default function MyCounselorPage() {
     const fetchCounselor = async () => {
       if (isAuthenticated) {
         try {
-          const res = await fetch("/api/student/counselor");
+          const res = await fetch("/api/student/counselor", {credentials: "include"});
           if (!res.ok) {
               throw new Error("Failed to fetch");
           }
@@ -73,6 +73,7 @@ export default function MyCounselorPage() {
       const res = await fetch("/api/student/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ text: message }),
       });
 

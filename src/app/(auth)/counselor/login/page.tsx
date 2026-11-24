@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react"; 
+import { useState, Suspense } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Users, Mail, Lock } from "lucide-react";
+import ForgotPassword from "@/components/auth/ForgotPassword";
 
-export default function CounselorLoginPage() {
+function CounselorLoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  const callbackUrl = searchParams.get("callbackUrl") || "/counselor";
 
+  const callbackUrl = searchParams.get("callbackUrl") || "/counselor/dashboard";
+
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -35,7 +37,7 @@ export default function CounselorLoginPage() {
         redirect: false,
         email: formData.email,
         password: formData.password,
-        loginType: "counselor", 
+        loginType: "counselor",
       });
 
       if (res?.error) {
@@ -46,8 +48,7 @@ export default function CounselorLoginPage() {
         toast.success("Welcome back!", {
           description: "Login successful.",
         });
-        
-        router.refresh(); 
+
         router.push(callbackUrl);
       }
     } catch (error) {
@@ -72,7 +73,10 @@ export default function CounselorLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {showForgotPassword ? (
+            <ForgotPassword loginType="counselor" onBackToLogin={() => setShowForgotPassword(false)} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
@@ -118,8 +122,18 @@ export default function CounselorLoginPage() {
               )}
             </Button>
           </form>
+        )}
         </CardContent>
         <CardFooter className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
+          {!showForgotPassword && (
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-primary hover:underline font-medium text-sm"
+            >
+              Forgot Password?
+            </button>
+          )}
           <p>Need access? Contact Admin.</p>
           <p className="text-xs opacity-70">
             &copy; {new Date().getFullYear()} Orbis Scholar
@@ -127,5 +141,13 @@ export default function CounselorLoginPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function CounselorLoginPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <CounselorLoginPageContent />
+    </Suspense>
   );
 }

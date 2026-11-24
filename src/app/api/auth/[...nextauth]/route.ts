@@ -34,9 +34,18 @@ export const authOptions: AuthOptions = {
         const actualRole = user.role;
 
         if (requestedRole && requestedRole !== actualRole) {
-             if(actualRole !== 'admin') { 
-                throw new Error(`Access Denied. This is a ${actualRole} account, not ${requestedRole}.`);
-             }
+          if (actualRole !== 'admin') {
+            throw new Error(`Access Denied. This is a ${actualRole} account, not ${requestedRole}.`);
+          }
+        }
+
+        // Check user status for partner role
+        if (actualRole === "partner" && user.status === "inactive") {
+          throw new Error("Your partner account is pending approval from admin.");
+        }
+
+        if (user.status === "blocked") {
+          throw new Error("Your account has been blocked. Please contact support.");
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password as string);

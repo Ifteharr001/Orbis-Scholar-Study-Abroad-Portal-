@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import signupIllustration from "@/assets/signup-illustration.png";
+import ForgotPassword from "@/components/auth/ForgotPassword";
 
 
 const loginSchema = z.object({
@@ -64,7 +65,8 @@ const programs = ["Bachelors", "Masters", "PhD", "Diploma"];
 // --- Main Form Component ---
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
-  
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   // Form States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,7 +76,7 @@ const AuthForm = () => {
   const [countryCode, setCountryCode] = useState("+880");
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
-  const [programPreference, setProgramPreference] = useState(""); 
+  const [programPreference, setProgramPreference] = useState("");
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -148,13 +150,12 @@ const AuthForm = () => {
           toast.success("Login Successful!", {
             description: "Welcome to your dashboard",
           });
-          
-          router.refresh();
+
           router.push(callbackUrl);
         }
       } else {
         
-        const res = await fetch("/api/register", {
+        const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -197,7 +198,7 @@ const AuthForm = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      
+
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 border-r border-border bg-muted/30">
         <div className="max-w-md text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground uppercase tracking-wide">
@@ -220,14 +221,17 @@ const AuthForm = () => {
         </div>
       </div>
 
-      
+      {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold text-foreground mb-6">
-            {isLogin ? "Student Login" : "Student Registration"}
+            {showForgotPassword ? "Reset Password" : isLogin ? "Student Login" : "Student Registration"}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {showForgotPassword ? (
+            <ForgotPassword loginType="student" onBackToLogin={() => setShowForgotPassword(false)} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
                 <div className="space-y-1.5">
@@ -430,7 +434,20 @@ const AuthForm = () => {
                 </>
               )}
             </p>
+
+            {isLogin && (
+              <p className="text-center text-sm text-muted-foreground pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </p>
+            )}
           </form>
+          )}
         </div>
       </div>
     </div>
