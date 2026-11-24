@@ -2,14 +2,16 @@ import { connect } from "@/lib/db";
 import Application from "@/models/Application";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  TrendingDown, 
-  TrendingUp, 
-  Filter, 
-  Download 
+import {
+  TrendingDown,
+  TrendingUp,
+  Filter,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import FunnelChartComponent from "./FunnelChartComponent"; 
+import FunnelChartComponent from "./FunnelChartComponent";
+
+export const dynamic = 'force-dynamic';
 
 async function getFunnelData() {
   await connect();

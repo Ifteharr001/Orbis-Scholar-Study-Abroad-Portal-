@@ -1,6 +1,6 @@
-import { 
-  Users, 
-  FileText, 
+import {
+  Users,
+  FileText,
   Clock,
   TrendingUp,
   DollarSign,
@@ -17,6 +17,8 @@ import Application from "@/models/Application";
 import Document from "@/models/Document";
 import Task from "@/models/Task";
 import University from "@/models/University";
+
+export const dynamic = 'force-dynamic';
 
 async function getDashboardData() {
   await connect();

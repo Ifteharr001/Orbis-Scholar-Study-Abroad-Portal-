@@ -2,7 +2,9 @@ import { connect } from "@/lib/db";
 import Application from "@/models/Application";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Users, CheckCircle, CalendarRange } from "lucide-react";
-import ConversionChart from "./ConversionChart"; 
+import ConversionChart from "./ConversionChart";
+
+export const dynamic = 'force-dynamic';
 
 async function getConversionData() {
   await connect();

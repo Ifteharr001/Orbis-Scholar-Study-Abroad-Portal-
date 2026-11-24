@@ -3,13 +3,15 @@
 
 import { connect } from "@/lib/db";
 import AuditLog from "@/models/AuditLog";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, Search, Clock, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+export const dynamic = 'force-dynamic';
 
 async function getAuditLogs() {
   await connect();

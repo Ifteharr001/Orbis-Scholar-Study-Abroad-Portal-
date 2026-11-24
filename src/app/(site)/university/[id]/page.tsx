@@ -3,6 +3,8 @@ import University from "@/models/University";
 import UniversityDetailsPage from "@/app/(site)/university/UniversityDetailsPage";
 import { isValidObjectId } from "mongoose";
 
+export const dynamic = 'force-dynamic';
+
 async function getUniversity(identifier: string) {
   try {
     await connect();

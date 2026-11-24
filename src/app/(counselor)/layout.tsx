@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import CounselorMainLayout from "./counselor/CounselorMainLayout";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CounselorLayout({
   children,
 }: {
