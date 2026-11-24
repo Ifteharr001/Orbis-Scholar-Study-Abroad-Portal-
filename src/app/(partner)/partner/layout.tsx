@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PartnerSidebar } from "./PartnerSidebar";
+import PartnerSidebar from "./PartnerSidebar";
 
 export const metadata: Metadata = {
   title: "Partner Dashboard | Orbis Scholar",
