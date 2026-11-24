@@ -2,14 +2,20 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connect } from "@/lib/db";
-import Invoice from "@/models/Invoice"; 
+import Invoice from "@/models/Invoice";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  apiVersion: "2025-01-27.acacia" as any,
-  typescript: true,
-});
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not defined");
+  }
+  return new Stripe(key, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiVersion: "2025-01-27.acacia" as any,
+    typescript: true,
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -35,6 +41,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "This invoice is already paid" }, { status: 400 });
     }
 
+    const stripe = getStripe();
     const sessionStripe = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
